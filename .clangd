@@ -1,0 +1,3 @@
+# https://clangd.llvm.org/config
+CompileFlags:
+  Add: [-std=c++23]

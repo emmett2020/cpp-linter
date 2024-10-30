@@ -1,1 +1,2 @@
 # linter
+Platform: Linux
