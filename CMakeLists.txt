@@ -6,7 +6,7 @@ set(CXX_STANDARD_REQUIRED true)
 set(CMAKE_EXPORT_COMPILE_COMMANDS on)
 set(CMAKE_BUILD_TYPE Debug)
 
-OPTION (ENABLE_COVERAGE "Enable coverage" ON)
+OPTION (ENABLE_COVERAGE "Enable coverage" OFF)
 IF(ENABLE_COVERAGE)
   message(STATUS ENABLE_COVERAGE=${ENABLE_COVERAGE})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage ")
@@ -17,7 +17,9 @@ ENDIF()
 # TODO: add a startup repository
 find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system)
 
-set(SRC_FILE src/main.cpp)
+set(SRC_FILE 
+  src/main.cpp
+  src/utils/system_command.cpp)
 add_executable(main ${SRC_FILE})
 target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries(main ${Boost_LIBRARIES})
