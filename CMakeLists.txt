@@ -14,7 +14,8 @@ IF(ENABLE_COVERAGE)
 ENDIF()
 
 # TODO: add an example about how to use boost in CMake
-find_package(Boost 1.83.0 REQUIRED)
+# TODO: add a startup repository
+find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system)
 
 set(SRC_FILE src/main.cpp)
 add_executable(main ${SRC_FILE})
