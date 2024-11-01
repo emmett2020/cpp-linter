@@ -1,21 +1,10 @@
 
-#include <boost/process/v2/bind_launcher.hpp>
-#include <boost/process/v2/cstring_ref.hpp>
-#include <boost/process/v2/default_launcher.hpp>
-#include <boost/process/v2/environment.hpp>
-#include <boost/process/v2/error.hpp>
-#include <boost/process/v2/execute.hpp>
-#include <boost/process/v2/exit_code.hpp>
-#include <boost/process/v2/pid.hpp>
-#include <boost/process/v2/popen.hpp>
-#include <boost/process/v2/process.hpp>
-#include <boost/process/v2/process_handle.hpp>
-#include <boost/process/v2/shell.hpp>
-#include <boost/process/v2/start_dir.hpp>
-#include <boost/process/v2/stdio.hpp>
+// #include <boost/asio.hpp>
+// #include <boost/asio/error.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/process/v2.hpp>
 
-#include <boost/asio.hpp>
-
+#include <iostream>
 #include <print>
 #include <string>
 
@@ -28,12 +17,13 @@ int main() {
   asio::io_context ctx;
   asio::readable_pipe rp{ctx};
   process proc(ctx, "/usr/bin/g++", {"--version"}, process_stdio{{}, rp, {}});
-  std::string output;
-  ctx.run();
+  std::cout << proc.running();
 
   boost::system::error_code ec;
   std::string s;
-  s.reserve(1024);
-  rp.read_some(asio::buffer(s));
-  proc.wait();
+  s.resize(1024);
+  asio::read(rp, asio::buffer(s), ec);
+  std::cout << ec.message() << std::endl;
+  std::cout << s << std::endl;
+  assert(proc.wait() == 0);
 }
