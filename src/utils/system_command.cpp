@@ -11,7 +11,7 @@ CommandResult Exec(std::string command, std::string args) {
   bp::ipstream std_out;
   bp::ipstream std_err;
   auto env = boost::this_process::environment();
-  bp::child child(command, args, bp::std_out > std_out, bp::std_err > std_err);
+  bp::child child(command, bp::std_out > std_out, bp::std_err > std_err);
 
   CommandResult result;
   std::string line;
