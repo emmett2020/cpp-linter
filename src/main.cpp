@@ -1,29 +1,55 @@
+#define BOOST_PROCESS_V2_SEPARATE_COMPILATION
 
-// #include <boost/asio.hpp>
-// #include <boost/asio/error.hpp>
+#include <boost/asio/error.hpp>
 #include <boost/asio/read.hpp>
 #include <boost/process/v2.hpp>
+#include <boost/process/v2/src.hpp>
 
+#include <boost/throw_exception.hpp>
 #include <iostream>
 #include <print>
+#include <stdexcept>
 #include <string>
+namespace bp = boost::process::v2;
+using namespace std::string_literals;
 
-// using namespace boost;
-using namespace boost::asio;
-namespace asio = boost::asio;
-using namespace boost::process::v2;
+struct CommandResult {
+  int exit_code;
+  std::string std_out;
+  std::string std_err;
+};
 
-int main() {
-  asio::io_context ctx;
-  asio::readable_pipe rp{ctx};
-  process proc(ctx, "/usr/bin/g++", {"--version"}, process_stdio{{}, rp, {}});
-  std::cout << proc.running();
+CommandResult Exec(std::string_view command,
+                   std::initializer_list<bp::string_view> args,
+                   std::unordered_map<std::string, std::string> env = {}) {
+  boost::asio::io_context ctx;
+  boost::asio::readable_pipe rp_out{ctx};
+  boost::asio::readable_pipe rp_err{ctx};
+
+  bp::process proc(ctx, command, args, bp::process_stdio{{}, rp_out, rp_err},
+                   bp::process_environment{env});
 
   boost::system::error_code ec;
-  std::string s;
-  s.resize(1024);
-  asio::read(rp, asio::buffer(s), ec);
-  std::cout << ec.message() << std::endl;
-  std::cout << s << std::endl;
-  assert(proc.wait() == 0);
+  CommandResult res;
+  boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
+  if (ec && ec != boost::asio::error::eof) {
+    throw std::runtime_error(std::format(
+        "Read stdout faild: {} in executing {}", ec.message(), command));
+  }
+  ec.clear();
+  boost::asio::read(rp_err, boost::asio::dynamic_buffer(res.std_err), ec);
+  if (ec && ec != boost::asio::error::eof) {
+    throw std::runtime_error(std::format(
+        "Read stderr faild: {} in executing {}", ec.message(), command));
+  }
+  res.exit_code = proc.wait();
+  return res;
+}
+
+int main() {
+  auto [exit_code, std_out, std_err] =
+      Exec("/usr/bin/c++", {"--version"}, {{"CXX", "/usr/bin/g++-14"}});
+  std::print("{}\n", exit_code);
+  std::print("{}\n", std_out);
+  std::print("{}\n", std_err);
 }
