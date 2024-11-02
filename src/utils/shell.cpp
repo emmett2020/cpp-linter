@@ -10,10 +10,9 @@
 namespace linter {
   namespace bp = boost::process::v2;
 
-  CommandResult Execute(
-    std::string_view command_path,
-    const std::vector<std::string_view>& args,
-    std::unordered_map<std::string, std::string> env) {
+  auto Execute(std::string_view command_path,
+               const std::vector<std::string_view>& args,
+               std::unordered_map<std::string, std::string> env) -> CommandResult {
     boost::asio::io_context ctx;
     boost::asio::readable_pipe rp_out{ctx};
     boost::asio::readable_pipe rp_err{ctx};
@@ -44,7 +43,7 @@ namespace linter {
     return res;
   }
 
-  CommandResult Which(std::string_view command) {
+  auto Which(std::string_view command) -> CommandResult {
     CommandResult res = Execute("/usr/bin/which", {command.data()});
     return res;
   }

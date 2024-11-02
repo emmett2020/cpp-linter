@@ -22,7 +22,6 @@ namespace linter {
     std::string_view clang_tidy_cmd,
     int db_json,
     std::optional<std::string> format_cmd) {
-
     //
     if (clang_tidy_cmd != "") {
     }
@@ -33,7 +32,7 @@ namespace linter {
   auto AssembleVersionExec(std::string_view tool_name, std::string_view specified_version)
     -> std::string {
     auto exe_path = std::string{};
-    auto semver = std::views::split(tool_name, ".");
+    auto semver   = std::views::split(tool_name, ".");
 
     if (!semver.empty()) {
       auto is_digit = [](char c) {
@@ -55,7 +54,6 @@ namespace linter {
     std::string_view file_path,
     std::string_view data_base_path,
     bool only_check_changed_line) -> ClangTidyAdivce {
-
     // Make additional args
     auto args = std::vector<std::string_view>{};
     if (data_base_path != "") {
@@ -63,9 +61,7 @@ namespace linter {
     }
     args.push_back(file_path);
 
-    auto arg_str = args //
-                 | ranges::views::join(' ')
-                 | ranges::to<std::string>();
+    auto arg_str = args | ranges::views::join(' ') | ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd_path, arg_str);
 
     auto [ec, std_out, std_err] = Execute(clang_tidy_cmd_path, args);

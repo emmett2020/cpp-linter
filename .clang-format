@@ -1,34 +1,43 @@
 # https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-Language: Cpp
-BasedOnStyle: Google
 AccessModifierOffset: -1
-AlignAfterOpenBracket: AlwaysBreak
+AlignAfterOpenBracket: Align
 AlignArrayOfStructures: Right
-AlignConsecutiveAssignments: None
-AlignConsecutiveBitFields: None
-AlignConsecutiveDeclarations: None
-AlignConsecutiveMacros: None
-AlignEscapedNewlines: DontAlign
+AlignConsecutiveAssignments:
+  Enabled: true
+  AlignCompound: true
+AlignConsecutiveBitFields:
+  Enabled: true
+AlignConsecutiveDeclarations:
+  Enabled: false
+AlignConsecutiveMacros:
+  Enabled: true
+AlignConsecutiveShortCaseStatements:
+  Enabled: true
+  AlignCaseArrows: true
+  AlignCaseColons: true
+AlignEscapedNewlines: LeftWithLastLine
 AlignOperands: AlignAfterOperator
-AlignTrailingComments: true
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 2
 AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: false
+AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
 AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseExpressionOnASingleLine: true
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortCompoundRequirementOnASingleLine: true
 AllowShortEnumsOnASingleLine: false
 AllowShortFunctionsOnASingleLine: None
 AllowShortIfStatementsOnASingleLine: Never
 AllowShortLambdasOnASingleLine: Inline
 AllowShortLoopsOnASingleLine: false
-AlwaysBreakAfterDefinitionReturnType: None
-AlwaysBreakAfterReturnType: None
-AlwaysBreakBeforeMultilineStrings: true
-AlwaysBreakTemplateDeclarations: Yes
+AlwaysBreakBeforeMultilineStrings: false
+AttributeMacros: []
 BinPackArguments: false
-BinPackParameters: false
+BinPackParameters: OnePerLine
 BitFieldColonSpacing: Both
 BreakBeforeBraces: Custom
-BreakBinaryOperations: OnePerLine
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
@@ -48,24 +57,31 @@ BraceWrapping:
   SplitEmptyFunction: false
   SplitEmptyRecord: false
   SplitEmptyNamespace: false
+BracedInitializerIndentWidth: 2
+BreakAdjacentStringLiterals: true
+BreakAfterAttributes: Leave
 BreakAfterJavaFieldAnnotations: true
+BreakAfterReturnType: Automatic
+BreakArrays: false
 BreakBeforeBinaryOperators: NonAssignment
-BreakBeforeConceptDeclarations: true
+BreakBeforeConceptDeclarations: Always
 BreakBeforeTernaryOperators: true
+BreakBeforeInlineASMColon: Never
+BreakBinaryOperations: OnePerLine
 BreakConstructorInitializers: BeforeComma
-BreakInheritanceList: BeforeComma
+BreakFunctionDefinitionParameters: false
+BreakInheritanceList: AfterComma
 BreakStringLiterals: true
+BreakTemplateDeclarations: Yes
 ColumnLimit: 100
-CompactNamespaces: true
+CompactNamespaces: false
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2
 Cpp11BracedListStyle: true
-DeriveLineEnding: true
 DerivePointerAlignment: true
 EmptyLineAfterAccessModifier: Never
 EmptyLineBeforeAccessModifier: Leave
-ExperimentalAutoDetectBinPacking: true
-FixNamespaceComments: false
+FixNamespaceComments: True
 IncludeBlocks: Preserve
 IndentAccessModifiers: false
 IndentCaseBlocks: false
@@ -73,12 +89,23 @@ IndentCaseLabels: false
 IndentExternBlock: AfterExternBlock
 IndentGotoLabels: false
 IndentPPDirectives: None
-IndentRequires: false
+IndentRequiresClause: true
 IndentWidth: 2
-IndentWrappedFunctionNames: true
+IndentWrappedFunctionNames: false
+InsertNewlineAtEOF: true
 InsertTrailingCommas: None
-KeepEmptyLinesAtTheStartOfBlocks: true
+IntegerLiteralSeparator:
+  Binary: 4
+  Decimal: 3
+  Hex: -1
+KeepEmptyLines:
+  AtEndOfFile: true
+  AtStartOfBlock: false
+  AtStartOfFile: false
 LambdaBodyIndentation: Signature
+Language: Cpp
+LineEnding: LF
+MainIncludeChar: Quote
 MaxEmptyLinesToKeep: 2
 NamespaceIndentation: All
 PackConstructorInitializers: Never
@@ -95,14 +122,17 @@ PenaltyReturnTypeOnItsOwnLine: 4
 PointerAlignment: Left
 QualifierAlignment: Leave
 ReferenceAlignment: Pointer
-RemoveBracesLLVM: false
 ReflowComments: false
+RemoveBracesLLVM: false
+RemoveEmptyLinesInUnwrappedLines: true
+RemoveParentheses: Leave
+RemoveSemicolon: false
 RequiresClausePosition: OwnLine
-IndentRequiresClause: true
+RequiresExpressionIndentation: OuterScope
 SeparateDefinitionBlocks: Always
 ShortNamespaceLines: 0
 SortIncludes: Never
-SortUsingDeclarations: false
+SortUsingDeclarations: LexicographicNumeric 
 SpaceAfterCStyleCast: true
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: true
@@ -132,8 +162,7 @@ SpacesInAngles: Leave
 SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
 SpacesInContainerLiterals: true
-SpacesInParentheses: false
+SpacesInParens: Never
 Standard: "c++20"
 TabWidth: 0
-UseCRLF: true
 UseTab: Never
