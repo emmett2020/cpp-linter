@@ -4,8 +4,14 @@
 #include <optional>
 #include <ranges>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#include <range/v3/all.hpp>
+#include <spdlog/spdlog.h>
+
+#include "range/v3/range_fwd.hpp"
+#include "range/v3/view/join.hpp"
 #include "utils/shell.h"
 
 namespace linter {
@@ -32,11 +38,18 @@ struct ClangTidyAdivce {};
 auto run_clang_tidy(std::string_view clang_tidy_cmd_path,
                     std::string_view file_path, std::string_view data_base_path,
                     bool only_check_changed_line) -> ClangTidyAdivce {
-  auto cmd = std::string{clang_tidy_cmd_path};
+  // Make additional args
+  std::vector<std::string_view> args;
   if (data_base_path != "") {
-    cmd += std::format("-p {}", data_base_path);
+    args.push_back(std::format("-p {}", data_base_path));
   }
-  cmd += file_path;
+  args.push_back(file_path);
+
+  auto arg_str = args | ranges::views::join(' ') | ranges::to<std::string>();
+  spdlog::info("Running {} {}", clang_tidy_cmd_path, arg_str);
+
+  // auto [ec, std_out, std_err] =
+  //     Exec(clang_tidy_cmd_path, {args.begin(), args.end()});
 
   //
 }

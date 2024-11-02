@@ -8,6 +8,7 @@ set(CMAKE_BUILD_TYPE Debug)
 set(linter_root ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(${linter_root}/cmake/FetchSpdlog.cmake)
+include(${linter_root}/cmake/FetchRangeV3.cmake)
 
 OPTION (ENABLE_COVERAGE "Enable coverage" OFF)
 IF(ENABLE_COVERAGE)
@@ -29,4 +30,5 @@ add_executable(main ${SRC_FILE})
 target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS}
                                         ${linter_root}/src)
 target_link_libraries(main ${Boost_LIBRARIES}
-                           spdlog)
+                           spdlog
+                           range-v3)
