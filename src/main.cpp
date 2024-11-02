@@ -8,7 +8,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <iostream>
-#include <print>
+// #include <print>
 #include <stdexcept>
 #include <string>
 namespace bp = boost::process::v2;
@@ -51,7 +51,7 @@ CommandResult Exec(std::string_view command_path,
 int main() {
   auto [exit_code, std_out, std_err] =
       Exec("/linter/exe", {""}, {{"ADD", "HI"}});
-  std::print("{}\n", exit_code);
-  std::print("{}\n", std_out);
-  std::print("{}\n", std_err);
+  std::cout << exit_code << std::endl;
+  std::cout << std_out << std::endl;
+  std::cout << std_err << std::endl;
 }
