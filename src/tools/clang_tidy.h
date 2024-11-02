@@ -9,6 +9,8 @@ namespace linter {
   auto GetClangToolFullPath(std::string_view tool_name,
                             std::string_view version) -> std::string;
 
+  auto GetRepoFullPath() -> std::string;
+
   auto RunClangTidy(
     std::string_view clang_tidy_cmd,
     std::string_view file_path,

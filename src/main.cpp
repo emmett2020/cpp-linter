@@ -17,5 +17,5 @@ int main() {
          | ranges::views::reverse
          | ranges::to<std::string>();
   std::cout << c << std::endl;
-  RunClangTidy(c, "t.cpp", "", false);
+  RunClangTidy(c, "/linter/build/t.cpp", "", false);
 }
