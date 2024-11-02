@@ -20,7 +20,7 @@ AlignOperands: AlignAfterOperator
 AlignTrailingComments:
   Kind: Always
   OverEmptyLines: 2
-AllowAllArgumentsOnNextLine: true
+AllowAllArgumentsOnNextLine: false
 AllowAllParametersOfDeclarationOnNextLine: false
 AllowBreakBeforeNoexceptSpecifier: OnlyWithParen
 AllowShortBlocksOnASingleLine: Never
@@ -60,8 +60,7 @@ BraceWrapping:
 BracedInitializerIndentWidth: 2
 BreakAdjacentStringLiterals: true
 BreakAfterAttributes: Leave
-BreakAfterJavaFieldAnnotations: true
-BreakAfterReturnType: Automatic
+BreakAfterReturnType: ExceptShortType
 BreakArrays: false
 BreakBeforeBinaryOperators: NonAssignment
 BreakBeforeConceptDeclarations: Always
@@ -73,7 +72,7 @@ BreakFunctionDefinitionParameters: false
 BreakInheritanceList: AfterComma
 BreakStringLiterals: true
 BreakTemplateDeclarations: Yes
-ColumnLimit: 100
+ColumnLimit: 80
 CompactNamespaces: false
 ConstructorInitializerIndentWidth: 2
 ContinuationIndentWidth: 2

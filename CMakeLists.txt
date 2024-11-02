@@ -24,7 +24,7 @@ find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system)
 set(SRC_FILE
   src/main.cpp
   src/utils/shell.cpp
-  src/tools/run_clang_tidy.cpp
+  src/tools/clang_tidy.cpp
 )
 add_executable(main ${SRC_FILE})
 target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS}

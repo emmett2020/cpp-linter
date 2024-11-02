@@ -1,8 +1,11 @@
+#include "clang_tidy.h"
+
 #include <algorithm>
 #include <cctype>
 #include <format>
 #include <optional>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -10,14 +13,20 @@
 #include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 
-#include "range/v3/range_fwd.hpp"
-#include "range/v3/view/join.hpp"
 #include "utils/shell.h"
 
 namespace linter {
+  constexpr auto kNoteHeader = std::string_view{"^(.+):(\\d+):(\\d+):\\s(\\w+):(.*)\\[()\\]$"};
+  constexpr auto kFixedNote  = std::string_view{"1"};
 
-  void run_on_single_file(
-    const std::string &file,
+  auto ParseClangTidyOutput(std::string_view output) -> ClangTidyAdivce {
+    for (auto line: ranges::views::split(output, "\n")) {
+    }
+    return {};
+  }
+
+  void RunOnSingleFile(
+    const std::string& file,
     int log_level,
     std::string_view clang_tidy_cmd,
     int db_json,
@@ -29,6 +38,19 @@ namespace linter {
     //
   }
 
+  /// @detail Get the full path of clang tool
+  /// @param tool_name Could be clang-tidy or clang-format
+  /// @param version A number.
+  auto GetClangToolFullPath(std::string_view tool_name, std::string_view version) -> std::string {
+    auto command                = std::format("{}-{}", tool_name, version);
+    auto [ec, std_out, std_err] = Which(command);
+    if (ec != 0) {
+      throw std::runtime_error{std_err};
+    }
+    return std_out;
+  }
+
+  // If find specified version, use it.
   auto AssembleVersionExec(std::string_view tool_name, std::string_view specified_version)
     -> std::string {
     auto exe_path = std::string{};
@@ -45,12 +67,11 @@ namespace linter {
         }
       }
     }
+    return {};
   }
 
-  struct ClangTidyAdivce { };
-
   auto RunClangTidy(
-    std::string_view clang_tidy_cmd_path,
+    std::string_view clang_tidy_cmd,
     std::string_view file_path,
     std::string_view data_base_path,
     bool only_check_changed_line) -> ClangTidyAdivce {
@@ -64,15 +85,15 @@ namespace linter {
     auto arg_str = args //
                  | ranges::views::join(' ')
                  | ranges::to<std::string>();
-    spdlog::info("Running {} {}", clang_tidy_cmd_path, arg_str);
+    spdlog::info("Running {} {}", clang_tidy_cmd, arg_str);
 
-    auto [ec, std_out, std_err] = Execute(clang_tidy_cmd_path, args);
+    auto [ec, std_out, std_err] = Execute(clang_tidy_cmd, args);
     spdlog::debug("Output from clang-tidy:\n{}", std_out);
     if (ec != 0) {
       spdlog::debug("clang-tidy made the following summary:\n{}", std_err);
     }
 
-    //
+    return {};
   }
 
 } // namespace linter
