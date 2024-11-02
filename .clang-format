@@ -28,6 +28,7 @@ BinPackArguments: false
 BinPackParameters: false
 BitFieldColonSpacing: Both
 BreakBeforeBraces: Custom
+BreakBinaryOperations: OnePerLine
 BraceWrapping:
   AfterCaseLabel: false
   AfterClass: false
@@ -132,7 +133,7 @@ SpacesInCStyleCastParentheses: false
 SpacesInConditionalStatement: false
 SpacesInContainerLiterals: true
 SpacesInParentheses: false
-Standard: c++23
+Standard: "c++20"
 TabWidth: 0
 UseCRLF: true
 UseTab: Never
