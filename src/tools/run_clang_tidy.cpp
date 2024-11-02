@@ -16,6 +16,20 @@
 
 namespace linter {
 
+  void run_on_single_file(
+    const std::string &file,
+    int log_level,
+    std::string_view clang_tidy_cmd,
+    int db_json,
+    std::optional<std::string> format_cmd) {
+
+    //
+    if (clang_tidy_cmd != "") {
+    }
+
+    //
+  }
+
   auto AssembleVersionExec(std::string_view tool_name, std::string_view specified_version)
     -> std::string {
     auto exe_path = std::string{};
@@ -36,37 +50,25 @@ namespace linter {
 
   struct ClangTidyAdivce { };
 
-  auto run_clang_tidy(
+  auto RunClangTidy(
     std::string_view clang_tidy_cmd_path,
     std::string_view file_path,
     std::string_view data_base_path,
     bool only_check_changed_line) -> ClangTidyAdivce {
+
     // Make additional args
-    std::vector<std::string_view> args;
+    auto args = std::vector<std::string_view>{};
     if (data_base_path != "") {
       args.push_back(std::format("-p {}", data_base_path));
     }
     args.push_back(file_path);
 
-    auto arg_str = args | ranges::views::join(' ') | ranges::to<std::string>();
+    auto arg_str = args //
+                 | ranges::views::join(' ')
+                 | ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd_path, arg_str);
 
-    // auto [ec, std_out, std_err] =
-    //     Exec(clang_tidy_cmd_path, {args.begin(), args.end()});
-
-    //
-  }
-
-  void run_on_single_file(
-    const std::string &file,
-    int log_level,
-    std::string_view clang_tidy_cmd,
-    int db_json,
-    std::optional<std::string> format_cmd) {
-
-    //
-    if (clang_tidy_cmd != "") {
-    }
+    auto [ec, std_out, std_err] = Execute(clang_tidy_cmd_path, args);
 
     //
   }
