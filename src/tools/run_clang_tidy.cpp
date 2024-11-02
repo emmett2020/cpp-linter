@@ -61,10 +61,16 @@ namespace linter {
     }
     args.push_back(file_path);
 
-    auto arg_str = args | ranges::views::join(' ') | ranges::to<std::string>();
+    auto arg_str = args //
+                 | ranges::views::join(' ')
+                 | ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd_path, arg_str);
 
     auto [ec, std_out, std_err] = Execute(clang_tidy_cmd_path, args);
+    spdlog::debug("Output from clang-tidy:\n{}", std_out);
+    if (ec != 0) {
+      spdlog::debug("clang-tidy made the following summary:\n{}", std_err);
+    }
 
     //
   }
