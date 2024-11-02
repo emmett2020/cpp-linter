@@ -44,4 +44,9 @@ CommandResult Exec(std::string_view command_path,
   return res;
 }
 
+CommandResult Which(std::string_view command) {
+  CommandResult res = Exec("/usr/bin/which", {command.data()});
+  return res;
+}
+
 } // namespace linter
