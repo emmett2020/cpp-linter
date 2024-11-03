@@ -130,10 +130,10 @@ namespace linter {
     -> shell::Result {
     auto args = std::vector<std::string>{};
     if (!arg.database.empty()) {
-      args.emplace_back("-p " + arg.database);
+      args.emplace_back(std::format("\"-p {}\"", arg.database));
     }
     if (!arg.checks.empty()) {
-      args.emplace_back("-checks " + arg.checks);
+      args.emplace_back(std::format("\"-checks {}\"", arg.checks));
     }
     args.emplace_back(file);
 

@@ -21,19 +21,37 @@ namespace linter::shell {
     auto rp_out  = boost::asio::readable_pipe{context};
     auto rp_err  = boost::asio::readable_pipe{context};
 
-    // auto temp_args = std::vector<bp::string_view>{};
-    // temp_args.reserve(args.size());
-    // for (const auto& arg: args) {
-    //   temp_args.emplace_back(arg.data(), arg.size());
-    // }
-
     auto proc = bp::process(
       context,
       command_path,
       options,
       bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err},
       bp::process_environment{env});
+    auto ec  = boost::system::error_code{};
+    auto res = Result{};
+    boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
+    ThrowIf(ec && ec != boost::asio::error::eof,
+            std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
+    ec.clear();
 
+    boost::asio::read(rp_err, boost::asio::dynamic_buffer(res.std_err), ec);
+    ThrowIf(ec && ec != boost::asio::error::eof,
+            std::format("Read stderr message of {} faild since {}", command_path, ec.message()));
+
+    res.exit_code = proc.wait();
+    return res;
+  }
+
+  auto Execute(std::string_view command_path, const Options& options) -> Result {
+    auto context = boost::asio::io_context{};
+    auto rp_out  = boost::asio::readable_pipe{context};
+    auto rp_err  = boost::asio::readable_pipe{context};
+
+    auto proc = bp::process(
+      context,
+      command_path,
+      options,
+      bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err});
     auto ec  = boost::system::error_code{};
     auto res = Result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
