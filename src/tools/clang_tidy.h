@@ -18,7 +18,7 @@ namespace linter {
     std::string diagnostic;
   };
 
-  struct TidyArg {
+  struct TidyOption {
     std::string database;
     std::string checks;
   };
@@ -30,8 +30,9 @@ namespace linter {
   auto ParseClangTidyOutput(std::string_view output)
     -> std::tuple<std::vector<TidyHeaderLine>, std::vector<std::string>>;
 
-  auto RunClangTidy(std::string_view clang_tidy_cmd, const TidyArg& arg, std::string_view file_path)
-    -> shell::Result;
+  auto RunClangTidy(std::string_view clang_tidy_cmd,
+                    const TidyOption& option,
+                    std::string_view file_path) -> shell::Result;
 
 
 } // namespace linter
