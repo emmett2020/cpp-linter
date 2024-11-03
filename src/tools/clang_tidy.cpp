@@ -136,6 +136,13 @@ namespace linter {
     if (!option.checks.empty()) {
       opts.emplace_back(std::format("-checks={}", option.checks));
     }
+    if (option.allow_no_checks) {
+      opts.emplace_back("--allow-no-checks");
+    }
+    if (!option.config.empty()) {
+      opts.emplace_back(std::format("--config={}", option.config));
+    }
+
     opts.emplace_back(file);
 
     auto arg_str = opts | std::views::join_with(' ') | std::ranges::to<std::string>();

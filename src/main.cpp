@@ -15,8 +15,14 @@ void ForClangTidy() {
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
-  auto cmd                    = GetClangToolFullPath("clang-tidy", "20");
-  auto option                 = TidyOption{.database = "build", .checks = "-*"};
+  auto cmd    = GetClangToolFullPath("clang-tidy", "20");
+  auto option = TidyOption{
+    .allow_no_checks = true,
+    // .checks          = "-*",
+    .config   = "{Checks: '*', CheckOptions: {x: y}}",
+    .database = "build",
+  };
+
   auto [ec, std_out, std_err] = RunClangTidy(cmd, option, "src/main.cpp");
   auto [noti_lines, codes]    = ParseClangTidyOutput(std_out);
 
