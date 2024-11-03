@@ -3,7 +3,6 @@
 
 #include <boost/asio/error.hpp>
 #include <boost/asio/read.hpp>
-#include <iostream>
 
 #define BOOST_PROCESS_V2_SEPARATE_COMPILATION
 #include <boost/process/v2.hpp>
@@ -22,14 +21,14 @@ namespace linter {
     std::vector<bp::string_view> temp{};
     temp.reserve(args.size());
     for (auto arg: args) {
-      temp.push_back(arg.data());
+      temp.emplace_back(arg.data());
     }
 
     bp::process proc(
       ctx,
       command_path,
       temp,
-      bp::process_stdio{{}, rp_out, rp_err},
+      bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err},
       bp::process_environment{env});
 
     boost::system::error_code ec;
@@ -50,10 +49,8 @@ namespace linter {
   }
 
   auto Which(std::string_view command) -> CommandResult {
-    CommandResult res = Execute("/usr/bin/which", {command.data()});
-    std::cout << res.std_out << "\n";
-    auto trimmed = Trim(res.std_out);
-    res.std_out  = trimmed;
+    CommandResult res = Execute("/usr/bin/which", {command});
+    res.std_out       = Trim(res.std_out);
     return res;
   }
 
