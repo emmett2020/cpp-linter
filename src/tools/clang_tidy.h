@@ -7,8 +7,7 @@
 namespace linter {
   struct ClangTidyAdivce { };
 
-  /// @detail
-  struct NotificationLine {
+  struct TidyHeaderLine {
     std::string file_name;
     std::string row_idx;
     std::string col_idx;
@@ -22,7 +21,7 @@ namespace linter {
   auto GetRepoFullPath() -> std::string;
 
   auto ParseClangTidyOutput(std::string_view output)
-    -> std::tuple<std::vector<NotificationLine>, std::vector<std::string>>;
+    -> std::tuple<std::vector<TidyHeaderLine>, std::vector<std::string>>;
 
   auto RunClangTidy(std::string_view clang_tidy_cmd,
                     std::string_view file_path,

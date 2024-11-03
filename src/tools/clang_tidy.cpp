@@ -30,7 +30,7 @@ namespace linter {
     constexpr auto kSupportedServerity = {"warning"sv, "info"sv, "error"sv};
 
     /// @brief: Only do some check.
-    auto ParseClangTidyOutputCode(std::string_view line) -> std::string_view {
+    auto ParseClangTidyDetailLine(std::string_view line) -> std::string_view {
       spdlog::debug(std::format("Parsing detaile code: {}", line));
       // auto parts = line | std::views::split('|');
       // ThrowIf(std::distance(parts.begin(), parts.end()) >= 2,
@@ -38,11 +38,9 @@ namespace linter {
       return line;
     }
 
-    /// @brief: Parse the output notification of clang-tidy.
-    /// @return: If the format of output line meets notification rules, return it. Otherwise return std::nullopt.
-    auto ParseClangTidyOutputNotification(std::string_view line)
-      -> std::optional<NotificationLine> {
-      spdlog::debug(std::format("Parsing notification: {}", line));
+    /// @brief: Parse the header line of clang-tidy.
+    /// @return: If the given line meets header line rule, parse it. Otherwise return std::nullopt.
+    auto ParseClangTidyHeaderLine(std::string_view line) -> std::optional<TidyHeaderLine> {
       auto parts = line | std::views::split(':');
 
       if (std::distance(parts.begin(), parts.end()) != 5) {
@@ -74,43 +72,46 @@ namespace linter {
       auto brief      = std::string_view{brief_diagnostic.begin(), square_brackets};
       auto diagnostic = std::string_view{square_brackets, brief_diagnostic.end()};
 
-      auto notification       = NotificationLine{};
-      notification.file_name  = file_name;
-      notification.row_idx    = row_idx;
-      notification.col_idx    = col_idx;
-      notification.serverity  = serverity;
-      notification.brief      = brief;
-      notification.diagnostic = diagnostic;
-      return notification;
+      auto header_line       = TidyHeaderLine{};
+      header_line.file_name  = file_name;
+      header_line.row_idx    = row_idx;
+      header_line.col_idx    = col_idx;
+      header_line.serverity  = serverity;
+      header_line.brief      = brief;
+      header_line.diagnostic = diagnostic;
+      return header_line;
     }
 
 
   } // namespace
 
   auto ParseClangTidyOutput(std::string_view output)
-    -> std::tuple<std::vector<NotificationLine>, std::vector<std::string>> {
-    auto notifications = std::vector<NotificationLine>{};
-    auto detail_codes  = std::vector<std::string>{};
-    auto has_noti_line = false;
+    -> std::tuple<std::vector<TidyHeaderLine>, std::vector<std::string>> {
+    auto tidy_header_lines = std::vector<TidyHeaderLine>{};
+    auto details           = std::vector<std::string>{};
+    auto needs_details     = false;
 
     for (auto part: std::views::split(output, '\n')) {
       auto line = std::string_view{part};
+      spdlog::debug(std::format("Parsing clang-dity output line: {}", line));
 
-      auto noti_result = ParseClangTidyOutputNotification(line);
-      if (noti_result) {
-        notifications.push_back(noti_result.value());
-        detail_codes.emplace_back("");
-        has_noti_line = true;
+      auto header_line = ParseClangTidyHeaderLine(line);
+      if (header_line) {
+        spdlog::debug("The parsing line is a header line.");
+
+        tidy_header_lines.emplace_back(header_line.value());
+        details.emplace_back();
+        needs_details = true;
         continue;
       }
 
-      auto detail_code_result = ParseClangTidyOutputCode(line);
-      if (has_noti_line && !detail_code_result.empty()) {
-        detail_codes.back() += line;
-        detail_codes.back() += "\n";
+      auto detail = ParseClangTidyDetailLine(line);
+      if (needs_details && !detail.empty()) {
+        details.back() += line;
+        details.back() += "\n";
       }
     }
-    return std::make_tuple(notifications, detail_codes);
+    return std::make_tuple(tidy_header_lines, details);
   }
 
   /// @detail Get the full path of clang tools
@@ -123,13 +124,17 @@ namespace linter {
     return std_out;
   }
 
+  /// @detail Run clang_tidy_cmd and return result
+  /// @param clang_tidy_cmd The full path of clang-tidy-version
+  /// @param file The full file path which is going to be checked
+  /// @param data_base_path The compile_commands.json's full path
   auto RunClangTidy(std::string_view clang_tidy_cmd,
-                    std::string_view file_path,
+                    std::string_view file,
                     std::string_view data_base_path) -> CommandResult {
     auto args = std::vector<std::string_view>{};
-    auto db   = data_base_path.empty() ? "" : std::format("-p {}", data_base_path);
+    auto db   = data_base_path.empty() ? "" : std::format("-p {} ", data_base_path);
     args.emplace_back(db);
-    args.emplace_back(file_path);
+    args.emplace_back(file);
 
     auto arg_str = args | std::views::join_with(' ') | std::ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd, arg_str);
