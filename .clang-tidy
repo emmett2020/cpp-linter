@@ -1,9 +1,10 @@
 Checks: '
-  -*,
+  *,
   -llvm*,
   -fuchsia*,
   -altera*,
   -hicpp*,
+  -abseil*,
 
   -modernize-use-trailing-return-type,
 
@@ -17,7 +18,6 @@ Checks: '
   -readability-identifier-naming,
 
   -google-readability-todo,
-  google-readability-todo,
 
   -misc-non-private-member-variables-in-classes,
 

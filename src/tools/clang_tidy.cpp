@@ -26,7 +26,8 @@ namespace linter {
     };
 
     using namespace std::string_view_literals;
-    constexpr auto kSupportedServerity = {"warning"sv, "info"sv, "error"sv};
+    constexpr auto kSupportedServerity     = {"warning"sv, "info"sv, "error"sv};
+    constexpr auto kTotalWraningsGenerated = "warnings generated."sv;
 
     /// @brief: Only do some check.
     auto ParseClangTidyDetailLine(std::string_view line) -> std::string_view {
@@ -84,7 +85,7 @@ namespace linter {
 
   } // namespace
 
-  auto ParseClangTidyOutput(std::string_view output)
+  auto ParseClangTidyStdout(std::string_view output)
     -> std::tuple<std::vector<TidyHeaderLine>, std::vector<std::string>> {
     auto tidy_header_lines = std::vector<TidyHeaderLine>{};
     auto details           = std::vector<std::string>{};
@@ -111,6 +112,26 @@ namespace linter {
       }
     }
     return std::make_tuple(tidy_header_lines, details);
+  }
+
+  auto ParseClangTidyStderr(std::string_view std_err) -> TidyStatistic {
+    auto statistic = TidyStatistic{};
+
+
+    for (auto part: std::views::split(std_err, '\n')) {
+      auto line = std::string_view{part};
+      if (line.find(kTotalWraningsGenerated) != std::string::npos) {
+        auto total = std::views::split(line, ' ')
+                   | std::views::take(1)
+                   | std::views::transform([](auto num_str) {
+                       return std::stoull(std::string(num_str.data(), num_str.size()));
+                     });
+        statistic.total_warnings = total.front();
+      } else if (line.starts_with("Suppressed")) {
+      }
+    }
+
+    return statistic;
   }
 
   /// @detail Get the full path of clang tools
