@@ -1,11 +1,11 @@
-#include "utils/shell.h"
-#include "tools/clang_tidy.h"
-
 #include <cctype>
 #include <print>
 #include <ranges>
 
 #include <spdlog/spdlog.h>
+
+#include "utils/shell.h"
+#include "tools/clang_tidy.h"
 
 using namespace linter; // NOLINT
 
@@ -23,6 +23,6 @@ int main() {
       line.serverity,
       line.brief,
       line.diagnostic);
-    std::println("{}", code);
+    std::print("{}", code);
   }
 }

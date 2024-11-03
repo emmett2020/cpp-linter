@@ -26,10 +26,19 @@ namespace linter {
     return TrimRight(TrimLeft(str));
   }
 
-  /// @brief: Throw a std::runtime_error with given msg if condition isn't true.
+  /// @brief: Throw a std::runtime_error with given msg if condition is true.
   /// @param: condition Condition to be checked.
   /// @param: msg Message used to be construct std::runtime_error.
   inline void ThrowIf(bool condition, const std::string& msg) {
+    if (condition) {
+      throw std::runtime_error{msg};
+    }
+  }
+
+  /// @brief: Throw a std::runtime_error with given msg if condition isn't true.
+  /// @param: condition Condition to be checked.
+  /// @param: msg Message used to be construct std::runtime_error.
+  inline void ThrowUnless(bool condition, const std::string& msg) {
     if (!condition) {
       throw std::runtime_error{msg};
     }

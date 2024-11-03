@@ -13,23 +13,22 @@
 #include <tuple>
 #include <vector>
 
-// #include <range/v3/all.hpp>
 #include <spdlog/spdlog.h>
 
 #include "utils/shell.h"
 #include "utils/util.h"
 
 namespace linter {
-
-  enum class LineType : std::uint8_t {
-    NOTIFICATION,
-    DETAIL_CODE,
-    FIX_SUGGESTION
-  };
-
-  constexpr auto kSupportedServerity = std::array<std::string_view, 2>{"warning", "info"};
-
   namespace {
+    enum class LineType : std::uint8_t {
+      NOTIFICATION,
+      DETAIL_CODE,
+      FIX_SUGGESTION
+    };
+
+    using namespace std::string_view_literals;
+    constexpr auto kSupportedServerity = {"warning"sv, "info"sv, "error"sv};
+
     /// @brief: Only do some check.
     auto ParseClangTidyOutputCode(std::string_view line) -> std::string_view {
       spdlog::debug(std::format("Parsing detaile code: {}", line));
@@ -92,6 +91,7 @@ namespace linter {
     -> std::tuple<std::vector<NotificationLine>, std::vector<std::string>> {
     auto notifications = std::vector<NotificationLine>{};
     auto detail_codes  = std::vector<std::string>{};
+    auto has_noti_line = false;
 
     for (auto part: std::views::split(output, '\n')) {
       auto line = std::string_view{part};
@@ -100,11 +100,12 @@ namespace linter {
       if (noti_result) {
         notifications.push_back(noti_result.value());
         detail_codes.emplace_back("");
+        has_noti_line = true;
         continue;
       }
 
       auto detail_code_result = ParseClangTidyOutputCode(line);
-      if (!detail_code_result.empty()) {
+      if (has_noti_line && !detail_code_result.empty()) {
         detail_codes.back() += line;
         detail_codes.back() += "\n";
       }
@@ -112,15 +113,13 @@ namespace linter {
     return std::make_tuple(notifications, detail_codes);
   }
 
-  /// @detail Get the full path of clang tool
-  /// @param tool_name Could be clang-tidy or clang-format
+  /// @detail Get the full path of clang tools
+  /// @param tool_name Could be "clang-tidy" or "clang-format"
   /// @param version A number.
   auto GetClangToolFullPath(std::string_view tool_name, std::string_view version) -> std::string {
     auto command                = std::format("{}-{}", tool_name, version);
     auto [ec, std_out, std_err] = Which(command);
-    if (ec != 0) {
-      throw std::runtime_error{std_err};
-    }
+    ThrowIf(ec != 0, std_err);
     return std_out;
   }
 
