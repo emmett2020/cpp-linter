@@ -7,17 +7,9 @@
 #include <unordered_map>
 #include <vector>
 
-struct NotificationLine {
-  std::string file_name;
-  std::string line;
-  std::string col;
-  std::string serverity;
-  std::string rationale;
-  std::string diagnostic;
-};
 
 using CompileCommands =
-    std::vector<std::unordered_map<std::string, std::string>>;
+  std::vector<std::unordered_map<std::string, std::string>>;
 
 constexpr std::string_view clang_notes = "clang-diagnostic-";
 
@@ -29,7 +21,8 @@ constexpr std::string_view diagnostic_link(std::string_view diagnostic) {
   }
 
   auto link = std::format(
-      "[{}](https://clang.llvm.org/extra/clang-tidy/checks)", diagnostic);
+    "[{}](https://clang.llvm.org/extra/clang-tidy/checks)",
+    diagnostic);
   if (diagnostic.starts_with("clang-analyzer-")) {
     // auto check_name_parts = diagnostic.split("-");
     // return link + std::format("clang-analyzer/{}.html",
@@ -39,14 +32,13 @@ constexpr std::string_view diagnostic_link(std::string_view diagnostic) {
 }
 
 struct ClangTidyNotification {
-
   ClangTidyNotification(const NotificationLine &notification_line,
                         std::optional<CompileCommands> compile_commands) {
     // TODO: strip rationale
     // TODO: strip serverity
 
     int line_number = std::stoi(notification_line.line);
-    int col_number = std::stoi(notification_line.col);
+    int col_number  = std::stoi(notification_line.col);
   }
 
   std::string filename;
@@ -59,15 +51,20 @@ struct ClangTidyNotification {
   std::vector<std::string> applied_lines;
 
   std::string to_string() {
-    return std::format("<ClangTidyNotification> {0}:{1}:{2} {3}", filename, row,
-                       col, diagnostic);
+    return std::format(
+      "<ClangTidyNotification> {0}:{1}:{2} {3}",
+      filename,
+      row,
+      col,
+      diagnostic);
   }
 };
 
 struct ClangTidyAdvice {
   std::vector<ClangTidyNotification> notifications;
+
   explicit ClangTidyAdvice(
-      const std::vector<ClangTidyNotification> &notifications) {
+    const std::vector<ClangTidyNotification> &notifications) {
     //
   }
 
@@ -76,8 +73,8 @@ struct ClangTidyAdvice {
   std::string diagnostics_in_range(int start, int end) {
     //
     std::string diagnostics;
-    for (const auto &notification : notifications) {
-      for (const auto &fix_line : notification.applied_lines) {
+    for (const auto &notification: notifications) {
+      for (const auto &fix_line: notification.applied_lines) {
         // if (fix_line > start && fix_line < end)  {
         //
         // }
@@ -88,6 +85,6 @@ struct ClangTidyAdvice {
 
   std::string get_suggestion_help(int start, int end) {
     auto diagnostics = diagnostics_in_range(start, end);
-    auto prefix = super().get_suggestion_help(start, end);
+    auto prefix      = super().get_suggestion_help(start, end);
   }
 };
