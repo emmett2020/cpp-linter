@@ -9,6 +9,7 @@ set(linter_root ${CMAKE_CURRENT_SOURCE_DIR})
 
 include(${linter_root}/cmake/FetchSpdlog.cmake)
 include(${linter_root}/cmake/FetchRangeV3.cmake)
+include(${linter_root}/cmake/FetchHttpLib.cmake)
 
 OPTION (ENABLE_COVERAGE "Enable coverage" OFF)
 IF(ENABLE_COVERAGE)
@@ -25,10 +26,12 @@ set(SRC_FILE
   src/main.cpp
   src/utils/shell.cpp
   src/tools/clang_tidy.cpp
+  src/github/api.cpp
 )
 add_executable(main ${SRC_FILE})
 target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS}
                                         ${linter_root}/src)
 target_link_libraries(main ${Boost_LIBRARIES}
                            spdlog
-                           range-v3)
+                           range-v3
+                           httplib)
