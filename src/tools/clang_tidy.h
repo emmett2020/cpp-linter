@@ -24,11 +24,9 @@ namespace linter {
   auto ParseClangTidyOutput(std::string_view output)
     -> std::tuple<std::vector<NotificationLine>, std::vector<std::string>>;
 
-  auto RunClangTidy(
-    std::string_view clang_tidy_cmd,
-    std::string_view file_path,
-    std::string_view data_base_path,
-    bool only_check_changed_line) -> CommandResult;
+  auto RunClangTidy(std::string_view clang_tidy_cmd,
+                    std::string_view file_path,
+                    std::string_view data_base_path) -> CommandResult;
 
 
 } // namespace linter

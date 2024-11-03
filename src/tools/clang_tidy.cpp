@@ -99,7 +99,7 @@ namespace linter {
       auto noti_result = ParseClangTidyOutputNotification(line);
       if (noti_result) {
         notifications.push_back(noti_result.value());
-        detail_codes.emplace_back();
+        detail_codes.emplace_back("");
         continue;
       }
 
@@ -124,11 +124,9 @@ namespace linter {
     return std_out;
   }
 
-  auto RunClangTidy(
-    std::string_view clang_tidy_cmd,
-    std::string_view file_path,
-    std::string_view data_base_path,
-    bool only_check_changed_line) -> CommandResult {
+  auto RunClangTidy(std::string_view clang_tidy_cmd,
+                    std::string_view file_path,
+                    std::string_view data_base_path) -> CommandResult {
     auto args = std::vector<std::string_view>{};
     auto db   = data_base_path.empty() ? "" : std::format("-p {}", data_base_path);
     args.emplace_back(db);
