@@ -1,7 +1,9 @@
 #include "shell.h"
+#include "utils/util.h"
 
 #include <boost/asio/error.hpp>
 #include <boost/asio/read.hpp>
+#include <iostream>
 
 #define BOOST_PROCESS_V2_SEPARATE_COMPILATION
 #include <boost/process/v2.hpp>
@@ -24,7 +26,11 @@ namespace linter {
     }
 
     bp::process proc(
-      ctx, command_path, temp, bp::process_stdio{{}, rp_out, rp_err}, bp::process_environment{env});
+      ctx,
+      command_path,
+      temp,
+      bp::process_stdio{{}, rp_out, rp_err},
+      bp::process_environment{env});
 
     boost::system::error_code ec;
     CommandResult res;
@@ -45,6 +51,9 @@ namespace linter {
 
   auto Which(std::string_view command) -> CommandResult {
     CommandResult res = Execute("/usr/bin/which", {command.data()});
+    std::cout << res.std_out << "\n";
+    auto trimmed = Trim(res.std_out);
+    res.std_out  = trimmed;
     return res;
   }
 

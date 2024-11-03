@@ -5,8 +5,7 @@
 
 namespace linter {
   constexpr auto TrimLeft(std::string_view str) -> std::string_view {
-    auto idx = str.find_first_not_of(" \n");
-    if (idx < str.size()) {
+    if (auto idx = str.find_first_not_of(" \n"); idx < str.size()) {
       str.remove_prefix(idx);
     }
     return str;
@@ -15,7 +14,7 @@ namespace linter {
   constexpr auto TrimRight(std::string_view str) -> std::string_view {
     auto idx = str.find_last_not_of(" \n");
     if (idx < str.size()) {
-      str.remove_suffix(idx); // TODO: validate
+      str.remove_suffix(str.size() - idx - 1);
     }
     return str;
   }
