@@ -19,12 +19,14 @@ namespace linter {
   };
 
   struct TidyOption {
-    bool allow_no_checks = false;
+    bool allow_no_checks      = false;
+    bool enable_check_profile = false;
     std::string checks;
     std::string config;
     std::string config_file;
     std::string database;
-    bool enable_check_profile = false;
+    std::string header_filter;
+    std::string line_filter;
   };
 
   auto GetClangToolFullPath(std::string_view tool_name, std::string_view version) -> std::string;

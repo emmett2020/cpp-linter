@@ -142,6 +142,18 @@ namespace linter {
     if (!option.config.empty()) {
       opts.emplace_back(std::format("--config={}", option.config));
     }
+    if (!option.config_file.empty()) {
+      opts.emplace_back(std::format("--config-file={}", option.config_file));
+    }
+    if (option.enable_check_profile) {
+      opts.emplace_back("--enable-check-profile");
+    }
+    if (!option.header_filter.empty()) {
+      opts.emplace_back(std::format("--header-filter={}", option.header_filter));
+    }
+    if (!option.line_filter.empty()) {
+      opts.emplace_back(std::format("--line-filter={}", option.line_filter));
+    }
 
     opts.emplace_back(file);
 
