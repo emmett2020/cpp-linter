@@ -1,42 +1,41 @@
 #include "shell.h"
 
 #include <string>
-
-#include <boost/asio/error.hpp>
-#include <boost/asio/read.hpp>
-#include <boost/asio/readable_pipe.hpp>
+#include <string_view>
 
 #define BOOST_PROCESS_V2_SEPARATE_COMPILATION
 #include <boost/process/v2.hpp>
 #include <boost/process/v2/src.hpp>
+#include <boost/asio/error.hpp>
+#include <boost/asio/read.hpp>
+#include <boost/asio/readable_pipe.hpp>
 
 #include "utils/util.h"
 
-namespace linter {
+namespace linter::shell {
   namespace bp = boost::process::v2;
 
-  auto Execute(std::string_view command_path,
-               const std::vector<std::string_view>& args,
-               std::unordered_map<std::string, std::string> env) -> CommandResult {
+  auto Execute(std::string_view command_path, const Options& options, const Envionment& env)
+    -> Result {
     auto context = boost::asio::io_context{};
     auto rp_out  = boost::asio::readable_pipe{context};
     auto rp_err  = boost::asio::readable_pipe{context};
 
-    auto temp_args = std::vector<bp::string_view>{};
-    temp_args.reserve(args.size());
-    for (auto arg: args) {
-      temp_args.emplace_back(arg.data(), arg.size());
-    }
+    // auto temp_args = std::vector<bp::string_view>{};
+    // temp_args.reserve(args.size());
+    // for (const auto& arg: args) {
+    //   temp_args.emplace_back(arg.data(), arg.size());
+    // }
 
     auto proc = bp::process(
       context,
       command_path,
-      temp_args,
+      options,
       bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err},
       bp::process_environment{env});
 
     auto ec  = boost::system::error_code{};
-    auto res = CommandResult{};
+    auto res = Result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
     ThrowIf(ec && ec != boost::asio::error::eof,
             std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
@@ -50,10 +49,11 @@ namespace linter {
     return res;
   }
 
-  auto Which(std::string_view command) -> CommandResult {
-    CommandResult res = Execute("/usr/bin/which", {command});
-    res.std_out       = Trim(res.std_out);
+  auto Which(std::string command) -> Result {
+    constexpr auto which = std::string_view{"/usr/bin/which"};
+    auto res             = Execute(which, {std::move(command)});
+    res.std_out          = Trim(res.std_out);
     return res;
   }
 
-} // namespace linter
+} // namespace linter::shell

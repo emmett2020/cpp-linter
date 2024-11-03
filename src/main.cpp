@@ -11,9 +11,16 @@ using namespace linter; // NOLINT
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
-  auto cmd                    = GetClangToolFullPath("clang-tidy", "20");
-  auto [ec, std_out, std_err] = RunClangTidy(cmd, "/linter/build/t.cpp", "");
+  auto cmd = GetClangToolFullPath("clang-tidy", "20");
+  // auto arg                    = TidyArg{.database = "/linter/build/"};
+  auto arg                    = TidyArg{};
+  auto [ec, std_out, std_err] = RunClangTidy(cmd, arg, "/linter/t.cpp");
   auto [noti_lines, codes]    = ParseClangTidyOutput(std_out);
+
+  std::println("ec: {}", ec);
+  if (ec == 1) {
+    std::println("{}", std_err);
+  }
   for (const auto& [line, code]: std::ranges::views::zip(noti_lines, codes)) {
     std::println(
       "{}:{}:{}: {}: {} {}",

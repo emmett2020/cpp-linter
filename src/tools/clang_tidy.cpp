@@ -7,7 +7,6 @@
 #include <iterator>
 #include <optional>
 #include <ranges>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -63,7 +62,7 @@ namespace linter {
         return std::nullopt;
       }
 
-      const auto *square_brackets = std::ranges::find(brief_diagnostic, '[');
+      const auto* square_brackets = std::ranges::find(brief_diagnostic, '[');
       if ((square_brackets == brief_diagnostic.end())
           || (brief_diagnostic.size() < 3)
           || (brief_diagnostic.back() != ']')) {
@@ -119,7 +118,7 @@ namespace linter {
   /// @param version A number.
   auto GetClangToolFullPath(std::string_view tool_name, std::string_view version) -> std::string {
     auto command                = std::format("{}-{}", tool_name, version);
-    auto [ec, std_out, std_err] = Which(command);
+    auto [ec, std_out, std_err] = shell::Which(command);
     ThrowIf(ec != 0, std_err);
     return std_out;
   }
@@ -127,18 +126,21 @@ namespace linter {
   /// @detail Run clang_tidy_cmd and return result
   /// @param clang_tidy_cmd The full path of clang-tidy-version
   /// @param file The full file path which is going to be checked
-  /// @param data_base_path The compile_commands.json's full path
-  auto RunClangTidy(std::string_view clang_tidy_cmd,
-                    std::string_view file,
-                    std::string_view data_base_path) -> CommandResult {
-    auto args = std::vector<std::string_view>{};
-    auto db   = data_base_path.empty() ? "" : std::format("-p {} ", data_base_path);
-    args.emplace_back(db);
+  auto RunClangTidy(std::string_view clang_tidy_cmd, const TidyArg& arg, std::string_view file)
+    -> shell::Result {
+    auto args = std::vector<std::string>{};
+    if (!arg.database.empty()) {
+      args.emplace_back("-p " + arg.database);
+    }
+    if (!arg.checks.empty()) {
+      args.emplace_back("-checks " + arg.checks);
+    }
     args.emplace_back(file);
 
     auto arg_str = args | std::views::join_with(' ') | std::ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd, arg_str);
-    return Execute(clang_tidy_cmd, args);
+
+    return shell::Execute(clang_tidy_cmd, args);
   }
 
   auto GetRepoFullPath() -> std::string {
