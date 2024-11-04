@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string_view>
 #include <unordered_map>
+#include <print>
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
@@ -20,7 +21,7 @@ namespace linter {
     std::size_t retry     = 0;
   };
 
-  constexpr auto kApiUrl           = "https://api.github.com";
+  constexpr auto kGithubAPI        = "https://api.github.com";
   constexpr auto kEnableDebug      = "ENABLE_DEBUG";
   constexpr auto kEventPullRequest = "pull_request";
   constexpr auto kEventPush        = "pull_request";
@@ -46,30 +47,33 @@ namespace linter {
   public:
     GithubApiClient() {
       LoadEnvionmentVariables();
+      InferConfigs();
     }
 
     // Return response
     void SendRequest(std::string_view method,
                      std::string_view payload,
-                     const std::unordered_map<std::string, std::string> &headers) {
+                     const std::unordered_map<std::string, std::string>& headers) {
     }
 
     auto GetChangedFiles() -> std::vector<std::string> {
-      auto uri = std::format("{}/repos/{}", kApiUrl, github_env_.repository);
+      auto path = std::format("/repos/{}", github_env_.repository);
       if (github_env_.event_name == kEventPullRequest) {
-        uri += std::format("/pulls/{}", pull_request_number_);
+        path += std::format("/pulls/{}", pull_request_number_);
       } else {
         ThrowUnless(github_env_.event_name == kEventPush, "unsupported event");
-        uri += std::format("/commits/{}", github_env_.sha);
+        path += std::format("/commits/{}", github_env_.sha);
       }
-      spdlog::info("Fetching changed files from: {}", uri);
-      auto client  = httplib::Client{uri};
+      spdlog::info("Fetching changed files from: {}/{}", kGithubAPI, path);
+      auto client  = httplib::Client{kGithubAPI};
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
-      auto response = client.Get("", headers);
+      auto response = client.Get(path, headers);
       assert(response->status == 200);
+      const auto& body = response->body;
+      std::print("{}", body);
       return {}; // parse
     }
 
@@ -77,7 +81,7 @@ namespace linter {
     }
 
   private:
-    void InferOtherConfig() {
+    void InferConfigs() {
       if (!github_env_.event_path.empty()) {
         auto file = std::ifstream(github_env_.event_name);
         auto data = nlohmann::json::parse(file);
