@@ -36,4 +36,6 @@ target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS}
 target_link_libraries(main ${Boost_LIBRARIES}
                            spdlog
                            range-v3
-                           httplib)
+                           httplib
+                           nlohmann_json
+                         )
