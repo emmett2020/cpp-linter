@@ -42,17 +42,13 @@ public:
   // Return response
   void
   SendRequest(std::string_view method, std::string_view payload,
-              const std::unordered_map<std::string, std::string> &headers) {
-    auto client = httplib::Client{kApiUrl};
-    if (method == "GET") {
-    }
-  }
+              const std::unordered_map<std::string, std::string> &headers) {}
 
   auto GetChangedFiles() -> std::vector<std::string> {
-    auto uri = std::format("{}/repos/{}", kApiUrl, repository_);
+    auto uri = std::format("{}/repos/{}", kApiUrl, github_env.repository);
     auto client = httplib::Client{uri};
-    if (event_name_ == kPullRequest) {
-      uri += "/pulls/" +
+    if (github_env.event_name == kPullRequest) {
+      uri += std::format("/pulls/{}", pull_request_number_);
     }
   }
 
@@ -68,7 +64,7 @@ private:
 
   GithubEnv github_env;
   bool enable_debug_ = false;
-  std::size_t pull_request_no_ = -1;
+  std::size_t pull_request_number_ = -1;
 };
 
 } // namespace linter

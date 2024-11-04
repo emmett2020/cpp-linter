@@ -10,6 +10,8 @@ set(linter_root ${CMAKE_CURRENT_SOURCE_DIR})
 include(${linter_root}/cmake/FetchSpdlog.cmake)
 include(${linter_root}/cmake/FetchRangeV3.cmake)
 include(${linter_root}/cmake/FetchHttpLib.cmake)
+include(${linter_root}/cmake/FetchNlohmannJson.cmake)
+include(${linter_root}/cmake/FetchMagicEnum.cmake)
 
 OPTION (ENABLE_COVERAGE "Enable coverage" OFF)
 IF(ENABLE_COVERAGE)
