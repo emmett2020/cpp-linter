@@ -43,6 +43,11 @@ int main() {
   //   std::print("{}", code);
   // }
 
+  env::SetCache(kGithubEventName, kGithubEventPush);
+  env::SetCache(kGithubToken, "xxx");
+  env::SetCache(kGithubRepository, "xxx");
+  env::SetCache(kGithubEventPath, "----");
+  env::SetCache(kGithubSha, "34234sdf");
   auto api_client = GithubApiClient{};
   auto t          = api_client.GetChangedFiles();
 }

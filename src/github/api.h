@@ -21,10 +21,10 @@ namespace linter {
     std::size_t retry     = 0;
   };
 
-  constexpr auto kGithubAPI        = "https://api.github.com";
-  constexpr auto kEnableDebug      = "ENABLE_DEBUG";
-  constexpr auto kEventPullRequest = "pull_request";
-  constexpr auto kEventPush        = "pull_request";
+  constexpr auto kGithubAPI              = "https://api.github.com";
+  constexpr auto kEnableDebug            = "ENABLE_DEBUG";
+  constexpr auto kGithubEventPullRequest = "pull_request";
+  constexpr auto kGithubEventPush        = "push";
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
@@ -58,10 +58,10 @@ namespace linter {
 
     auto GetChangedFiles() -> std::vector<std::string> {
       auto path = std::format("/repos/{}", github_env_.repository);
-      if (github_env_.event_name == kEventPullRequest) {
+      if (github_env_.event_name == kGithubEventPullRequest) {
         path += std::format("/pulls/{}", pull_request_number_);
       } else {
-        ThrowUnless(github_env_.event_name == kEventPush, "unsupported event");
+        ThrowUnless(github_env_.event_name == kGithubEventPush, "unsupported event");
         path += std::format("/commits/{}", github_env_.sha);
       }
       spdlog::info("Fetching changed files from: {}/{}", kGithubAPI, path);
@@ -81,20 +81,20 @@ namespace linter {
     }
 
   private:
+    void LoadEnvionmentVariables() {
+      github_env_.repository = env::Get(kGithubRepository);
+      github_env_.token      = env::Get(kGithubToken);
+      github_env_.event_name = env::Get(kGithubEventName);
+      github_env_.event_path = env::Get(kGithubEventPath);
+      github_env_.sha        = env::Get(kGithubSha);
+    }
+
     void InferConfigs() {
       if (!github_env_.event_path.empty()) {
         auto file = std::ifstream(github_env_.event_name);
         auto data = nlohmann::json::parse(file);
         data.at("number").get_to(pull_request_number_);
       }
-    }
-
-    void LoadEnvionmentVariables() {
-      github_env_.repository = env::Load(kGithubRepository);
-      github_env_.token      = env::Load(kGithubToken);
-      github_env_.event_name = env::Load(kGithubEventName);
-      github_env_.event_path = env::Load(kGithubEventPath);
-      github_env_.sha        = env::Load(kGithubSha);
     }
 
     GithubEnv github_env_;

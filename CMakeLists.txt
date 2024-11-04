@@ -27,6 +27,7 @@ find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system)
 set(SRC_FILE
   src/main.cpp
   src/utils/shell.cpp
+  src/utils/env_manager.cpp
   src/tools/clang_tidy.cpp
   src/github/api.cpp
 )
