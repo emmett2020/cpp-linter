@@ -64,16 +64,17 @@ namespace linter {
         ThrowUnless(github_env_.event_name == kGithubEventPush, "unsupported event");
         path += std::format("/commits/{}", github_env_.sha);
       }
-      spdlog::info("Fetching changed files from: {}/{}", kGithubAPI, path);
+      spdlog::info("Fetching changed files from: {}{}", kGithubAPI, path);
       auto client  = httplib::Client{kGithubAPI};
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
+
       auto response = client.Get(path, headers);
-      assert(response->status == 200);
-      const auto& body = response->body;
-      std::print("{}", body);
+      ThrowIf(response->status != 200,
+              std::format("Get changed files failed. Status code: {}", response->status));
+      spdlog::debug(response->body);
       return {}; // parse
     }
 

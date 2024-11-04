@@ -44,10 +44,10 @@ int main() {
   // }
 
   env::SetCache(kGithubEventName, kGithubEventPush);
-  env::SetCache(kGithubToken, "xxx");
-  env::SetCache(kGithubRepository, "xxx");
-  env::SetCache(kGithubEventPath, "----");
-  env::SetCache(kGithubSha, "34234sdf");
+  env::SetCache(kGithubToken, "");
+  env::SetCache(kGithubRepository, "emmett2020/temp");
+  // env::SetCache(kGithubEventPath, "----");
+  env::SetCache(kGithubSha, "b083715");
   auto api_client = GithubApiClient{};
   auto t          = api_client.GetChangedFiles();
 }

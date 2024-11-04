@@ -1,0 +1,100 @@
+{
+    "sha": "b083715d21d19faadd80a6af152350bafdbcd867",
+    "node_id": "C_kwDOGmh4xdoAKGIwODM3MTVkMjFkMTlmYWFkZDgwYTZhZjE1MjM1MGJhZmRiY2Q4Njc",
+    "commit": {
+        "author": {
+            "name": "root",
+            "email": "emmettzhang2020@outlook.com",
+            "date": "2024-10-31T04:53:28Z"
+        },
+        "committer": {
+            "name": "root",
+            "email": "emmettzhang2020@outlook.com",
+            "date": "2024-10-31T04:53:28Z"
+        },
+        "message": "add boost",
+        "tree": {
+            "sha": "59cd70c5a5fab0b6e499ac65942da9e440491bb4",
+            "url": "https://api.github.com/repos/emmett2020/temp/git/trees/59cd70c5a5fab0b6e499ac65942da9e440491bb4"
+        },
+        "url": "https://api.github.com/repos/emmett2020/temp/git/commits/b083715d21d19faadd80a6af152350bafdbcd867",
+        "comment_count": 0,
+        "verification": {
+            "verified": false,
+            "reason": "unsigned",
+            "signature": null,
+            "payload": null
+        }
+    },
+    "url": "https://api.github.com/repos/emmett2020/temp/commits/b083715d21d19faadd80a6af152350bafdbcd867",
+    "html_url": "https://github.com/emmett2020/temp/commit/b083715d21d19faadd80a6af152350bafdbcd867",
+    "comments_url": "https://api.github.com/repos/emmett2020/temp/commits/b083715d21d19faadd80a6af152350bafdbcd867/comments",
+    "author": {
+        "login": "emmett2020",
+        "id": 59395781,
+        "node_id": "MDQ6VXNlcjU5Mzk1Nzgx",
+        "avatar_url": "https://avatars.githubusercontent.com/u/59395781?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/emmett2020",
+        "html_url": "https://github.com/emmett2020",
+        "followers_url": "https://api.github.com/users/emmett2020/followers",
+        "following_url": "https://api.github.com/users/emmett2020/following{/other_user}",
+        "gists_url": "https://api.github.com/users/emmett2020/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/emmett2020/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/emmett2020/subscriptions",
+        "organizations_url": "https://api.github.com/users/emmett2020/orgs",
+        "repos_url": "https://api.github.com/users/emmett2020/repos",
+        "events_url": "https://api.github.com/users/emmett2020/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/emmett2020/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+    },
+    "committer": {
+        "login": "emmett2020",
+        "id": 59395781,
+        "node_id": "MDQ6VXNlcjU5Mzk1Nzgx",
+        "avatar_url": "https://avatars.githubusercontent.com/u/59395781?v=4",
+        "gravatar_id": "",
+        "url": "https://api.github.com/users/emmett2020",
+        "html_url": "https://github.com/emmett2020",
+        "followers_url": "https://api.github.com/users/emmett2020/followers",
+        "following_url": "https://api.github.com/users/emmett2020/following{/other_user}",
+        "gists_url": "https://api.github.com/users/emmett2020/gists{/gist_id}",
+        "starred_url": "https://api.github.com/users/emmett2020/starred{/owner}{/repo}",
+        "subscriptions_url": "https://api.github.com/users/emmett2020/subscriptions",
+        "organizations_url": "https://api.github.com/users/emmett2020/orgs",
+        "repos_url": "https://api.github.com/users/emmett2020/repos",
+        "events_url": "https://api.github.com/users/emmett2020/events{/privacy}",
+        "received_events_url": "https://api.github.com/users/emmett2020/received_events",
+        "type": "User",
+        "user_view_type": "public",
+        "site_admin": false
+    },
+    "parents": [
+        {
+            "sha": "d048893ad426f9b041c4e3ce2487181d51c305c0",
+            "url": "https://api.github.com/repos/emmett2020/temp/commits/d048893ad426f9b041c4e3ce2487181d51c305c0",
+            "html_url": "https://github.com/emmett2020/temp/commit/d048893ad426f9b041c4e3ce2487181d51c305c0"
+        }
+    ],
+    "stats": {
+        "total": 5,
+        "additions": 5,
+        "deletions": 0
+    },
+    "files": [
+        {
+            "sha": "a58250931409d6749e1756dff2aafb65534202f2",
+            "filename": "CMakeLists.txt",
+            "status": "modified",
+            "additions": 5,
+            "deletions": 0,
+            "changes": 5,
+            "blob_url": "https://github.com/emmett2020/temp/blob/b083715d21d19faadd80a6af152350bafdbcd867/CMakeLists.txt",
+            "raw_url": "https://github.com/emmett2020/temp/raw/b083715d21d19faadd80a6af152350bafdbcd867/CMakeLists.txt",
+            "contents_url": "https://api.github.com/repos/emmett2020/temp/contents/CMakeLists.txt?ref=b083715d21d19faadd80a6af152350bafdbcd867",
+            "patch": "@@ -11,5 +11,10 @@ IF(ENABLE_COVERAGE)\n   set(CMAKE_C_FLAGS \"${CMAKE_CXX_FLAGS} --coverage \")\n ENDIF()\n \n+# TODO: add an example about how to use boost in CMake\n+find_package(Boost 1.83.0 REQUIRED)\n+\n set(SRC_FILE main.cpp)\n add_executable(main ${SRC_FILE})\n+target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS})\n+target_link_libraries(main ${Boost_LIBRARIES})"
+        }
+    ]
+}
