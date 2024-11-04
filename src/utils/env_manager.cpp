@@ -18,10 +18,8 @@ namespace linter::env {
   }
 
   void ThreadSafeEnvManager::SetCache(const std::string &name, const std::string &value) {
-    auto lg = std::lock_guard(mutex_);
-    if (cache_.contains(name)) {
-      cache_[name] = value;
-    }
+    auto lg      = std::lock_guard(mutex_);
+    cache_[name] = value;
   }
 
   void ThreadSafeEnvManager::SetCache(std::unordered_map<std::string, std::string> data) {
