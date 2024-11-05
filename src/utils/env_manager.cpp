@@ -2,6 +2,7 @@
 #include "utils/util.h"
 
 /// TODO: There is no standard std::setenv
+/// TODO: singleton?
 
 namespace linter::env {
 
