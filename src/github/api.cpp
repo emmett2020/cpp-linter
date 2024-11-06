@@ -1,5 +1,18 @@
 #include "api.h"
 
-#include <httplib.h>
+#include <git2.h>
 
-namespace linter { }
+#include <git2/repository.h>
+#include <git2/types.h>
+#include <httplib.h>
+#include <vector>
+
+namespace linter {
+
+  std::vector<std::string> ParseDiff() {
+    git_repository* g = nullptr;
+    std::cout << git_repository_open(&g, "/tmp");
+    return {};
+  }
+
+} // namespace linter

@@ -103,4 +103,6 @@ namespace linter {
     std::size_t pull_request_number_ = -1;
   };
 
+  std::vector<std::string> ParseDiff();
+
 } // namespace linter

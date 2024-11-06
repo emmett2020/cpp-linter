@@ -39,4 +39,5 @@ target_link_libraries(main ${Boost_LIBRARIES}
                            range-v3
                            httplib
                            nlohmann_json
+                           git2
                          )

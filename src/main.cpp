@@ -43,6 +43,7 @@ int main() {
   //   std::print("{}", code);
   // }
 
+  ParseDiff();
   env::SetCache(kGithubEventName, kGithubEventPush);
   env::SetCache(kGithubToken, "");
   env::SetCache(kGithubRepository, "emmett2020/temp");
