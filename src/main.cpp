@@ -52,8 +52,10 @@ int main() {
   // auto api_client = GithubApiClient{};
   // auto t          = api_client.GetChangedFiles();
 
-  git::Setup();
-  auto *repo = git::Open("/temp");
-  git::Free(repo);
-  git::Shutdown();
+  git::setup();
+  auto *repo = git::open("/temp");
+  auto state = git::repo::state(repo);
+  std::print("{}", state);
+  git::free(repo);
+  git::shutdown();
 }

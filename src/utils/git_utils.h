@@ -10,12 +10,20 @@ namespace linter::git {
 using GitRepositoryPtr = git_repository *;
 // using GitRepositoryPtr = std::unique_ptr<git_repository>;
 
-int Setup();
-int Shutdown();
-GitRepositoryPtr Open(std::string_view repo_path);
-void Free(GitRepositoryPtr repo);
+int setup();
+int shutdown();
+GitRepositoryPtr open(std::string_view repo_path);
+void free(GitRepositoryPtr repo);
 
-bool init(GitRepositoryPtr repo);
+namespace repo {
+/// Determines the status of a git repository
+/// i.e. whether an operation (merge, cherry-pick, etc) is in progress.
+/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
+int state(GitRepositoryPtr repo);
+
+} // namespace repo
+
+bool Init(GitRepositoryPtr repo);
 bool Close(GitRepositoryPtr repo);
 bool Clone(GitRepositoryPtr repo);
 bool Add(GitRepositoryPtr repo);
