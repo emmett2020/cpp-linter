@@ -56,9 +56,14 @@ int main() {
   // auto t          = api_client.GetChangedFiles();
 
   git::setup();
-  auto *repo = git::open("/temp/temp");
-  auto state = git::repo::state(repo);
-  std::print("{}", state);
-  git::free(repo);
+  auto *repo   = git::repo::open("/temp/temp");
+  auto state   = git::repo::state(repo);
+  auto path    = git::repo::path(repo);
+  auto empty   = git::repo::is_empty(repo);
+  auto *config = git::repo::config(repo);
+
+  std::print("{}, {}, {}", state, path, empty);
+  git::repo::free(repo);
+  git::config::free(config);
   git::shutdown();
 }

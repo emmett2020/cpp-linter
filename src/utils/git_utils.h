@@ -7,42 +7,53 @@
 
 namespace linter::git {
 
-  using GitRepositoryPtr = git_repository*;
-  // using GitRepositoryPtr = std::unique_ptr<git_repository>;
-
   int setup();
   int shutdown();
-  GitRepositoryPtr open(const std::string& repo_path);
-  void free(GitRepositoryPtr repo);
+
+  using git_repo_ptr   = git_repository*;
+  using git_config_ptr = git_config*;
 
   namespace repo {
-    /// Determines the status of a git repository
-    /// i.e. whether an operation (merge, cherry-pick, etc) is in progress.
-    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
-    int state(GitRepositoryPtr repo);
 
+    /// @brief Creates a new Git repository in the given folder.
+    /// @param repo_path The path to the repository
+    /// @param is_bare If true, a Git repository without a working directory is
+    ///                created at the pointed path. If false, provided path
+    ///                will be considered as the working directory into which
+    ///                the .git directory will be created.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_init
+    git_repo_ptr init(const std::string& repo_path, bool is_bare);
+
+    /// @brief Open a git repository.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
+    git_repo_ptr open(const std::string& repo_path);
+
+    /// @brief Free a previously allocated repository
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
+    void free(git_repo_ptr repo);
+
+    /// @brief Determines the status of a git repository
+    /// @link  https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
+    int state(git_repo_ptr repo);
+
+    /// @brief Get the path of this repository
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
+    std::string path(git_repo_ptr repo);
+
+    /// @brief Check if a repository is empty
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
+    bool is_empty(git_repo_ptr repo);
+
+    /// @brief Get the configuration file for this repository.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
+    git_config_ptr config(git_repo_ptr repo);
   } // namespace repo
 
-  bool Init(GitRepositoryPtr repo);
-  bool Close(GitRepositoryPtr repo);
-  bool Clone(GitRepositoryPtr repo);
-  bool Add(GitRepositoryPtr repo);
-  bool Move(GitRepositoryPtr repo);
-  bool Restore(GitRepositoryPtr repo);
-  bool Remove(GitRepositoryPtr repo);
-  bool Diff(GitRepositoryPtr repo);
-  bool Log(GitRepositoryPtr repo);
-  bool Status(GitRepositoryPtr repo);
-  bool Show(GitRepositoryPtr repo);
-  bool Branch(GitRepositoryPtr repo);
-  bool Commit(GitRepositoryPtr repo);
-  bool Merge(GitRepositoryPtr repo);
-  bool Rebase(GitRepositoryPtr repo);
-  bool Reset(GitRepositoryPtr repo);
-  bool Switch(GitRepositoryPtr repo);
-  bool Tag(GitRepositoryPtr repo);
-  bool Fetch(GitRepositoryPtr repo);
-  bool Pull(GitRepositoryPtr repo);
-  bool Push(GitRepositoryPtr repo);
+  namespace config {
+    /// @brief Free the configuration and its associated memory and files
+    /// @link https://libgit2.org/libgit2/#HEAD/group/config/git_config_free
+    void free(git_config_ptr config_ptr);
+
+  } // namespace config
 
 } // namespace linter::git
