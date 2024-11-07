@@ -61,6 +61,7 @@ int main() {
   auto path    = git::repo::path(repo);
   auto empty   = git::repo::is_empty(repo);
   auto *config = git::repo::config(repo);
+  auto *ref    = git::branch::create(repo, "bygit2", nullptr, false);
 
   std::print("{}, {}, {}", state, path, empty);
   git::repo::free(repo);
