@@ -10,8 +10,11 @@
 #include "utils/shell.h"
 
 using namespace linter; // NOLINT
+using namespace std::string_literals;
 
-void ForClangTidy() { int *hi = 0; }
+void ForClangTidy() {
+  int *hi = 0;
+}
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
@@ -53,7 +56,7 @@ int main() {
   // auto t          = api_client.GetChangedFiles();
 
   git::setup();
-  auto *repo = git::open("/temp");
+  auto *repo = git::open("/temp/temp");
   auto state = git::repo::state(repo);
   std::print("{}", state);
   git::free(repo);
