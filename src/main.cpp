@@ -5,14 +5,13 @@
 #include <spdlog/spdlog.h>
 
 #include "github/api.h"
-#include "utils/shell.h"
 #include "tools/clang_tidy.h"
+#include "utils/git_utils.h"
+#include "utils/shell.h"
 
 using namespace linter; // NOLINT
 
-void ForClangTidy() {
-  int* hi = 0;
-}
+void ForClangTidy() { int *hi = 0; }
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
@@ -31,7 +30,8 @@ int main() {
   // auto statistic = ParseClangTidyStderr(std_err);
   // std::println("{} warnings generated.", statistic.total_warnings);
   //
-  // for (const auto& [line, code]: std::ranges::views::zip(noti_lines, codes)) {
+  // for (const auto& [line, code]: std::ranges::views::zip(noti_lines, codes))
+  // {
   //   std::println(
   //     "{}:{}:{}: {}: {} {}",
   //     line.file_name,
@@ -43,12 +43,17 @@ int main() {
   //   std::print("{}", code);
   // }
 
-  ParseDiff();
-  env::SetCache(kGithubEventName, kGithubEventPush);
-  env::SetCache(kGithubToken, "");
-  env::SetCache(kGithubRepository, "emmett2020/temp");
-  // env::SetCache(kGithubEventPath, "----");
-  env::SetCache(kGithubSha, "b083715");
-  auto api_client = GithubApiClient{};
-  auto t          = api_client.GetChangedFiles();
+  // ParseDiff();
+  // env::SetCache(kGithubEventName, kGithubEventPush);
+  // env::SetCache(kGithubToken, "");
+  // env::SetCache(kGithubRepository, "emmett2020/temp");
+  // // env::SetCache(kGithubEventPath, "----");
+  // env::SetCache(kGithubSha, "b083715");
+  // auto api_client = GithubApiClient{};
+  // auto t          = api_client.GetChangedFiles();
+
+  git::Setup();
+  auto *repo = git::Open("/temp");
+  git::Free(repo);
+  git::Shutdown();
 }

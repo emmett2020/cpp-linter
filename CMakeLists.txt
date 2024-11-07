@@ -28,6 +28,7 @@ set(SRC_FILE
   src/main.cpp
   src/utils/shell.cpp
   src/utils/env_manager.cpp
+  src/utils/git_utils.cpp
   src/tools/clang_tidy.cpp
   src/github/api.cpp
 )
