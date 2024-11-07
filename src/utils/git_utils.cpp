@@ -109,6 +109,11 @@ namespace linter::git {
     void free(diff_ptr diff) {
       git_diff_free(diff);
     }
+
+    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, const_diff_options opts) {
+      auto* ptr = diff_ptr{nullptr};
+      return ptr;
+    }
   } // namespace diff
 
 
