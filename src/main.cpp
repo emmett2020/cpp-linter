@@ -1,4 +1,5 @@
 #include <cctype>
+#include <git2/diff.h>
 #include <print>
 #include <ranges>
 
@@ -61,7 +62,11 @@ int main() {
   auto path    = git::repo::path(repo);
   auto empty   = git::repo::is_empty(repo);
   auto *config = git::repo::config(repo);
-  auto *ref    = git::branch::create(repo, "bygit2", nullptr, false);
+  // auto *ref    = git::branch::create(repo, "bygit2", nullptr, false);
+
+  // git_diff_options opts;
+  // git::diff::init_option(&opts);
+  auto *diff = git::diff::index_to_workdir(repo, nullptr, nullptr);
 
   std::print("{}, {}, {}", state, path, empty);
   git::repo::free(repo);

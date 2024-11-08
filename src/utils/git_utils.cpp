@@ -1,10 +1,12 @@
 #include "git_utils.h"
 #include "utils/util.h"
+#include <git2/diff.h>
 #include <git2/errors.h>
 #include <git2/rebase.h>
 #include <git2/repository.h>
 #include <git2/types.h>
 #include <iostream>
+#include <print>
 
 namespace linter::git {
   int setup() {
@@ -110,9 +112,19 @@ namespace linter::git {
       git_diff_free(diff);
     }
 
-    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, const_diff_options opts) {
+    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, const_diff_options_ptr opts) {
       auto* ptr = diff_ptr{nullptr};
+      auto ec   = git_diff_index_to_workdir(&ptr, repo, index, opts);
+      if (ec < 0) {
+        std::print("xxxxxxxxxec: {}", ec);
+      }
+      ThrowIf(ec < 0, git_error_last()->message);
       return ptr;
+    }
+
+    void init_option(diff_options_ptr opts) {
+      auto ec = git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
+      ThrowIf(ec < 0, git_error_last()->message);
     }
   } // namespace diff
 

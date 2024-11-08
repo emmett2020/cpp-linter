@@ -7,22 +7,23 @@
 #include <memory>
 
 namespace linter::git {
-  using repo_ptr            = git_repository*;
-  using config_ptr          = git_config*;
-  using reference_ptr       = git_reference*;
-  using commit_ptr          = git_commit*;
-  using diff_ptr            = git_diff*;
-  using diff_options        = git_diff_options*;
-  using tree_ptr            = git_tree*;
-  using index_ptr           = git_index*;
-  using const_repo_ptr      = const git_repository*;
-  using const_config_ptr    = const git_config*;
-  using const_reference_ptr = const git_reference*;
-  using const_commit_ptr    = const git_commit*;
-  using const_tree_ptr      = const git_tree*;
-  using const_diff_ptr      = const git_diff*;
-  using const_index_ptr     = const git_index*;
-  using const_diff_options  = const git_diff_options*;
+  using repo_ptr         = git_repository*;
+  using config_ptr       = git_config*;
+  using reference_ptr    = git_reference*;
+  using commit_ptr       = git_commit*;
+  using diff_ptr         = git_diff*;
+  using diff_options_ptr = git_diff_options*;
+  using tree_ptr         = git_tree*;
+  using index_ptr        = git_index*;
+
+  using const_repo_ptr         = const git_repository*;
+  using const_config_ptr       = const git_config*;
+  using const_reference_ptr    = const git_reference*;
+  using const_commit_ptr       = const git_commit*;
+  using const_tree_ptr         = const git_tree*;
+  using const_diff_ptr         = const git_diff*;
+  using const_index_ptr        = const git_index*;
+  using const_diff_options_ptr = const git_diff_options*;
 
 
   /// @brief Shutdown the global state
@@ -106,14 +107,23 @@ namespace linter::git {
 
   } // namespace commit
 
+  /// @brief
+  /// @link
+
   namespace diff {
     /// @brief Deallocate a diff.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_free
     void free(diff_ptr diff);
 
-    ///@brief: Create a diff between the repository index and the workdir directory.
+    /// @brief: Create a diff between the repository index and the workdir directory.
     /// @link: https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
-    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, const_diff_options opts);
+    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, const_diff_options_ptr opts);
+
+
+    /// @brief Initialize diff options structure
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
+    void init_option(diff_options_ptr opts);
+
 
   } // namespace diff
 
