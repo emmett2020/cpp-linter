@@ -65,9 +65,10 @@ int main() {
   // git_diff_options opts;
   // git::diff::init_option(&opts);
   auto *diff = git::diff::index_to_workdir(repo, nullptr, nullptr);
-  auto deltas = git::diff::num_deltas(diff);
-
-  std::print("{}, {}, {}, {}", state, path, empty, deltas);
+  auto num_deltas = git::diff::num_deltas(diff);
+  const auto *deltas = git::diff::get_delta(diff, 0);
+  std::print("old path: {}", deltas->old_file.path);
+  std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
   git::config::free(config);
   git::shutdown();

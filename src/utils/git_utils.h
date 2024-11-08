@@ -8,22 +8,30 @@
 
 namespace linter::git {
 using repo_ptr = git_repository *;
+using repo_cptr = const git_repository *;
 using config_ptr = git_config *;
+using config_cptr = const git_config *;
 using reference_ptr = git_reference *;
+using reference_cptr = const git_reference *;
 using commit_ptr = git_commit *;
+using commit_cptr = const git_commit *;
 using diff_ptr = git_diff *;
+using diff_cptr = const git_diff *;
 using diff_options_ptr = git_diff_options *;
+using diff_options_cptr = const git_diff_options *;
 using tree_ptr = git_tree *;
+using tree_cptr = const git_tree *;
 using index_ptr = git_index *;
+using index_cptr = const git_index *;
+using blob_ptr = git_blob *;
+using blob_cptr = const blob_ptr *;
 
-using const_repo_ptr = const git_repository *;
-using const_config_ptr = const git_config *;
-using const_reference_ptr = const git_reference *;
-using const_commit_ptr = const git_commit *;
-using const_tree_ptr = const git_tree *;
-using const_diff_ptr = const git_diff *;
-using const_index_ptr = const git_index *;
-using const_diff_options_ptr = const git_diff_options *;
+using diff_options = git_diff_options;
+
+// https://libgit2.org/libgit2/#HEAD/type/git_diff_delta
+using diff_delta = git_diff_delta;
+using diff_delta_ptr = git_diff_delta *;
+using diff_delta_cptr = const git_diff_delta *;
 
 /// TODO: maybe a standlone repository and add libgit2 as submodule
 
@@ -89,7 +97,7 @@ namespace branch {
 /// @brief Create a new branch pointing at a target commit
 /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
 reference_ptr create(repo_ptr repo, const std::string &branch_name,
-                     const_commit_ptr target, bool force);
+                     commit_cptr target, bool force);
 
 /// @brief Delete an existing branch reference.
 /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
@@ -102,14 +110,14 @@ std::string_view name(reference_ptr ref);
 
 /// @brief Determine if HEAD points to the given branch
 /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
-bool is_head(const_reference_ptr branch);
+bool is_head(reference_cptr branch);
 
 } // namespace branch
 
 namespace commit {
 /// @brief Get the tree pointed to by a commit.
 /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
-tree_ptr tree(const_commit_ptr commit);
+tree_ptr tree(commit_cptr commit);
 
 } // namespace commit
 
@@ -126,7 +134,7 @@ void free(diff_ptr diff);
 /// @link:
 /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
 diff_ptr index_to_workdir(repo_ptr repo, index_ptr index,
-                          const_diff_options_ptr opts);
+                          diff_options_cptr opts);
 
 /// @brief Initialize diff options structure
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
@@ -135,6 +143,14 @@ void init_option(diff_options_ptr opts);
 /// @brief Query how many diff records are there in a diff.
 /// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
 std::size_t num_deltas(diff_ptr diff);
+
+/// @brief Return the diff delta for an entry in the diff list.
+/// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_get_delta
+diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
+
+/// @brief Loop over all deltas in a diff issuing callbacks.
+/// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
+int foreach ();
 
 } // namespace diff
 
