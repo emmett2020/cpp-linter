@@ -7,6 +7,31 @@
 #include <memory>
 
 namespace linter::git {
+/// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
+enum class delta_t {
+  unmodified,
+  added,
+  deleted,
+  modified,
+  renamed,
+  copied,
+  ignored,
+  untracked,
+  type_change,
+  unreadable,
+  conflicted
+};
+
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_flag_t
+enum class diff_flag_t { binary, not_binary, valid_id, exists, valid_size };
+
+struct diff_details {
+  delta_t delta_type;
+  diff_flag_t flags; // TODO: contains flag
+  std::uint16_t similarity;
+  std::uint16_t nfiles;
+};
+
 /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
 using diff_file = git_diff_file;
 
@@ -174,6 +199,9 @@ diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
 /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
 int for_each(diff_ptr diff, diff_file_cb file_cb, diff_binary_cb binary_cb,
              diff_hunk_cb hunk_cb, diff_line_cb line_cb, void *payload);
+
+/// @brief A simple implmentation which uses for_each to get diff details.
+diff_details details(diff_ptr diff);
 
 } // namespace diff
 
