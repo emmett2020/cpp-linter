@@ -1,208 +1,260 @@
 #pragma once
 
+#include <cstdint>
 #include <git2.h>
 #include <git2/diff.h>
 #include <git2/repository.h>
 #include <git2/types.h>
 #include <memory>
+#include <vector>
 
 namespace linter::git {
-/// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
-enum class delta_t {
-  unmodified,
-  added,
-  deleted,
-  modified,
-  renamed,
-  copied,
-  ignored,
-  untracked,
-  type_change,
-  unreadable,
-  conflicted
-};
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
+  using diff_file = git_diff_file;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_flag_t
-enum class diff_flag_t { binary, not_binary, valid_id, exists, valid_size };
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_delta
+  using diff_delta = git_diff_delta;
 
-struct diff_details {
-  delta_t delta_type;
-  diff_flag_t flags; // TODO: contains flag
-  std::uint16_t similarity;
-  std::uint16_t nfiles;
-};
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_options
+  using diff_options = git_diff_options;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
-using diff_file = git_diff_file;
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_line
+  using diff_line = git_diff_line;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_delta
-using diff_delta = git_diff_delta;
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_hunk
+  using diff_hunk = git_diff_hunk;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_options
-using diff_options = git_diff_options;
+  using repo_ptr         = git_repository *;
+  using config_ptr       = git_config *;
+  using reference_ptr    = git_reference *;
+  using commit_ptr       = git_commit *;
+  using diff_ptr         = git_diff *;
+  using diff_options_ptr = git_diff_options *;
+  using tree_ptr         = git_tree *;
+  using index_ptr        = git_index *;
+  using blob_ptr         = git_blob *;
+  using diff_delta_ptr   = git_diff_delta *;
+  using diff_hunk_ptr    = git_diff_hunk *;
+  using diff_line_ptr    = git_diff_line *;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_line
-using diff_line = git_diff_line;
+  using repo_cptr         = const git_repository *;
+  using config_cptr       = const git_config *;
+  using reference_cptr    = const git_reference *;
+  using commit_cptr       = const git_commit *;
+  using diff_cptr         = const git_diff *;
+  using diff_options_cptr = const git_diff_options *;
+  using tree_cptr         = const git_tree *;
+  using index_cptr        = const git_index *;
+  using blob_cptr         = const blob_ptr *;
+  using diff_delta_cptr   = const git_diff_delta *;
+  using diff_hunk_cptr    = const git_diff_hunk *;
+  using diff_line_cptr    = const git_diff_line *;
 
-/// https://libgit2.org/libgit2/#HEAD/type/git_diff_hunk
-using diff_hunk = git_diff_hunk;
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_file_cb
+  using diff_file_cb = git_diff_file_cb;
 
-using repo_ptr = git_repository *;
-using repo_cptr = const git_repository *;
-using config_ptr = git_config *;
-using config_cptr = const git_config *;
-using reference_ptr = git_reference *;
-using reference_cptr = const git_reference *;
-using commit_ptr = git_commit *;
-using commit_cptr = const git_commit *;
-using diff_ptr = git_diff *;
-using diff_cptr = const git_diff *;
-using diff_options_ptr = git_diff_options *;
-using diff_options_cptr = const git_diff_options *;
-using tree_ptr = git_tree *;
-using tree_cptr = const git_tree *;
-using index_ptr = git_index *;
-using index_cptr = const git_index *;
-using blob_ptr = git_blob *;
-using blob_cptr = const blob_ptr *;
-using diff_delta_ptr = git_diff_delta *;
-using diff_delta_cptr = const git_diff_delta *;
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_hunk_cb
+  using diff_hunk_cb = git_diff_hunk_cb;
 
-/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_file_cb
-using diff_file_cb = git_diff_file_cb;
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_line_cb
+  using diff_line_cb = git_diff_line_cb;
 
-/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_hunk_cb
-using diff_hunk_cb = git_diff_hunk_cb;
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
+  using diff_binary_cb = git_diff_binary_cb;
 
-/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_line_cb
-using diff_line_cb = git_diff_line_cb;
+  /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
+  enum class delta_t : uint8_t {
+    unmodified,
+    added,
+    deleted,
+    modified,
+    renamed,
+    copied,
+    ignored,
+    untracked,
+    type_change,
+    unreadable,
+    conflicted
+  };
 
-/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
-using diff_binary_cb = git_diff_binary_cb;
+  /// https://libgit2.org/libgit2/#HEAD/type/git_diff_flag_t
+  enum class diff_flag_t : uint8_t {
+    binary,
+    not_binary,
+    valid_id,
+    exists,
+    valid_size
+  };
 
-/// TODO: maybe a standlone repository and add libgit2 as submodule
+  enum class diff_line_t : uint8_t {
+    context       = ' ',
+    addition      = '+',
+    deletion      = '-',
+    context_eofnl = '=',
+    add_eofnl     = '>',
+    del_eofnl     = '<',
+    file_hdr      = 'F',
+    hunk_hdr      = 'H',
+    binary        = 'B',
+  };
 
-/// @brief Shutdown the global state
-/// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_shutdown
-int shutdown();
+  struct line_details {
+    diff_line_t origin;
+    std::uint32_t old_lineno;
+    std::uint32_t new_lineno;
+    std::uint32_t num_lines;
+    std::uint32_t offset_in_origin;
+    std::string content;
+  };
 
-/// @brief Init the global state.
-/// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
-int setup();
+  struct hunk_details {
+    std::uint32_t old_start;
+    std::uint32_t old_lines;
+    std::uint32_t new_start;
+    std::uint32_t new_lines;
+    std::string header;
+    std::vector<line_details> lines;
+  };
 
-namespace repo {
-/// @brief Creates a new Git repository in the given folder.
-/// @param repo_path The path to the repository
-/// @param is_bare If true, a Git repository without a working directory is
-///                created at the pointed path. If false, provided path
-///                will be considered as the working directory into which
-///                the .git directory will be created.
-/// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_init
-repo_ptr init(const std::string &repo_path, bool is_bare);
+  struct diff_details {
+    delta_t delta_type;
+    diff_flag_t flag; // TODO: contains flag
+    std::uint16_t similarity;
+    std::uint16_t num_files;
 
-/// @brief Open a git repository.
-/// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
-repo_ptr open(const std::string &repo_path);
+    std::string old_file_path;
+    std::string new_file_path;
 
-/// @brief Free a previously allocated repository
-/// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
-void free(repo_ptr repo);
+    std::vector<hunk_details> hunks;
+  };
 
-/// @brief Determines the status of a git repository
-/// @link
-/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
-int state(repo_ptr repo);
+  /// TODO: maybe a standlone repository and add libgit2 as submodule
 
-/// @brief Get the path of this repository
-/// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
-std::string path(repo_ptr repo);
+  /// @brief Shutdown the global state
+  /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_shutdown
+  int shutdown();
 
-/// @brief Check if a repository is empty
-/// @link
-/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
-bool is_empty(repo_ptr repo);
+  /// @brief Init the global state.
+  /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
+  int setup();
 
-/// @brief Get the configuration file for this repository.
-/// @link
-/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
-config_ptr config(repo_ptr repo);
+  namespace repo {
+    /// @brief Creates a new Git repository in the given folder.
+    /// @param repo_path The path to the repository
+    /// @param is_bare If true, a Git repository without a working directory is
+    ///                created at the pointed path. If false, provided path
+    ///                will be considered as the working directory into which
+    ///                the .git directory will be created.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_init
+    repo_ptr init(const std::string &repo_path, bool is_bare);
 
-/// @brief Get the Index file for this repository.
-/// @link
-/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
-index_ptr index(repo_ptr repo);
-} // namespace repo
+    /// @brief Open a git repository.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
+    repo_ptr open(const std::string &repo_path);
 
-namespace config {
-/// @brief Free the configuration and its associated memory and files
-/// @link https://libgit2.org/libgit2/#HEAD/group/config/git_config_free
-void free(config_ptr config_ptr);
+    /// @brief Free a previously allocated repository
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
+    void free(repo_ptr repo);
 
-} // namespace config
+    /// @brief Determines the status of a git repository
+    /// @link
+    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
+    int state(repo_ptr repo);
 
-namespace branch {
-/// @brief Create a new branch pointing at a target commit
-/// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
-reference_ptr create(repo_ptr repo, const std::string &branch_name,
-                     commit_cptr target, bool force);
+    /// @brief Get the path of this repository
+    /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
+    std::string path(repo_ptr repo);
 
-/// @brief Delete an existing branch reference.
-/// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
-void del(reference_ptr branch);
+    /// @brief Check if a repository is empty
+    /// @link
+    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
+    bool is_empty(repo_ptr repo);
 
-/// @brief Get the branch name
-/// @return Pointer to the abbreviated reference name. Owned by ref, do not
-/// free. https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_name
-std::string_view name(reference_ptr ref);
+    /// @brief Get the configuration file for this repository.
+    /// @link
+    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
+    config_ptr config(repo_ptr repo);
 
-/// @brief Determine if HEAD points to the given branch
-/// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
-bool is_head(reference_cptr branch);
+    /// @brief Get the Index file for this repository.
+    /// @link
+    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
+    index_ptr index(repo_ptr repo);
+  } // namespace repo
 
-} // namespace branch
+  namespace config {
+    /// @brief Free the configuration and its associated memory and files
+    /// @link https://libgit2.org/libgit2/#HEAD/group/config/git_config_free
+    void free(config_ptr config_ptr);
 
-namespace commit {
-/// @brief Get the tree pointed to by a commit.
-/// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
-tree_ptr tree(commit_cptr commit);
+  } // namespace config
 
-} // namespace commit
+  namespace branch {
+    /// @brief Create a new branch pointing at a target commit
+    /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
+    reference_ptr
+    create(repo_ptr repo, const std::string &branch_name, commit_cptr target, bool force);
 
-/// @brief
-/// @link
+    /// @brief Delete an existing branch reference.
+    /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
+    void del(reference_ptr branch);
 
-namespace diff {
-/// @brief Deallocate a diff.
-/// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_free
-void free(diff_ptr diff);
+    /// @brief Get the branch name
+    /// @return Pointer to the abbreviated reference name. Owned by ref, do not
+    /// free. https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_name
+    std::string_view name(reference_ptr ref);
 
-/// @brief: Create a diff between the repository index and the workdir
-/// directory.
-/// @link:
-/// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
-diff_ptr index_to_workdir(repo_ptr repo, index_ptr index,
-                          diff_options_cptr opts);
+    /// @brief Determine if HEAD points to the given branch
+    /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
+    bool is_head(reference_cptr branch);
 
-/// @brief Initialize diff options structure
-/// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
-void init_option(diff_options_ptr opts);
+  } // namespace branch
 
-/// @brief Query how many diff records are there in a diff.
-/// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
-std::size_t num_deltas(diff_ptr diff);
+  namespace commit {
+    /// @brief Get the tree pointed to by a commit.
+    /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
+    tree_ptr tree(commit_cptr commit);
 
-/// @brief Return the diff delta for an entry in the diff list.
-/// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_get_delta
-diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
+  } // namespace commit
 
-/// @brief Loop over all deltas in a diff issuing callbacks.
-/// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
-int for_each(diff_ptr diff, diff_file_cb file_cb, diff_binary_cb binary_cb,
-             diff_hunk_cb hunk_cb, diff_line_cb line_cb, void *payload);
+  /// @brief
+  /// @link
 
-/// @brief A simple implmentation which uses for_each to get diff details.
-diff_details details(diff_ptr diff);
+  namespace diff {
+    /// @brief Deallocate a diff.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_free
+    void free(diff_ptr diff);
 
-} // namespace diff
+    /// @brief: Create a diff between the repository index and the workdir
+    /// directory.
+    /// @link:
+    /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
+    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, diff_options_cptr opts);
+
+    /// @brief Initialize diff options structure
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
+    void init_option(diff_options_ptr opts);
+
+    /// @brief Query how many diff records are there in a diff.
+    /// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
+    std::size_t num_deltas(diff_ptr diff);
+
+    /// @brief Return the diff delta for an entry in the diff list.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_get_delta
+    diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
+
+    /// @brief Loop over all deltas in a diff issuing callbacks.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
+    int for_each(
+      diff_ptr diff,
+      diff_file_cb file_cb,
+      diff_binary_cb binary_cb,
+      diff_hunk_cb hunk_cb,
+      diff_line_cb line_cb,
+      void *payload);
+
+    /// @brief A simple implmentation which uses for_each to get diff details.
+    diff_details details(diff_ptr diff);
+
+  } // namespace diff
 
 } // namespace linter::git

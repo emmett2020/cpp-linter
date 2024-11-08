@@ -13,7 +13,9 @@
 using namespace linter; // NOLINT
 using namespace std::string_literals;
 
-void ForClangTidy() { int *hi = 0; }
+void ForClangTidy() {
+  int *hi = 0;
+}
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
@@ -55,26 +57,26 @@ int main() {
   // auto t          = api_client.GetChangedFiles();
 
   git::setup();
-  auto *repo = git::repo::open("/temp/temp");
-  auto state = git::repo::state(repo);
-  auto path = git::repo::path(repo);
-  auto empty = git::repo::is_empty(repo);
+  auto *repo   = git::repo::open("/temp/temp");
+  auto state   = git::repo::state(repo);
+  auto path    = git::repo::path(repo);
+  auto empty   = git::repo::is_empty(repo);
   auto *config = git::repo::config(repo);
   // auto *ref    = git::branch::create(repo, "bygit2", nullptr, false);
 
   // git_diff_options opts;
   // git::diff::init_option(&opts);
-  auto *diff = git::diff::index_to_workdir(repo, nullptr, nullptr);
-  auto num_deltas = git::diff::num_deltas(diff);
+  auto *diff         = git::diff::index_to_workdir(repo, nullptr, nullptr);
+  auto num_deltas    = git::diff::num_deltas(diff);
   const auto *deltas = git::diff::get_delta(diff, 0);
 
-  auto file_cb = [](git::diff_delta_cptr delta, float progress, void *payload) {
-    std::println("old_file: {}, new_file: {}", delta->old_file.path,
-                 delta->new_file.path);
-    return 0;
-  };
+  auto diff_details = git::diff::details(diff);
+  std::println("old_file_path: {}, new_file_path: {}, similarity: {}",
+               diff_details.old_file_path,
+               diff_details.new_file_path,
+               diff_details.similarity);
 
-  git::diff::for_each(diff, file_cb, nullptr, nullptr, nullptr, nullptr);
+
   std::print("old path: {}", deltas->old_file.path);
   std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
