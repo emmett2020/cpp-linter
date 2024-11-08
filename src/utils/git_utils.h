@@ -25,6 +25,8 @@ using const_diff_ptr = const git_diff *;
 using const_index_ptr = const git_index *;
 using const_diff_options_ptr = const git_diff_options *;
 
+/// TODO: maybe a standlone repository and add libgit2 as submodule
+
 /// @brief Shutdown the global state
 /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_shutdown
 int shutdown();
