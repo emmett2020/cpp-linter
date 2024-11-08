@@ -13,9 +13,7 @@
 using namespace linter; // NOLINT
 using namespace std::string_literals;
 
-void ForClangTidy() {
-  int *hi = 0;
-}
+void ForClangTidy() { int *hi = 0; }
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG
@@ -57,18 +55,19 @@ int main() {
   // auto t          = api_client.GetChangedFiles();
 
   git::setup();
-  auto *repo   = git::repo::open("/temp/temp");
-  auto state   = git::repo::state(repo);
-  auto path    = git::repo::path(repo);
-  auto empty   = git::repo::is_empty(repo);
+  auto *repo = git::repo::open("/temp/temp");
+  auto state = git::repo::state(repo);
+  auto path = git::repo::path(repo);
+  auto empty = git::repo::is_empty(repo);
   auto *config = git::repo::config(repo);
   // auto *ref    = git::branch::create(repo, "bygit2", nullptr, false);
 
   // git_diff_options opts;
   // git::diff::init_option(&opts);
   auto *diff = git::diff::index_to_workdir(repo, nullptr, nullptr);
+  auto deltas = git::diff::num_deltas(diff);
 
-  std::print("{}, {}, {}", state, path, empty);
+  std::print("{}, {}, {}, {}", state, path, empty, deltas);
   git::repo::free(repo);
   git::config::free(config);
   git::shutdown();

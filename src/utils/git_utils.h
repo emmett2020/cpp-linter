@@ -71,6 +71,11 @@ bool is_empty(repo_ptr repo);
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
 config_ptr config(repo_ptr repo);
+
+/// @brief Get the Index file for this repository.
+/// @link
+/// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
+index_ptr index(repo_ptr repo);
 } // namespace repo
 
 namespace config {
@@ -126,6 +131,10 @@ diff_ptr index_to_workdir(repo_ptr repo, index_ptr index,
 /// @brief Initialize diff options structure
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
 void init_option(diff_options_ptr opts);
+
+/// @brief Query how many diff records are there in a diff.
+/// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
+std::size_t num_deltas(diff_ptr diff);
 
 } // namespace diff
 

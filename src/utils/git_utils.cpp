@@ -52,6 +52,13 @@ config_ptr config(repo_ptr repo) {
   return config;
 }
 
+index_ptr index(repo_ptr repo) {
+  auto *index = index_ptr{nullptr};
+  auto ret = git_repository_index(&index, repo);
+  ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+  return index;
+}
+
 } // namespace repo
 
 namespace config {
@@ -105,9 +112,6 @@ diff_ptr index_to_workdir(repo_ptr repo, index_ptr index,
                           const_diff_options_ptr opts) {
   auto *ptr = diff_ptr{nullptr};
   auto ret = git_diff_index_to_workdir(&ptr, repo, index, opts);
-  if (ret < 0) {
-    std::print("xxxxxxxxxec: {}", ret);
-  }
   ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
   return ptr;
 }
@@ -116,6 +120,9 @@ void init_option(diff_options_ptr opts) {
   auto ret = git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
   ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
 }
+
+std::size_t num_deltas(diff_ptr diff) { return git_diff_num_deltas(diff); }
+
 } // namespace diff
 
 } // namespace linter::git
