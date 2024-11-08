@@ -7,6 +7,21 @@
 #include <memory>
 
 namespace linter::git {
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
+using diff_file = git_diff_file;
+
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_delta
+using diff_delta = git_diff_delta;
+
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_options
+using diff_options = git_diff_options;
+
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_line
+using diff_line = git_diff_line;
+
+/// https://libgit2.org/libgit2/#HEAD/type/git_diff_hunk
+using diff_hunk = git_diff_hunk;
+
 using repo_ptr = git_repository *;
 using repo_cptr = const git_repository *;
 using config_ptr = git_config *;
@@ -25,13 +40,20 @@ using index_ptr = git_index *;
 using index_cptr = const git_index *;
 using blob_ptr = git_blob *;
 using blob_cptr = const blob_ptr *;
-
-using diff_options = git_diff_options;
-
-// https://libgit2.org/libgit2/#HEAD/type/git_diff_delta
-using diff_delta = git_diff_delta;
 using diff_delta_ptr = git_diff_delta *;
 using diff_delta_cptr = const git_diff_delta *;
+
+/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_file_cb
+using diff_file_cb = git_diff_file_cb;
+
+/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_hunk_cb
+using diff_hunk_cb = git_diff_hunk_cb;
+
+/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_line_cb
+using diff_line_cb = git_diff_line_cb;
+
+/// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
+using diff_binary_cb = git_diff_binary_cb;
 
 /// TODO: maybe a standlone repository and add libgit2 as submodule
 
@@ -150,7 +172,8 @@ diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
 
 /// @brief Loop over all deltas in a diff issuing callbacks.
 /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
-int foreach ();
+int for_each(diff_ptr diff, diff_file_cb file_cb, diff_binary_cb binary_cb,
+             diff_hunk_cb hunk_cb, diff_line_cb line_cb, void *payload);
 
 } // namespace diff
 

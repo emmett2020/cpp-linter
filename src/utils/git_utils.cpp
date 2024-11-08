@@ -127,7 +127,10 @@ diff_delta_cptr get_delta(diff_cptr diff, size_t idx) {
   return git_diff_get_delta(diff, idx);
 }
 
-int foreach (diff_ptr diff) { return 1; }
+int for_each(diff_ptr diff, diff_file_cb file_cb, diff_binary_cb binary_cb,
+             diff_hunk_cb hunk_cb, diff_line_cb line_cb, void *payload) {
+  return git_diff_foreach(diff, file_cb, binary_cb, hunk_cb, line_cb, payload);
+}
 
 } // namespace diff
 

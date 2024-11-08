@@ -67,6 +67,14 @@ int main() {
   auto *diff = git::diff::index_to_workdir(repo, nullptr, nullptr);
   auto num_deltas = git::diff::num_deltas(diff);
   const auto *deltas = git::diff::get_delta(diff, 0);
+
+  auto file_cb = [](git::diff_delta_cptr delta, float progress, void *payload) {
+    std::println("old_file: {}, new_file: {}", delta->old_file.path,
+                 delta->new_file.path);
+    return 0;
+  };
+
+  git::diff::for_each(diff, file_cb, nullptr, nullptr, nullptr, nullptr);
   std::print("old path: {}", deltas->old_file.path);
   std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
