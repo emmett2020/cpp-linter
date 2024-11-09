@@ -42,3 +42,5 @@ target_link_libraries(main ${Boost_LIBRARIES}
                            nlohmann_json
                            git2
                          )
+
+add_subdirectory(tests)
