@@ -10,6 +10,7 @@
 #include <git2/types.h>
 #include <iostream>
 #include <print>
+#include <string>
 
 namespace linter::git {
   auto setup() -> int {
@@ -175,13 +176,13 @@ namespace linter::git {
       return git_diff_foreach(diff, file_cb, binary_cb, hunk_cb, line_cb, payload);
     }
 
-    auto details(diff_ptr diff) -> std::vector<diff_detail> {
+    auto details(diff_ptr diff) -> std::vector<diff_delta_detail> {
       auto file_cb =
         [](diff_delta_cptr delta, [[maybe_unused]] float progress, void *payload) -> int {
         assert(delta && payload);
-        auto *res = static_cast<std::vector<diff_detail> *>(payload);
+        auto *res = static_cast<std::vector<diff_delta_detail> *>(payload);
 
-        auto detail = diff_detail{
+        auto detail = diff_delta_detail{
           .status     = convert_to_delta_status(delta->status),
           .flags      = delta->flags,
           .similarity = delta->similarity,
@@ -198,34 +199,14 @@ namespace linter::git {
                          .mode          = convert_to_file_mode(delta->new_file.mode)},
         };
 
-        std::println(
-          "{}, {}, {}, {}, {}, {}",
-          detail.old_file.relative_path,
-          detail.new_file.relative_path,
-          detail.similarity,
-          detail.file_num,
-          file_flag_str(detail.flags),
-          delta_status_str(detail.status));
-        std::println("{}, {}, {}, {}",
-                     detail.old_file.oid,
-                     detail.old_file.size,
-                     file_flag_str(detail.old_file.flags),
-                     file_mode_str(detail.old_file.mode));
-
-        std::println("{}, {}, {}, {}",
-                     detail.new_file.oid,
-                     detail.new_file.size,
-                     file_flag_str(detail.new_file.flags),
-                     file_mode_str(detail.new_file.mode));
-
         res->emplace_back(std::move(detail));
         return 0;
       };
 
       auto hunk_cb = [](diff_delta_cptr delta, diff_hunk_cptr hunk, void *payload) -> int {
         assert(delta && hunk && payload);
-        auto *res   = static_cast<std::vector<diff_detail> *>(payload);
-        auto detail = hunk_detail{
+        auto *res   = static_cast<std::vector<diff_delta_detail> *>(payload);
+        auto detail = diff_hunk_detail{
           .header    = {static_cast<const char *>(hunk->header), hunk->header_len},
           .old_start = hunk->old_start,
           .old_lines = hunk->old_lines,
@@ -233,7 +214,7 @@ namespace linter::git {
           .new_lines = hunk->new_lines
         };
 
-        auto iter = std::ranges::find_if(*res, [&](const diff_detail &detail) {
+        auto iter = std::ranges::find_if(*res, [&](const diff_delta_detail &detail) {
           return detail.old_file.oid
               == oid::to_str(delta->old_file.id)
               && detail.new_file.oid
@@ -245,22 +226,66 @@ namespace linter::git {
           iter = --(res->end());
         }
         iter->hunks.emplace_back(std::move(detail));
-        std::println("called hunk_cv");
         return 0;
       };
 
 
       auto line_cb =
-        [](diff_delta_cptr delta, diff_hunk_cptr hunk, diff_line_cptr line, void *payload) -> int {
-        assert(delta && hunk && line && payload);
-        auto *res = static_cast<diff_detail *>(payload);
-        std::println("called lin_cb");
+        [](diff_delta_cptr cur_delta,
+           diff_hunk_cptr cur_hunk,
+           diff_line_cptr cur_line,
+           void *payload) -> int {
+        assert(cur_delta && cur_hunk && cur_line && payload);
+        auto &deltas = *static_cast<std::vector<diff_delta_detail> *>(payload);
+
+        auto cur_old_id = oid::to_str(cur_delta->old_file.id);
+        auto cur_new_id = oid::to_str(cur_delta->new_file.id);
+        auto delta_iter = std::ranges::find_if(deltas, [&](const diff_delta_detail &delta) {
+          return delta.old_file.oid == cur_old_id && delta.new_file.oid == cur_new_id;
+        });
+
+        if (delta_iter == deltas.end()) {
+          auto delta = diff_delta_detail{
+            .status     = convert_to_delta_status(cur_delta->status),
+            .flags      = cur_delta->flags,
+            .similarity = cur_delta->similarity,
+            .file_num   = cur_delta->nfiles,
+            .old_file   = {.oid           = cur_old_id,
+                           .relative_path = cur_delta->old_file.path,
+                           .size          = cur_delta->old_file.size,
+                           .flags         = cur_delta->old_file.flags,
+                           .mode          = convert_to_file_mode(cur_delta->old_file.mode)},
+            .new_file   = {.oid           = cur_new_id,
+                           .relative_path = cur_delta->new_file.path,
+                           .size          = cur_delta->new_file.size,
+                           .flags         = cur_delta->new_file.flags,
+                           .mode          = convert_to_file_mode(cur_delta->new_file.mode)},
+          };
+          deltas.emplace_back(std::move(delta));
+          delta_iter = --(deltas.end());
+        }
+
+        auto cur_hunk_header =
+          std::string{static_cast<const char *>(cur_hunk->header), cur_hunk->header_len};
+        auto hook_iter = std::ranges::find_if(delta_iter->hunks, [&](const diff_hunk_detail &hunk) {
+          return hunk.header == cur_hunk_header;
+        });
+        if (hook_iter == delta_iter->hunks.end()) {
+          auto hunk = diff_hunk_detail{
+            .header    = cur_hunk_header,
+            .old_start = cur_hunk->old_start,
+            .old_lines = cur_hunk->old_lines,
+            .new_start = cur_hunk->new_start,
+            .new_lines = cur_hunk->new_lines};
+          delta_iter->hunks.emplace_back(std::move(hunk));
+        }
+
+
         return 0;
-        // TODO: push to which hunk?
       };
 
 
-      auto details = std::vector<diff_detail>{};
+      auto details = std::vector<diff_delta_detail>{};
       for_each(diff, file_cb, nullptr, hunk_cb, line_cb, &details);
       return details;
     }

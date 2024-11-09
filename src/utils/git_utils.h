@@ -197,7 +197,7 @@ namespace linter::git {
     std::string content;
   };
 
-  struct hunk_detail {
+  struct diff_hunk_detail {
     std::string header;
     std::int32_t old_start;
     std::int32_t old_lines;
@@ -206,14 +206,14 @@ namespace linter::git {
     std::vector<line_details> lines;
   };
 
-  struct diff_detail {
+  struct diff_delta_detail {
     delta_status_t status;
     std::uint32_t flags;
     std::uint16_t similarity;
     std::uint16_t file_num;
     diff_file_detail old_file;
     diff_file_detail new_file;
-    std::vector<hunk_detail> hunks;
+    std::vector<diff_hunk_detail> hunks;
   };
 
   /// @brief Init the global state.
@@ -339,7 +339,7 @@ namespace linter::git {
       void *payload) -> int;
 
     /// @brief A simple implmentation which uses for_each to get diff details.
-    auto details(diff_ptr diff) -> std::vector<diff_detail>;
+    auto details(diff_ptr diff) -> std::vector<diff_delta_detail>;
 
   } // namespace diff
 
