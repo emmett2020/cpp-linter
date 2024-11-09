@@ -98,7 +98,7 @@ namespace linter::git {
     return delta_status_t::unknown;
   }
 
-  constexpr auto delta_status_str(delta_status_t status) -> std::string {
+  inline auto delta_status_str(delta_status_t status) -> std::string {
     switch (status) {
     case delta_status_t::unmodified : return "unmodified";
     case delta_status_t::added      : return "added";
@@ -133,17 +133,47 @@ namespace linter::git {
     blob            = 0100644,
     blob_executable = 0100755,
     link            = 0120000,
-    commit          = 0160000
+    commit          = 0160000,
+    unknown         = 0177777, // -1
   };
 
+  constexpr auto convert_to_file_mode(uint16_t m) -> file_mode_t {
+    switch (m) {
+    case 0000000: return file_mode_t::unreadable;
+    case 0040000: return file_mode_t::tree;
+    case 0100644: return file_mode_t::blob;
+    case 0100755: return file_mode_t::blob_executable;
+    case 0120000: return file_mode_t::link;
+    case 0160000: return file_mode_t::commit;
+    default     : return file_mode_t::unknown;
+    }
+    return file_mode_t::unknown;
+  }
+
+  inline auto file_mode_str(file_mode_t mode) -> std::string {
+    switch (mode) {
+    case file_mode_t::unreadable     : return "unreadable";
+    case file_mode_t::tree           : return "tree";
+    case file_mode_t::blob           : return "blob";
+    case file_mode_t::blob_executable: return "blob_executable";
+    case file_mode_t::link           : return "link";
+    case file_mode_t::commit         : return "commit";
+    case file_mode_t::unknown        : return "unknown";
+    }
+    return "unknown";
+  }
+
+  auto file_flag_str(std::uint32_t flag) -> std::string;
+
   struct diff_file_detail {
-    git_oid oid;
+    std::string oid;
     std::string relative_path;
     std::uint64_t size;
     std::uint32_t flags;
-    std::uint16_t mode;
-    std::uint16_t id_abbrev;
+    file_mode_t mode;
   };
+
+  auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
 
 
   enum class diff_line_t : uint8_t {
@@ -178,9 +208,9 @@ namespace linter::git {
 
   struct diff_detail {
     delta_status_t status;
-    std::uint32_t flag;
+    std::uint32_t flags;
     std::uint16_t similarity;
-    std::uint16_t num_files;
+    std::uint16_t file_num;
     diff_file_detail old_file;
     diff_file_detail new_file;
     std::vector<hunk_details> hunks;
@@ -314,8 +344,13 @@ namespace linter::git {
   } // namespace diff
 
   namespace oid {
-    auto to_str(git_oid_t oid) -> std::string;
+    /// @brief Format a git_oid into a buffer as a hex format c-string.
+    /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_tostr
+    auto to_str(git_oid oid) -> std::string;
 
+    /// @brief Compare two oid structures for equality
+    /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_equal
+    auto equal(git_oid o1, git_oid o2) -> bool;
 
   } // namespace oid
 

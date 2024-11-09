@@ -19,6 +19,29 @@ namespace linter::git {
     return git_libgit2_shutdown();
   }
 
+  auto file_flag_str(std::uint32_t flags) -> std::string {
+    auto res    = std::string{};
+    auto concat = [&](std::uint32_t exactor, std::string_view msg) {
+      if (flags & exactor) {
+        if (res.empty()) {
+          res.append(msg);
+        } else {
+          res.append(", ").append(msg);
+        }
+      }
+    };
+    concat(0b0000'0000, "binary");
+    concat(0b0000'0010, "not_binary");
+    concat(0b0000'0100, "valid_id");
+    concat(0b0000'1000, "exists");
+    concat(0b0001'0000, "valid_size");
+    return res;
+  }
+
+  auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
+    return file1.relative_path == file2.relative_path;
+  }
+
   namespace repo {
     auto open(const std::string &repo_path) -> repo_ptr {
       auto *repo = repo_ptr{nullptr};
@@ -152,28 +175,27 @@ namespace linter::git {
     }
 
     auto details(diff_ptr diff) -> std::vector<diff_detail> {
-      auto file_cb = [](diff_delta_cptr delta, float progress, void *payload) -> int {
+      auto file_cb =
+        [](diff_delta_cptr delta, [[maybe_unused]] float progress, void *payload) -> int {
         assert(delta && payload);
         auto *res = static_cast<std::vector<diff_detail> *>(payload);
         assert(res);
 
         auto detail = diff_detail{
           .status     = convert_to_delta_status(delta->status),
-          .flag       = delta->flags,
+          .flags      = delta->flags,
           .similarity = delta->similarity,
-          .num_files  = delta->nfiles,
-          .old_file   = {.oid           = delta->old_file.id,
+          .file_num   = delta->nfiles,
+          .old_file   = {.oid           = oid::to_str(delta->old_file.id),
                          .relative_path = delta->old_file.path,
                          .size          = delta->old_file.size,
                          .flags         = delta->old_file.flags,
-                         .mode          = delta->old_file.mode,
-                         .id_abbrev     = delta->old_file.id_abbrev},
-          .new_file   = {.oid           = delta->new_file.id,
+                         .mode          = convert_to_file_mode(delta->old_file.mode)},
+          .new_file   = {.oid           = oid::to_str(delta->new_file.id),
                          .relative_path = delta->new_file.path,
                          .size          = delta->new_file.size,
                          .flags         = delta->new_file.flags,
-                         .mode          = delta->new_file.mode,
-                         .id_abbrev     = delta->new_file.id_abbrev},
+                         .mode          = convert_to_file_mode(delta->new_file.mode)},
         };
 
         std::println(
@@ -181,9 +203,20 @@ namespace linter::git {
           detail.old_file.relative_path,
           detail.new_file.relative_path,
           detail.similarity,
-          detail.num_files,
-          detail.flag,
+          detail.file_num,
+          file_flag_str(detail.flags),
           delta_status_str(detail.status));
+        std::println("{}, {}, {}, {}",
+                     detail.old_file.oid,
+                     detail.old_file.size,
+                     file_flag_str(detail.old_file.flags),
+                     file_mode_str(detail.old_file.mode));
+
+        std::println("{}, {}, {}, {}",
+                     detail.new_file.oid,
+                     detail.new_file.size,
+                     file_flag_str(detail.new_file.flags),
+                     file_mode_str(detail.new_file.mode));
 
         res->emplace_back(std::move(detail));
         return 0;
@@ -226,6 +259,20 @@ namespace linter::git {
 
   } // namespace diff
 
-  namespace oid { }
+  namespace oid {
+
+    auto to_str(git_oid oid) -> std::string {
+      auto buffer = std::string{};
+      // +1 is for null terminated.
+      buffer.resize(GIT_OID_MAX_HEXSIZE + 1);
+      git_oid_tostr(buffer.data(), buffer.size(), &oid);
+      return buffer;
+    }
+
+    auto equal(git_oid o1, git_oid o2) -> bool {
+      return git_oid_equal(&o1, &o2) == 1;
+    }
+
+  } // namespace oid
 
 } // namespace linter::git
