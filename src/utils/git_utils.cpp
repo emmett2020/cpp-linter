@@ -13,6 +13,12 @@
 #include <string>
 
 namespace linter::git {
+  namespace {
+    inline auto make_str(const char *p, std::size_t len) -> std::string {
+      return {p, len};
+    }
+  } // namespace
+
   auto setup() -> int {
     return git_libgit2_init();
   }
@@ -278,16 +284,26 @@ namespace linter::git {
             .new_start = cur_hunk->new_start,
             .new_lines = cur_hunk->new_lines};
           delta_iter->hunks.emplace_back(std::move(hunk));
+          hook_iter = --(delta_iter->hunks.end());
         }
 
-
+        auto line = diff_line_details{
+          .origin           = convert_to_diff_line_type(cur_line->origin),
+          .old_lineno       = cur_line->old_lineno,
+          .new_lineno       = cur_line->new_lineno,
+          .num_lines        = cur_line->num_lines,
+          .offset_in_origin = cur_line->content_offset,
+          .content          = make_str(cur_line->content, cur_line->content_len),
+        };
+        hook_iter->lines.emplace_back(std::move(line));
         return 0;
       };
 
 
-      auto details = std::vector<diff_delta_detail>{};
-      for_each(diff, file_cb, nullptr, hunk_cb, line_cb, &details);
-      return details;
+      auto deltas = std::vector<diff_delta_detail>{};
+      // for_each(diff, file_cb, nullptr, hunk_cb, line_cb, &details);
+      for_each(diff, nullptr, nullptr, nullptr, line_cb, &deltas);
+      return deltas;
     }
 
   } // namespace diff

@@ -186,14 +186,47 @@ namespace linter::git {
     file_hdr      = 'F',
     hunk_hdr      = 'H',
     binary        = 'B',
+    unknown       = '?',
   };
 
-  struct line_details {
+  constexpr auto convert_to_diff_line_type(char m) -> diff_line_t {
+    switch (m) {
+    case ' ': return diff_line_t::context;
+    case '+': return diff_line_t::addition;
+    case '-': return diff_line_t::deletion;
+    case '=': return diff_line_t::context_eofnl;
+    case '>': return diff_line_t::add_eofnl;
+    case '<': return diff_line_t::del_eofnl;
+    case 'F': return diff_line_t::file_hdr;
+    case 'H': return diff_line_t::hunk_hdr;
+    case 'B': return diff_line_t::binary;
+    default : return diff_line_t::unknown;
+    }
+    return diff_line_t::unknown;
+  }
+
+  inline auto diff_line_type_str(diff_line_t tp) -> std::string {
+    switch (tp) {
+    case diff_line_t::context      : return "context";
+    case diff_line_t::addition     : return "addition";
+    case diff_line_t::deletion     : return "deletion";
+    case diff_line_t::context_eofnl: return "context_eofnl";
+    case diff_line_t::add_eofnl    : return "add_eofnl";
+    case diff_line_t::del_eofnl    : return "del_eofnl";
+    case diff_line_t::file_hdr     : return "file_hdr";
+    case diff_line_t::hunk_hdr     : return "hunk_hdr";
+    case diff_line_t::binary       : return "binary";
+    case diff_line_t::unknown      : return "unknown";
+    }
+    return "unknown";
+  }
+
+  struct diff_line_details {
     diff_line_t origin;
-    std::uint32_t old_lineno;
-    std::uint32_t new_lineno;
-    std::uint32_t num_lines;
-    std::uint32_t offset_in_origin;
+    std::int64_t old_lineno;
+    std::int64_t new_lineno;
+    std::int64_t num_lines;
+    std::int64_t offset_in_origin;
     std::string content;
   };
 
@@ -203,7 +236,7 @@ namespace linter::git {
     std::int32_t old_lines;
     std::int32_t new_start;
     std::int32_t new_lines;
-    std::vector<line_details> lines;
+    std::vector<diff_line_details> lines;
   };
 
   struct diff_delta_detail {

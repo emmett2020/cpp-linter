@@ -78,39 +78,41 @@ int main() {
 
   for (const auto &file: diff_details) {
     std::println(
-      "{}, {}, {}, {}, {}",
+      "rel_path:{}\nrel_path {}\nfile num: {}\nflag: {}\nstatus: {}\n",
       file.old_file.relative_path,
       file.new_file.relative_path,
       file.file_num,
       git::file_flag_str(file.flags),
       git::delta_status_str(file.status));
-    std::println("{}, {}, {}, {}",
+
+    std::println("\ndetails: ");
+    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
                  file.old_file.oid,
                  file.old_file.size,
                  git::file_flag_str(file.old_file.flags),
                  git::file_mode_str(file.old_file.mode));
-
-    std::println("{}, {}, {}, {}",
+    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
                  file.new_file.oid,
                  file.new_file.size,
                  git::file_flag_str(file.new_file.flags),
                  git::file_mode_str(file.new_file.mode));
 
     for (const auto &hunk: file.hunks) {
-      std::print("hunk: {}, {}, {}, {}, {}",
+      std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
                  hunk.header,
                  hunk.old_start,
                  hunk.old_lines,
                  hunk.new_start,
                  hunk.new_lines);
+
       for (const auto &line: hunk.lines) {
-        std::print("line: {}", line.content);
+        std::print("line content: {}", line.content);
       }
     }
   }
 
 
-  std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
+  // std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
   git::config::free(config);
   git::shutdown();
