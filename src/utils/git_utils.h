@@ -1,12 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <git2.h>
 #include <git2/diff.h>
 #include <git2/repository.h>
 #include <git2/types.h>
 #include <memory>
 #include <vector>
+
+/// TODO: maybe a standlone repository and add libgit2 as submodule
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -63,7 +66,7 @@ namespace linter::git {
   using diff_binary_cb = git_diff_binary_cb;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
-  enum class delta_t : uint8_t {
+  enum class delta_status_t : uint8_t {
     unmodified,
     added,
     deleted,
@@ -74,17 +77,74 @@ namespace linter::git {
     untracked,
     type_change,
     unreadable,
-    conflicted
+    conflicted,
+    unknown,
   };
+
+  constexpr auto convert_to_delta_status(git_delta_t t) -> delta_status_t {
+    switch (t) {
+    case GIT_DELTA_UNMODIFIED: return delta_status_t::unmodified;
+    case GIT_DELTA_ADDED     : return delta_status_t::added;
+    case GIT_DELTA_DELETED   : return delta_status_t::deleted;
+    case GIT_DELTA_MODIFIED  : return delta_status_t::modified;
+    case GIT_DELTA_RENAMED   : return delta_status_t::renamed;
+    case GIT_DELTA_COPIED    : return delta_status_t::copied;
+    case GIT_DELTA_IGNORED   : return delta_status_t::ignored;
+    case GIT_DELTA_UNTRACKED : return delta_status_t::untracked;
+    case GIT_DELTA_TYPECHANGE: return delta_status_t::type_change;
+    case GIT_DELTA_UNREADABLE: return delta_status_t::unreadable;
+    case GIT_DELTA_CONFLICTED: return delta_status_t::conflicted;
+    }
+    return delta_status_t::unknown;
+  }
+
+  constexpr auto delta_status_str(delta_status_t status) -> std::string {
+    switch (status) {
+    case delta_status_t::unmodified : return "unmodified";
+    case delta_status_t::added      : return "added";
+    case delta_status_t::deleted    : return "deleted";
+    case delta_status_t::modified   : return "modified";
+    case delta_status_t::renamed    : return "renamed";
+    case delta_status_t::copied     : return "copied";
+    case delta_status_t::ignored    : return "ignored";
+    case delta_status_t::untracked  : return "untracked";
+    case delta_status_t::type_change: return "type_change";
+    case delta_status_t::unreadable : return "unreadable";
+    case delta_status_t::conflicted : return "conflicted";
+    case delta_status_t::unknown    : return "unknown";
+    }
+    return "unknown";
+  }
+
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_flag_t
   enum class diff_flag_t : uint8_t {
-    binary,
-    not_binary,
-    valid_id,
-    exists,
-    valid_size
+    binary     = 1U << 0,
+    not_binary = 1U << 1,
+    valid_id   = 1U << 2,
+    exists     = 1U << 3,
+    valid_size = 1U << 4
   };
+
+
+  enum class file_mode_t : uint16_t {
+    unreadable      = 0000000,
+    tree            = 0040000,
+    blob            = 0100644,
+    blob_executable = 0100755,
+    link            = 0120000,
+    commit          = 0160000
+  };
+
+  struct diff_file_detail {
+    git_oid oid;
+    std::string relative_path;
+    std::uint64_t size;
+    std::uint32_t flags;
+    std::uint16_t mode;
+    std::uint16_t id_abbrev;
+  };
+
 
   enum class diff_line_t : uint8_t {
     context       = ' ',
@@ -116,27 +176,23 @@ namespace linter::git {
     std::vector<line_details> lines;
   };
 
-  struct diff_details {
-    delta_t delta_type;
-    diff_flag_t flag; // TODO: contains flag
+  struct diff_detail {
+    delta_status_t status;
+    std::uint32_t flag;
     std::uint16_t similarity;
     std::uint16_t num_files;
-
-    std::string old_file_path;
-    std::string new_file_path;
-
+    diff_file_detail old_file;
+    diff_file_detail new_file;
     std::vector<hunk_details> hunks;
   };
 
-  /// TODO: maybe a standlone repository and add libgit2 as submodule
+  /// @brief Init the global state.
+  /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
+  auto setup() -> int;
 
   /// @brief Shutdown the global state
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_shutdown
-  int shutdown();
-
-  /// @brief Init the global state.
-  /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
-  int setup();
+  auto shutdown() -> int;
 
   namespace repo {
     /// @brief Creates a new Git repository in the given folder.
@@ -146,11 +202,11 @@ namespace linter::git {
     ///                will be considered as the working directory into which
     ///                the .git directory will be created.
     /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_init
-    repo_ptr init(const std::string &repo_path, bool is_bare);
+    auto init(const std::string &repo_path, bool is_bare) -> repo_ptr;
 
     /// @brief Open a git repository.
     /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
-    repo_ptr open(const std::string &repo_path);
+    auto open(const std::string &repo_path) -> repo_ptr;
 
     /// @brief Free a previously allocated repository
     /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
@@ -159,26 +215,26 @@ namespace linter::git {
     /// @brief Determines the status of a git repository
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
-    int state(repo_ptr repo);
+    auto state(repo_ptr repo) -> int;
 
     /// @brief Get the path of this repository
     /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
-    std::string path(repo_ptr repo);
+    auto path(repo_ptr repo) -> std::string;
 
     /// @brief Check if a repository is empty
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
-    bool is_empty(repo_ptr repo);
+    auto is_empty(repo_ptr repo) -> bool;
 
     /// @brief Get the configuration file for this repository.
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
-    config_ptr config(repo_ptr repo);
+    auto config(repo_ptr repo) -> config_ptr;
 
     /// @brief Get the Index file for this repository.
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
-    index_ptr index(repo_ptr repo);
+    auto index(repo_ptr repo) -> index_ptr;
   } // namespace repo
 
   namespace config {
@@ -191,8 +247,8 @@ namespace linter::git {
   namespace branch {
     /// @brief Create a new branch pointing at a target commit
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
-    reference_ptr
-    create(repo_ptr repo, const std::string &branch_name, commit_cptr target, bool force);
+    auto create(repo_ptr repo, const std::string &branch_name, commit_cptr target, bool force)
+      -> reference_ptr;
 
     /// @brief Delete an existing branch reference.
     /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
@@ -201,7 +257,7 @@ namespace linter::git {
     /// @brief Get the branch name
     /// @return Pointer to the abbreviated reference name. Owned by ref, do not
     /// free. https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_name
-    std::string_view name(reference_ptr ref);
+    auto name(reference_ptr ref) -> std::string_view;
 
     /// @brief Determine if HEAD points to the given branch
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
@@ -212,7 +268,7 @@ namespace linter::git {
   namespace commit {
     /// @brief Get the tree pointed to by a commit.
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
-    tree_ptr tree(commit_cptr commit);
+    auto tree(commit_cptr commit) -> tree_ptr;
 
   } // namespace commit
 
@@ -228,7 +284,7 @@ namespace linter::git {
     /// directory.
     /// @link:
     /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
-    diff_ptr index_to_workdir(repo_ptr repo, index_ptr index, diff_options_cptr opts);
+    auto index_to_workdir(repo_ptr repo, index_ptr index, diff_options_cptr opts) -> diff_ptr;
 
     /// @brief Initialize diff options structure
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
@@ -236,25 +292,31 @@ namespace linter::git {
 
     /// @brief Query how many diff records are there in a diff.
     /// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
-    std::size_t num_deltas(diff_ptr diff);
+    auto num_deltas(diff_ptr diff) -> std::size_t;
 
     /// @brief Return the diff delta for an entry in the diff list.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_get_delta
-    diff_delta_cptr get_delta(diff_cptr diff, size_t idx);
+    auto get_delta(diff_cptr diff, size_t idx) -> diff_delta_cptr;
 
     /// @brief Loop over all deltas in a diff issuing callbacks.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
-    int for_each(
+    auto for_each(
       diff_ptr diff,
       diff_file_cb file_cb,
       diff_binary_cb binary_cb,
       diff_hunk_cb hunk_cb,
       diff_line_cb line_cb,
-      void *payload);
+      void *payload) -> int;
 
     /// @brief A simple implmentation which uses for_each to get diff details.
-    diff_details details(diff_ptr diff);
+    auto details(diff_ptr diff) -> std::vector<diff_detail>;
 
   } // namespace diff
+
+  namespace oid {
+    auto to_str(git_oid_t oid) -> std::string;
+
+
+  } // namespace oid
 
 } // namespace linter::git

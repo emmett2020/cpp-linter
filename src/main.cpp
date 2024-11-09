@@ -71,10 +71,10 @@ int main() {
   const auto *deltas = git::diff::get_delta(diff, 0);
 
   auto diff_details = git::diff::details(diff);
-  std::println("old_file_path: {}, new_file_path: {}, similarity: {}",
-               diff_details.old_file_path,
-               diff_details.new_file_path,
-               diff_details.similarity);
+  // std::println("old_file_path: {}, new_file_path: {}, similarity: {}",
+  //              diff_details.old_file_path,
+  //              diff_details.new_file_path,
+  //              diff_details.similarity);
 
 
   std::print("old path: {}", deltas->old_file.path);
