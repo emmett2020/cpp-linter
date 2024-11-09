@@ -2,12 +2,10 @@
 
 #include <cstdint>
 #include <cstring>
-#include <git2.h>
-#include <git2/diff.h>
-#include <git2/repository.h>
-#include <git2/types.h>
-#include <memory>
 #include <vector>
+#include <string>
+
+#include <git2.h>
 
 /// TODO: maybe a standlone repository and add libgit2 as submodule
 
@@ -26,6 +24,18 @@ namespace linter::git {
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_hunk
   using diff_hunk = git_diff_hunk;
+
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_file_cb
+  using diff_file_cb = git_diff_file_cb;
+
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_hunk_cb
+  using diff_hunk_cb = git_diff_hunk_cb;
+
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_line_cb
+  using diff_line_cb = git_diff_line_cb;
+
+  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
+  using diff_binary_cb = git_diff_binary_cb;
 
   using repo_ptr         = git_repository *;
   using config_ptr       = git_config *;
@@ -53,18 +63,6 @@ namespace linter::git {
   using diff_hunk_cptr    = const git_diff_hunk *;
   using diff_line_cptr    = const git_diff_line *;
 
-  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_file_cb
-  using diff_file_cb = git_diff_file_cb;
-
-  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_hunk_cb
-  using diff_hunk_cb = git_diff_hunk_cb;
-
-  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_line_cb
-  using diff_line_cb = git_diff_line_cb;
-
-  /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
-  using diff_binary_cb = git_diff_binary_cb;
-
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
     unmodified,
@@ -81,42 +79,6 @@ namespace linter::git {
     unknown,
   };
 
-  constexpr auto convert_to_delta_status(git_delta_t t) -> delta_status_t {
-    switch (t) {
-    case GIT_DELTA_UNMODIFIED: return delta_status_t::unmodified;
-    case GIT_DELTA_ADDED     : return delta_status_t::added;
-    case GIT_DELTA_DELETED   : return delta_status_t::deleted;
-    case GIT_DELTA_MODIFIED  : return delta_status_t::modified;
-    case GIT_DELTA_RENAMED   : return delta_status_t::renamed;
-    case GIT_DELTA_COPIED    : return delta_status_t::copied;
-    case GIT_DELTA_IGNORED   : return delta_status_t::ignored;
-    case GIT_DELTA_UNTRACKED : return delta_status_t::untracked;
-    case GIT_DELTA_TYPECHANGE: return delta_status_t::type_change;
-    case GIT_DELTA_UNREADABLE: return delta_status_t::unreadable;
-    case GIT_DELTA_CONFLICTED: return delta_status_t::conflicted;
-    }
-    return delta_status_t::unknown;
-  }
-
-  inline auto delta_status_str(delta_status_t status) -> std::string {
-    switch (status) {
-    case delta_status_t::unmodified : return "unmodified";
-    case delta_status_t::added      : return "added";
-    case delta_status_t::deleted    : return "deleted";
-    case delta_status_t::modified   : return "modified";
-    case delta_status_t::renamed    : return "renamed";
-    case delta_status_t::copied     : return "copied";
-    case delta_status_t::ignored    : return "ignored";
-    case delta_status_t::untracked  : return "untracked";
-    case delta_status_t::type_change: return "type_change";
-    case delta_status_t::unreadable : return "unreadable";
-    case delta_status_t::conflicted : return "conflicted";
-    case delta_status_t::unknown    : return "unknown";
-    }
-    return "unknown";
-  }
-
-
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_flag_t
   enum class diff_flag_t : uint8_t {
     binary     = 1U << 0,
@@ -125,7 +87,6 @@ namespace linter::git {
     exists     = 1U << 3,
     valid_size = 1U << 4
   };
-
 
   enum class file_mode_t : uint16_t {
     unreadable      = 0000000,
@@ -136,45 +97,6 @@ namespace linter::git {
     commit          = 0160000,
     unknown         = 0177777, // -1
   };
-
-  constexpr auto convert_to_file_mode(uint16_t m) -> file_mode_t {
-    switch (m) {
-    case 0000000: return file_mode_t::unreadable;
-    case 0040000: return file_mode_t::tree;
-    case 0100644: return file_mode_t::blob;
-    case 0100755: return file_mode_t::blob_executable;
-    case 0120000: return file_mode_t::link;
-    case 0160000: return file_mode_t::commit;
-    default     : return file_mode_t::unknown;
-    }
-    return file_mode_t::unknown;
-  }
-
-  inline auto file_mode_str(file_mode_t mode) -> std::string {
-    switch (mode) {
-    case file_mode_t::unreadable     : return "unreadable";
-    case file_mode_t::tree           : return "tree";
-    case file_mode_t::blob           : return "blob";
-    case file_mode_t::blob_executable: return "blob_executable";
-    case file_mode_t::link           : return "link";
-    case file_mode_t::commit         : return "commit";
-    case file_mode_t::unknown        : return "unknown";
-    }
-    return "unknown";
-  }
-
-  auto file_flag_str(std::uint32_t flag) -> std::string;
-
-  struct diff_file_detail {
-    std::string oid;
-    std::string relative_path;
-    std::uint64_t size;
-    std::uint32_t flags;
-    file_mode_t mode;
-  };
-
-  auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
-
 
   enum class diff_line_t : uint8_t {
     context       = ' ',
@@ -188,38 +110,6 @@ namespace linter::git {
     binary        = 'B',
     unknown       = '?',
   };
-
-  constexpr auto convert_to_diff_line_type(char m) -> diff_line_t {
-    switch (m) {
-    case ' ': return diff_line_t::context;
-    case '+': return diff_line_t::addition;
-    case '-': return diff_line_t::deletion;
-    case '=': return diff_line_t::context_eofnl;
-    case '>': return diff_line_t::add_eofnl;
-    case '<': return diff_line_t::del_eofnl;
-    case 'F': return diff_line_t::file_hdr;
-    case 'H': return diff_line_t::hunk_hdr;
-    case 'B': return diff_line_t::binary;
-    default : return diff_line_t::unknown;
-    }
-    return diff_line_t::unknown;
-  }
-
-  inline auto diff_line_type_str(diff_line_t tp) -> std::string {
-    switch (tp) {
-    case diff_line_t::context      : return "context";
-    case diff_line_t::addition     : return "addition";
-    case diff_line_t::deletion     : return "deletion";
-    case diff_line_t::context_eofnl: return "context_eofnl";
-    case diff_line_t::add_eofnl    : return "add_eofnl";
-    case diff_line_t::del_eofnl    : return "del_eofnl";
-    case diff_line_t::file_hdr     : return "file_hdr";
-    case diff_line_t::hunk_hdr     : return "hunk_hdr";
-    case diff_line_t::binary       : return "binary";
-    case diff_line_t::unknown      : return "unknown";
-    }
-    return "unknown";
-  }
 
   struct diff_line_details {
     diff_line_t origin;
@@ -239,6 +129,14 @@ namespace linter::git {
     std::vector<diff_line_details> lines;
   };
 
+  struct diff_file_detail {
+    std::string oid;
+    std::string relative_path;
+    std::uint64_t size;
+    std::uint32_t flags;
+    file_mode_t mode;
+  };
+
   struct diff_delta_detail {
     delta_status_t status;
     std::uint32_t flags;
@@ -248,6 +146,58 @@ namespace linter::git {
     diff_file_detail new_file;
     std::vector<diff_hunk_detail> hunks;
   };
+
+  constexpr auto convert_to_delta_status(git_delta_t t) -> delta_status_t {
+    switch (t) {
+    case GIT_DELTA_UNMODIFIED: return delta_status_t::unmodified;
+    case GIT_DELTA_ADDED     : return delta_status_t::added;
+    case GIT_DELTA_DELETED   : return delta_status_t::deleted;
+    case GIT_DELTA_MODIFIED  : return delta_status_t::modified;
+    case GIT_DELTA_RENAMED   : return delta_status_t::renamed;
+    case GIT_DELTA_COPIED    : return delta_status_t::copied;
+    case GIT_DELTA_IGNORED   : return delta_status_t::ignored;
+    case GIT_DELTA_UNTRACKED : return delta_status_t::untracked;
+    case GIT_DELTA_TYPECHANGE: return delta_status_t::type_change;
+    case GIT_DELTA_UNREADABLE: return delta_status_t::unreadable;
+    case GIT_DELTA_CONFLICTED: return delta_status_t::conflicted;
+    }
+    return delta_status_t::unknown;
+  }
+
+  constexpr auto convert_to_file_mode(uint16_t m) -> file_mode_t {
+    switch (m) {
+    case 0000000: return file_mode_t::unreadable;
+    case 0040000: return file_mode_t::tree;
+    case 0100644: return file_mode_t::blob;
+    case 0100755: return file_mode_t::blob_executable;
+    case 0120000: return file_mode_t::link;
+    case 0160000: return file_mode_t::commit;
+    default     : return file_mode_t::unknown;
+    }
+    return file_mode_t::unknown;
+  }
+
+  constexpr auto convert_to_diff_line_type(char m) -> diff_line_t {
+    switch (m) {
+    case ' ': return diff_line_t::context;
+    case '+': return diff_line_t::addition;
+    case '-': return diff_line_t::deletion;
+    case '=': return diff_line_t::context_eofnl;
+    case '>': return diff_line_t::add_eofnl;
+    case '<': return diff_line_t::del_eofnl;
+    case 'F': return diff_line_t::file_hdr;
+    case 'H': return diff_line_t::hunk_hdr;
+    case 'B': return diff_line_t::binary;
+    default : return diff_line_t::unknown;
+    }
+    return diff_line_t::unknown;
+  }
+
+  auto delta_status_str(delta_status_t status) -> std::string;
+  auto file_mode_str(file_mode_t mode) -> std::string;
+  auto file_flag_str(std::uint32_t flag) -> std::string;
+  auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
+  auto diff_line_type_str(diff_line_t tp) -> std::string;
 
   /// @brief Init the global state.
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init

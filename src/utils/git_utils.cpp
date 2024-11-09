@@ -27,6 +27,37 @@ namespace linter::git {
     return git_libgit2_shutdown();
   }
 
+  auto delta_status_str(delta_status_t status) -> std::string {
+    switch (status) {
+    case delta_status_t::unmodified : return "unmodified";
+    case delta_status_t::added      : return "added";
+    case delta_status_t::deleted    : return "deleted";
+    case delta_status_t::modified   : return "modified";
+    case delta_status_t::renamed    : return "renamed";
+    case delta_status_t::copied     : return "copied";
+    case delta_status_t::ignored    : return "ignored";
+    case delta_status_t::untracked  : return "untracked";
+    case delta_status_t::type_change: return "type_change";
+    case delta_status_t::unreadable : return "unreadable";
+    case delta_status_t::conflicted : return "conflicted";
+    case delta_status_t::unknown    : return "unknown";
+    }
+    return "unknown";
+  }
+
+  auto file_mode_str(file_mode_t mode) -> std::string {
+    switch (mode) {
+    case file_mode_t::unreadable     : return "unreadable";
+    case file_mode_t::tree           : return "tree";
+    case file_mode_t::blob           : return "blob";
+    case file_mode_t::blob_executable: return "blob_executable";
+    case file_mode_t::link           : return "link";
+    case file_mode_t::commit         : return "commit";
+    case file_mode_t::unknown        : return "unknown";
+    }
+    return "unknown";
+  }
+
   auto file_flag_str(std::uint32_t flags) -> std::string {
     auto res    = std::string{};
     auto concat = [&](std::uint32_t exactor, std::string_view msg) {
@@ -44,6 +75,22 @@ namespace linter::git {
     concat(0b0000'1000, "exists");
     concat(0b0001'0000, "valid_size");
     return res;
+  }
+
+  auto diff_line_type_str(diff_line_t tp) -> std::string {
+    switch (tp) {
+    case diff_line_t::context      : return "context";
+    case diff_line_t::addition     : return "addition";
+    case diff_line_t::deletion     : return "deletion";
+    case diff_line_t::context_eofnl: return "context_eofnl";
+    case diff_line_t::add_eofnl    : return "add_eofnl";
+    case diff_line_t::del_eofnl    : return "del_eofnl";
+    case diff_line_t::file_hdr     : return "file_hdr";
+    case diff_line_t::hunk_hdr     : return "hunk_hdr";
+    case diff_line_t::binary       : return "binary";
+    case diff_line_t::unknown      : return "unknown";
+    }
+    return "unknown";
   }
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
@@ -183,59 +230,6 @@ namespace linter::git {
     }
 
     auto details(diff_ptr diff) -> std::vector<diff_delta_detail> {
-      auto file_cb =
-        [](diff_delta_cptr delta, [[maybe_unused]] float progress, void *payload) -> int {
-        assert(delta && payload);
-        auto *res = static_cast<std::vector<diff_delta_detail> *>(payload);
-
-        auto detail = diff_delta_detail{
-          .status     = convert_to_delta_status(delta->status),
-          .flags      = delta->flags,
-          .similarity = delta->similarity,
-          .file_num   = delta->nfiles,
-          .old_file   = {.oid           = oid::to_str(delta->old_file.id),
-                         .relative_path = delta->old_file.path,
-                         .size          = delta->old_file.size,
-                         .flags         = delta->old_file.flags,
-                         .mode          = convert_to_file_mode(delta->old_file.mode)},
-          .new_file   = {.oid           = oid::to_str(delta->new_file.id),
-                         .relative_path = delta->new_file.path,
-                         .size          = delta->new_file.size,
-                         .flags         = delta->new_file.flags,
-                         .mode          = convert_to_file_mode(delta->new_file.mode)},
-        };
-
-        res->emplace_back(std::move(detail));
-        return 0;
-      };
-
-      auto hunk_cb = [](diff_delta_cptr delta, diff_hunk_cptr hunk, void *payload) -> int {
-        assert(delta && hunk && payload);
-        auto *res   = static_cast<std::vector<diff_delta_detail> *>(payload);
-        auto detail = diff_hunk_detail{
-          .header    = {static_cast<const char *>(hunk->header), hunk->header_len},
-          .old_start = hunk->old_start,
-          .old_lines = hunk->old_lines,
-          .new_start = hunk->new_start,
-          .new_lines = hunk->new_lines
-        };
-
-        auto iter = std::ranges::find_if(*res, [&](const diff_delta_detail &detail) {
-          return detail.old_file.oid
-              == oid::to_str(delta->old_file.id)
-              && detail.new_file.oid
-              == oid::to_str(delta->new_file.id);
-        });
-
-        if (iter == res->end()) {
-          res->emplace_back();
-          iter = --(res->end());
-        }
-        iter->hunks.emplace_back(std::move(detail));
-        return 0;
-      };
-
-
       auto line_cb =
         [](diff_delta_cptr cur_delta,
            diff_hunk_cptr cur_hunk,
@@ -301,7 +295,6 @@ namespace linter::git {
 
 
       auto deltas = std::vector<diff_delta_detail>{};
-      // for_each(diff, file_cb, nullptr, hunk_cb, line_cb, &details);
       for_each(diff, nullptr, nullptr, nullptr, line_cb, &deltas);
       return deltas;
     }
@@ -309,7 +302,6 @@ namespace linter::git {
   } // namespace diff
 
   namespace oid {
-
     auto to_str(git_oid oid) -> std::string {
       auto buffer = std::string{};
       // +1 is for null terminated.
