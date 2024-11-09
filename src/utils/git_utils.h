@@ -197,12 +197,12 @@ namespace linter::git {
     std::string content;
   };
 
-  struct hunk_details {
-    std::uint32_t old_start;
-    std::uint32_t old_lines;
-    std::uint32_t new_start;
-    std::uint32_t new_lines;
+  struct hunk_detail {
     std::string header;
+    std::int32_t old_start;
+    std::int32_t old_lines;
+    std::int32_t new_start;
+    std::int32_t new_lines;
     std::vector<line_details> lines;
   };
 
@@ -213,7 +213,7 @@ namespace linter::git {
     std::uint16_t file_num;
     diff_file_detail old_file;
     diff_file_detail new_file;
-    std::vector<hunk_details> hunks;
+    std::vector<hunk_detail> hunks;
   };
 
   /// @brief Init the global state.

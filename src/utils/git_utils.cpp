@@ -1,5 +1,6 @@
 #include "git_utils.h"
 #include "utils/util.h"
+#include <algorithm>
 #include <cassert>
 #include <cstring>
 #include <git2/diff.h>
@@ -179,7 +180,6 @@ namespace linter::git {
         [](diff_delta_cptr delta, [[maybe_unused]] float progress, void *payload) -> int {
         assert(delta && payload);
         auto *res = static_cast<std::vector<diff_detail> *>(payload);
-        assert(res);
 
         auto detail = diff_detail{
           .status     = convert_to_delta_status(delta->status),
@@ -223,37 +223,45 @@ namespace linter::git {
       };
 
       auto hunk_cb = [](diff_delta_cptr delta, diff_hunk_cptr hunk, void *payload) -> int {
-        auto *res = static_cast<diff_detail *>(payload);
-        assert(res);
-        auto hd      = hunk_details{};
-        hd.header    = {static_cast<const char *>(hunk->header), hunk->header_len};
-        hd.old_lines = hunk->old_lines;
-        hd.new_lines = hunk->new_lines;
-        hd.old_start = hunk->old_start;
-        hd.new_start = hunk->new_start;
-        res->hunks.emplace_back(hd);
+        assert(delta && hunk && payload);
+        auto *res   = static_cast<std::vector<diff_detail> *>(payload);
+        auto detail = hunk_detail{
+          .header    = {static_cast<const char *>(hunk->header), hunk->header_len},
+          .old_start = hunk->old_start,
+          .old_lines = hunk->old_lines,
+          .new_start = hunk->new_start,
+          .new_lines = hunk->new_lines
+        };
+
+        auto iter = std::ranges::find_if(*res, [&](const diff_detail &detail) {
+          return detail.old_file.oid
+              == oid::to_str(delta->old_file.id)
+              && detail.new_file.oid
+              == oid::to_str(delta->new_file.id);
+        });
+
+        if (iter == res->end()) {
+          res->emplace_back();
+          iter = --(res->end());
+        }
+        iter->hunks.emplace_back(std::move(detail));
+        std::println("called hunk_cv");
         return 0;
       };
 
 
       auto line_cb =
         [](diff_delta_cptr delta, diff_hunk_cptr hunk, diff_line_cptr line, void *payload) -> int {
+        assert(delta && hunk && line && payload);
         auto *res = static_cast<diff_detail *>(payload);
-        assert(res);
-        auto l = line_details{};
-        // l.origin = line->origin;
-        l.num_lines        = line->num_lines;
-        l.old_lineno       = line->old_lineno;
-        l.new_lineno       = line->new_lineno;
-        l.offset_in_origin = line->content_offset;
-        l.content          = line->content;
+        std::println("called lin_cb");
         return 0;
         // TODO: push to which hunk?
       };
 
 
       auto details = std::vector<diff_detail>{};
-      for_each(diff, file_cb, nullptr, nullptr, nullptr, &details);
+      for_each(diff, file_cb, nullptr, hunk_cb, line_cb, &details);
       return details;
     }
 

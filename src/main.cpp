@@ -76,8 +76,40 @@ int main() {
   //              diff_details.new_file_path,
   //              diff_details.similarity);
 
+  for (const auto &file: diff_details) {
+    std::println(
+      "{}, {}, {}, {}, {}",
+      file.old_file.relative_path,
+      file.new_file.relative_path,
+      file.file_num,
+      git::file_flag_str(file.flags),
+      git::delta_status_str(file.status));
+    std::println("{}, {}, {}, {}",
+                 file.old_file.oid,
+                 file.old_file.size,
+                 git::file_flag_str(file.old_file.flags),
+                 git::file_mode_str(file.old_file.mode));
 
-  std::print("old path: {}", deltas->old_file.path);
+    std::println("{}, {}, {}, {}",
+                 file.new_file.oid,
+                 file.new_file.size,
+                 git::file_flag_str(file.new_file.flags),
+                 git::file_mode_str(file.new_file.mode));
+
+    for (const auto &hunk: file.hunks) {
+      std::print("hunk: {}, {}, {}, {}, {}",
+                 hunk.header,
+                 hunk.old_start,
+                 hunk.old_lines,
+                 hunk.new_start,
+                 hunk.new_lines);
+      for (const auto &line: hunk.lines) {
+        std::print("line: {}", line.content);
+      }
+    }
+  }
+
+
   std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
   git::config::free(config);
