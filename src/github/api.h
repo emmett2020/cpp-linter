@@ -99,11 +99,11 @@ namespace linter {
 
   private:
     void LoadEnvionmentVariables() {
-      github_env_.repository = env::Get(kGithubRepository);
-      github_env_.token      = env::Get(kGithubToken);
-      github_env_.event_name = env::Get(kGithubEventName);
-      github_env_.event_path = env::Get(kGithubEventPath);
-      github_env_.sha        = env::Get(kGithubSha);
+      github_env_.repository = env::get(kGithubRepository);
+      github_env_.token      = env::get(kGithubToken);
+      github_env_.event_name = env::get(kGithubEventName);
+      github_env_.event_path = env::get(kGithubEventPath);
+      github_env_.sha        = env::get(kGithubSha);
     }
 
     void InferConfigs() {

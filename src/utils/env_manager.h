@@ -5,22 +5,28 @@
 
 namespace linter::env {
 
-  class ThreadSafeEnvManager {
+  class thread_safe_env_manager {
   public:
-    auto Get(const std::string &name) -> std::string;
-    void SetCache(const std::string &name, const std::string &value);
-    void SetCache(std::unordered_map<std::string, std::string> data);
+    static thread_safe_env_manager &get_instance() noexcept;
 
+    auto get(const std::string &name) -> std::string;
+    void set_cache(const std::string &name, const std::string &value);
+    void set_cache(std::unordered_map<std::string, std::string> data);
+
+    thread_safe_env_manager(const thread_safe_env_manager &)            = delete;
+    thread_safe_env_manager &operator=(const thread_safe_env_manager &) = delete;
   private:
+    thread_safe_env_manager()  = default;
+    ~thread_safe_env_manager() = default;
+
     std::mutex mutex_;
     std::unordered_map<std::string, std::string> cache_;
   };
 
   /// @brief: Wrapper of ThreadSafeEnvManager
-  auto GetEnvManager() noexcept -> ThreadSafeEnvManager &;
-  [[nodiscard]] auto Get(const std::string &name) -> std::string;
-  void SetCache(const std::string &name, const std::string &value);
-  void SetCache(std::unordered_map<std::string, std::string> data);
+  [[nodiscard]] auto get(const std::string &name) -> std::string;
+  void set_cache(const std::string &name, const std::string &value);
+  void set_cache(std::unordered_map<std::string, std::string> data);
 
 
 } // namespace linter::env

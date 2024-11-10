@@ -14,6 +14,12 @@
 using namespace linter; // NOLINT
 using namespace std::string_literals;
 
+namespace {
+  void set_logger() {
+    env::get("");
+  }
+} // namespace
+
 int main() {
   spdlog::set_level(spdlog::level::trace); // FOR DEBUG
   auto cmd    = GetClangToolFullPath("clang-tidy", "20");
@@ -44,11 +50,11 @@ int main() {
   }
 
   ParseDiff();
-  env::SetCache(kGithubEventName, kGithubEventPush);
-  env::SetCache(kGithubToken, "");
-  env::SetCache(kGithubRepository, "emmett2020/temp");
+  env::set_cache(kGithubEventName, kGithubEventPush);
+  env::set_cache(kGithubToken, "");
+  env::set_cache(kGithubRepository, "emmett2020/temp");
   // env::SetCache(kGithubEventPath, "----");
-  env::SetCache(kGithubSha, "b083715");
+  env::set_cache(kGithubSha, "b083715");
   auto api_client = GithubApiClient{};
   auto t          = api_client.GetChangedFiles();
 

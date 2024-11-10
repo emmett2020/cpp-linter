@@ -1,12 +1,15 @@
 #include "env_manager.h"
-#include "utils/util.h"
 
 /// TODO: There is no standard std::setenv
-/// TODO: singleton?
 
 namespace linter::env {
 
-  auto ThreadSafeEnvManager::Get(const std::string &name) -> std::string {
+  auto thread_safe_env_manager::get_instance() noexcept -> thread_safe_env_manager & {
+    static auto env_manager = thread_safe_env_manager{};
+    return env_manager;
+  }
+
+  auto thread_safe_env_manager::get(const std::string &name) -> std::string {
     auto lg = std::lock_guard(mutex_);
     if (cache_.contains(name)) {
       return cache_[name];
@@ -18,34 +21,29 @@ namespace linter::env {
     return cache_[name];
   }
 
-  void ThreadSafeEnvManager::SetCache(const std::string &name, const std::string &value) {
+  void thread_safe_env_manager::set_cache(const std::string &name, const std::string &value) {
     auto lg      = std::lock_guard(mutex_);
     cache_[name] = value;
   }
 
-  void ThreadSafeEnvManager::SetCache(std::unordered_map<std::string, std::string> data) {
+  void thread_safe_env_manager::set_cache(std::unordered_map<std::string, std::string> data) {
     auto lg = std::lock_guard(mutex_);
     cache_  = std::move(data);
   }
 
-  auto GetEnvManager() noexcept -> ThreadSafeEnvManager & {
-    static auto env_manager = ThreadSafeEnvManager{};
-    return env_manager;
+  [[nodiscard]] auto get(const std::string &name) -> std::string {
+    auto &env_manager = thread_safe_env_manager::get_instance();
+    return env_manager.get(name);
   }
 
-  [[nodiscard]] auto Get(const std::string &name) -> std::string {
-    auto &env_manager = GetEnvManager();
-    return env_manager.Get(name);
+  void set_cache(const std::string &name, const std::string &value) {
+    auto &env_manager = thread_safe_env_manager::get_instance();
+    env_manager.set_cache(name, value);
   }
 
-  void SetCache(const std::string &name, const std::string &value) {
-    auto &env_manager = GetEnvManager();
-    env_manager.SetCache(name, value);
-  }
-
-  void SetCache(std::unordered_map<std::string, std::string> data) {
-    auto &env_manager = GetEnvManager();
-    env_manager.SetCache(std::move(data));
+  void set_cache(std::unordered_map<std::string, std::string> data) {
+    auto &env_manager = thread_safe_env_manager::get_instance();
+    env_manager.set_cache(std::move(data));
   }
 
 } // namespace linter::env
