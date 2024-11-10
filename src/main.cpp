@@ -19,6 +19,7 @@ void ForClangTidy() {
 }
 
 namespace {
+
   void branch_to_branch(
     git::repo_ptr repo,
     const std::string &branch1_name,
@@ -30,6 +31,7 @@ namespace {
 
     auto *commit1 = git::revparse::single(repo, branch1_name);
     assert(git::object::type(commit1) == git::object_t::commit);
+
     // auto c1_type  = git::object::type(commit1);
     // auto c1_oid   = git::oid::to_str(git::object::id(commit1));
     // std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), c1_oid);
@@ -45,6 +47,7 @@ namespace {
     git::object::free(commit1);
     git::object::free(commit2);
   }
+
 } // namespace
 
 int main() {

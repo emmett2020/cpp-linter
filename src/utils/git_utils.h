@@ -419,7 +419,7 @@ namespace linter::git {
 
     /// @brief: Lookup a reference by name and resolve immediately to OID.
     /// @link: https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name_to_id
-    auto name_to_oid(repo_ptr repo, const std::string &name) -> oid_ptr;
+    auto name_to_oid(repo_ptr repo, const std::string &name) -> git_oid;
 
   } // namespace ref
 
