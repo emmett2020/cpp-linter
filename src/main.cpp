@@ -28,14 +28,16 @@ namespace {
     auto *branch1 = git::branch::lookup(repo, branch1_name, branch1_type);
     auto *branch2 = git::branch::lookup(repo, branch2_name, branch2_type);
 
-    auto *commit1 = git::revparse::single(repo, "refs/heads/main");
-    auto c1_type  = git::object::type(commit1);
-    auto c1_oid   = git::oid::to_str(git::object::id(commit1));
-    std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), c1_oid);
+    auto *commit1 = git::revparse::single(repo, branch1_name);
     assert(git::object::type(commit1) == git::object_t::commit);
+    // auto c1_type  = git::object::type(commit1);
+    // auto c1_oid   = git::oid::to_str(git::object::id(commit1));
+    // std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), c1_oid);
 
-    auto *commit2 = git::revparse::single(repo, "HEAD");
+    auto *commit2 = git::revparse::single(repo, branch2_name);
     assert(git::object::type(commit2) == git::object_t::commit);
+
+    // auto commit1_tree = git::tree(commit1);
 
 
     git::ref::free(branch1);

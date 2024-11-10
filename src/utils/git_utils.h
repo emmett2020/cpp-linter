@@ -332,6 +332,10 @@ namespace linter::git {
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
     auto tree(commit_cptr commit) -> tree_ptr;
 
+    /// @brief Lookup a commit object from a repository.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_lookup
+    auto lookup(repo_ptr repo, oid_cptr id) -> commit_ptr;
+
   } // namespace commit
 
   /// @brief
@@ -412,6 +416,10 @@ namespace linter::git {
     /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master, refs/tags/v0.1.0, ...)
     /// @link: https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_lookup
     auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr;
+
+    /// @brief: Lookup a reference by name and resolve immediately to OID.
+    /// @link: https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name_to_id
+    auto name_to_oid(repo_ptr repo, const std::string &name) -> oid_ptr;
 
   } // namespace ref
 

@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstring>
 #include <git2/branch.h>
+#include <git2/commit.h>
 #include <git2/diff.h>
 #include <git2/errors.h>
 #include <git2/rebase.h>
@@ -238,6 +239,13 @@ namespace linter::git {
       auto ret  = git_commit_tree(&ptr, commit);
       ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
       return ptr;
+    }
+
+    auto lookup(repo_ptr repo, oid_cptr id) -> commit_ptr {
+      auto *commit = commit_ptr{nullptr};
+      auto ret     = git_commit_lookup(&commit, repo, id);
+      ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+      return commit;
     }
 
   } // namespace commit
