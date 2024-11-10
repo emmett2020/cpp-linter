@@ -13,6 +13,7 @@
 
 #include "utils/env_manager.h"
 #include "utils/util.h"
+#include "utils/git_utils.h"
 
 namespace linter {
   struct RateLimitHeaders {
@@ -41,6 +42,21 @@ namespace linter {
     std::string event_path;
     std::string sha;
     std::string token;
+  };
+
+  struct Repo {
+    explicit Repo(const std::string& repo_path) {
+      git::setup();
+      repo = git::repo::open(repo_path); // NOLINT
+    }
+
+    ~Repo() {
+      git::repo::free(repo);
+      git::shutdown();
+    }
+
+  private:
+    git::repo_ptr repo = nullptr;
   };
 
   class GithubApiClient {
