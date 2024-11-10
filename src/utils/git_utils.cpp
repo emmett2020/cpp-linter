@@ -10,6 +10,7 @@
 #include <git2/object.h>
 #include <git2/rebase.h>
 #include <git2/repository.h>
+#include <git2/signature.h>
 #include <git2/types.h>
 #include <iostream>
 #include <print>
@@ -125,6 +126,14 @@ namespace linter::git {
     case object_t::tree  : return "tree";
     }
     return "unknown";
+  }
+
+  auto convert_to_signature(signature_cptr sig_ptr) -> signature {
+    auto sig  = signature{};
+    sig.name  = sig_ptr->name;
+    sig.email = sig_ptr->email;
+    sig.when  = {.sec = sig_ptr->when.time, .offset = sig_ptr->when.offset};
+    return sig;
   }
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
@@ -243,11 +252,64 @@ namespace linter::git {
       return ptr;
     }
 
+    auto tree_id(commit_cptr commit) -> oid_cptr {
+      const auto *ret = ::git_commit_tree_id(commit);
+      return ret;
+    }
+
     auto lookup(repo_ptr repo, oid_cptr id) -> commit_ptr {
       auto *commit = commit_ptr{nullptr};
       auto ret     = ::git_commit_lookup(&commit, repo, id);
       ThrowIf(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return commit;
+    }
+
+    auto author(commit_cptr commit) -> signature {
+      const auto *sig_ptr = ::git_commit_author(commit);
+      ThrowIf(sig_ptr == nullptr, "The returned git_signature pointer is null");
+      auto sig = convert_to_signature(sig_ptr);
+      return sig;
+    }
+
+    auto committer(commit_cptr commit) -> signature {
+      const auto *sig_ptr = ::git_commit_committer(commit);
+      ThrowIf(sig_ptr == nullptr, "The returned git_signature pointer is null");
+      auto sig = convert_to_signature(sig_ptr);
+      return sig;
+    }
+
+    auto time(commit_cptr commit) -> int64_t {
+      auto time = ::git_commit_time(commit);
+      return time;
+    }
+
+    auto message(commit_cptr commit) -> std::string {
+      const auto *ret = ::git_commit_message(commit);
+      ThrowIf(ret == nullptr, [] noexcept { return ::git_error_last()->message; });
+      return ret;
+    }
+
+    auto nth_gen_ancestor(commit_cptr commit, std::uint32_t n) -> commit_ptr {
+      auto *out = commit_ptr{nullptr};
+      auto ret  = ::git_commit_nth_gen_ancestor(&out, commit, n);
+      ThrowIf(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return out;
+    }
+
+    auto parent(commit_cptr commit, std::uint32_t n) -> commit_ptr {
+      auto *out = commit_ptr{nullptr};
+      auto ret  = ::git_commit_parent(&out, commit, n);
+      ThrowIf(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return out;
+    }
+
+    auto parent_id(commit_cptr commit, std::uint32_t n) -> oid_cptr {
+      const auto *ret = ::git_commit_parent_id(commit, n);
+      return ret;
+    }
+
+    auto parent_count(commit_cptr commit) -> std::uint32_t {
+      return git_commit_parentcount(commit);
     }
 
   } // namespace commit
@@ -465,6 +527,13 @@ namespace linter::git {
 
 
   } // namespace object
+
+  namespace sig {
+    void free(signature_ptr sig) {
+      git_signature_free(sig);
+    }
+
+  } // namespace sig
 
 
 } // namespace linter::git

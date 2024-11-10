@@ -56,6 +56,7 @@ namespace linter::git {
   using diff_line_ptr    = git_diff_line *;
   using object_ptr       = git_object *;
   using oid_ptr          = git_oid *;
+  using signature_ptr    = git_signature *;
 
   using repo_cptr         = const git_repository *;
   using config_cptr       = const git_config *;
@@ -72,6 +73,7 @@ namespace linter::git {
   using diff_line_cptr    = const git_diff_line *;
   using object_cptr       = const git_object *;
   using oid_cptr          = const git_oid *;
+  using signature_cptr    = const git_signature *;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
@@ -179,6 +181,17 @@ namespace linter::git {
     std::vector<diff_hunk_detail> hunks;
   };
 
+  struct time {
+    std::int64_t sec;
+    int offset;
+  };
+
+  struct signature {
+    std::string name;
+    std::string email;
+    time when;
+  };
+
   constexpr auto convert_to_delta_status_t(git_delta_t t) -> delta_status_t {
     switch (t) {
     case GIT_DELTA_UNMODIFIED: return delta_status_t::unmodified;
@@ -250,6 +263,8 @@ namespace linter::git {
     }
     return GIT_OBJ_ANY;
   }
+
+  auto convert_to_signature(signature_cptr sig) -> signature;
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
   auto delta_status_t_str(delta_status_t status) -> std::string;
@@ -348,9 +363,49 @@ namespace linter::git {
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
     auto tree(commit_cptr commit) -> tree_ptr;
 
+    /// @brief Get the id of the tree pointed to by a commit. This differs from
+    /// git_commit_tree in that no attempts are made to fetch an object from the
+    /// ODB.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_tree_id
+    auto tree_id(commit_cptr commit) -> oid_cptr;
+
     /// @brief Lookup a commit object from a repository.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_lookup
     auto lookup(repo_ptr repo, oid_cptr id) -> commit_ptr;
+
+    /// @brief Get the author of a commit.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_author
+    auto author(commit_cptr commit) -> signature;
+
+    /// @brief Get the committer of a commit.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_committer
+    auto committer(commit_cptr commit) -> signature;
+
+    /// @brief Get the commit time (i.e. committer time) of a commit.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_time
+    auto time(commit_cptr commit) -> int64_t;
+
+    /// @brief Get the full message of a commit.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_message
+    auto message(commit_cptr commit) -> std::string;
+
+    /// @brief Get the commit object that is the <n
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_nth_gen_ancestor
+    auto nth_gen_ancestor(commit_cptr commit, std::uint32_t n) -> commit_ptr;
+
+    /// @brief Get the specified parent of the commit.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parent
+    auto parent(commit_cptr commit, std::uint32_t n) -> commit_ptr;
+
+    /// @brief Get the oid of a specified parent for a commit. This is
+    /// different from git_commit_parent, which will attempt to load the parent
+    /// commit from the ODB.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parent_id
+    auto parent_id(commit_cptr commit, std::uint32_t n) -> oid_cptr;
+
+    /// @brief Get the number of parents of this commit
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parentcount
+    auto parent_count(commit_cptr commit) -> std::uint32_t;
 
   } // namespace commit
 
@@ -485,6 +540,13 @@ namespace linter::git {
       return reinterpret_cast<tag_ptr>(obj);
     }
   }
+
+  namespace sig {
+    /// @brief Free an existing signature.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/signature/git_signature_free
+    void free(signature_ptr sig);
+
+  } // namespace sig
 
 
 } // namespace linter::git

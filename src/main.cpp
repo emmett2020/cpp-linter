@@ -153,6 +153,11 @@ int main() {
   auto *obj = git::object::lookup(repo, &oid, git::object_t::commit);
   assert(git::oid::to_str(oid) == git::oid::to_str(git::object::id(obj)));
   auto *commit = git::convert<git::commit_ptr>(obj);
+  auto cnt     = git::commit::parent_count(commit);
+  auto sig     = git::commit::author(commit);
+  auto msg     = git::commit::message(commit);
+
+  std::print("{}, {}, {}, {}, {}\n", cnt, sig.name, sig.email, sig.when.sec, msg);
 
   // std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
