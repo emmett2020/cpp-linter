@@ -40,7 +40,7 @@ namespace linter {
 
     /// @brief: Parse the header line of clang-tidy.
     /// @return: If the given line meets header line rule, parse it. Otherwise return std::nullopt.
-    auto ParseClangTidyHeaderLine(std::string_view line) -> std::optional<TidyHeaderLine> {
+    auto ParseClangTidyHeaderLine(std::string_view line) -> std::optional<tidy_header_line> {
       auto parts = line | std::views::split(':');
 
       if (std::distance(parts.begin(), parts.end()) != 5) {
@@ -72,7 +72,7 @@ namespace linter {
       auto brief      = std::string_view{brief_diagnostic.begin(), square_brackets};
       auto diagnostic = std::string_view{square_brackets, brief_diagnostic.end()};
 
-      auto header_line       = TidyHeaderLine{};
+      auto header_line       = tidy_header_line{};
       header_line.file_name  = file_name;
       header_line.row_idx    = row_idx;
       header_line.col_idx    = col_idx;
@@ -85,9 +85,9 @@ namespace linter {
 
   } // namespace
 
-  auto ParseClangTidyStdout(std::string_view output)
-    -> std::tuple<std::vector<TidyHeaderLine>, std::vector<std::string>> {
-    auto tidy_header_lines = std::vector<TidyHeaderLine>{};
+  auto parse_clang_tidy_stdout(std::string_view output)
+    -> std::tuple<std::vector<tidy_header_line>, std::vector<std::string>> {
+    auto tidy_header_lines = std::vector<tidy_header_line>{};
     auto details           = std::vector<std::string>{};
     auto needs_details     = false;
 
@@ -114,8 +114,8 @@ namespace linter {
     return std::make_tuple(tidy_header_lines, details);
   }
 
-  auto ParseClangTidyStderr(std::string_view std_err) -> TidyStatistic {
-    auto statistic = TidyStatistic{};
+  auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
+    auto statistic = tidy_statistic{};
 
 
     for (auto part: std::views::split(std_err, '\n')) {
@@ -137,19 +137,20 @@ namespace linter {
   /// @detail Get the full path of clang tools
   /// @param tool_name Could be "clang-tidy" or "clang-format"
   /// @param version A number.
-  auto GetClangToolFullPath(std::string_view tool_name, std::string_view version) -> std::string {
+  auto find_clang_tool_exe_path(std::string_view tool_name, std::string_view version)
+    -> std::string {
     auto command                = std::format("{}-{}", tool_name, version);
     auto [ec, std_out, std_err] = shell::Which(command);
-    ThrowIf(ec != 0, std_err);
+    throw_if(ec != 0, std_err);
     return std_out;
   }
 
   /// @detail Run clang_tidy_cmd and return result
   /// @param clang_tidy_cmd The full path of clang-tidy-version
   /// @param file The full file path which is going to be checked
-  auto RunClangTidy(std::string_view clang_tidy_cmd,
-                    const TidyOption& option,
-                    std::string_view file) -> shell::Result {
+  auto run_clang_tidy(std::string_view clang_tidy_cmd,
+                      const clang_tidy_option& option,
+                      std::string_view file) -> shell::Result {
     auto opts = std::vector<std::string>{};
     if (!option.database.empty()) {
       opts.emplace_back(std::format("-p={}", option.database));
@@ -184,7 +185,7 @@ namespace linter {
     return shell::Execute(clang_tidy_cmd, opts);
   }
 
-  auto GetRepoFullPath() -> std::string {
+  auto get_repo_full_path() -> std::string {
     return "";
   }
 

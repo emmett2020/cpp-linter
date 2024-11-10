@@ -5,6 +5,7 @@ Checks: '
   -altera*,
   -hicpp*,
   -abseil*,
+  -cert*,
 
   -modernize-use-trailing-return-type,
 

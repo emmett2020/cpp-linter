@@ -23,7 +23,6 @@ namespace linter::env {
     std::unordered_map<std::string, std::string> cache_;
   };
 
-  /// @brief: Wrapper of ThreadSafeEnvManager
   [[nodiscard]] auto get(const std::string &name) -> std::string;
   void set_cache(const std::string &name, const std::string &value);
   void set_cache(std::unordered_map<std::string, std::string> data);

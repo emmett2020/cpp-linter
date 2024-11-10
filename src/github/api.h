@@ -34,6 +34,7 @@ namespace linter {
   constexpr auto kGithubEventName  = "GITHUB_EVENT_NAME";
   constexpr auto kGithubEventPath  = "GITHUB_EVENT_PATH";
   constexpr auto kGithubSha        = "GITHUB_SHA";
+  constexpr auto kGithubRef        = "GITHUB_REF";
 
   /// Reads from the actual Github runner.
   struct GithubEnv {
@@ -44,14 +45,22 @@ namespace linter {
     std::string token;
   };
 
-  struct Repo {
-    explicit Repo(const std::string& repo_path) {
-      git::setup();
+  struct repository {
+    explicit repository(const std::string& repo_path) {
       repo = git::repo::open(repo_path); // NOLINT
     }
 
-    ~Repo() {
-      git::repo::free(repo);
+    auto get_changed_files(const std::string& target_branch, const std::string& cur_branch)
+      -> std::vector<std::string> {
+      auto deltas = git::diff::deltas(repo, target_branch, cur_branch);
+      auto res    = std::vector<std::string>{};
+      for (const auto& delta: deltas) {
+        res.emplace_back(delta.new_file.relative_path);
+      }
+      return res;
+    }
+
+    ~repository() {
       git::shutdown();
     }
 
@@ -88,8 +97,8 @@ namespace linter {
       };
 
       auto response = client.Get(path, headers);
-      ThrowIf(response->status != 200,
-              std::format("Get changed files failed. Status code: {}", response->status));
+      throw_if(response->status != 200,
+               std::format("Get changed files failed. Status code: {}", response->status));
       spdlog::debug(response->body);
       return {}; // parse
     }

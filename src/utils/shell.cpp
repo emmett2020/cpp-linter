@@ -30,13 +30,13 @@ namespace linter::shell {
     auto ec  = boost::system::error_code{};
     auto res = Result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
-    ThrowIf(ec && ec != boost::asio::error::eof,
-            std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
+    throw_if(ec && ec != boost::asio::error::eof,
+             std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
     ec.clear();
 
     boost::asio::read(rp_err, boost::asio::dynamic_buffer(res.std_err), ec);
-    ThrowIf(ec && ec != boost::asio::error::eof,
-            std::format("Read stderr message of {} faild since {}", command_path, ec.message()));
+    throw_if(ec && ec != boost::asio::error::eof,
+             std::format("Read stderr message of {} faild since {}", command_path, ec.message()));
 
     res.exit_code = proc.wait();
     return res;
@@ -55,13 +55,13 @@ namespace linter::shell {
     auto ec  = boost::system::error_code{};
     auto res = Result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
-    ThrowIf(ec && ec != boost::asio::error::eof,
-            std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
+    throw_if(ec && ec != boost::asio::error::eof,
+             std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
     ec.clear();
 
     boost::asio::read(rp_err, boost::asio::dynamic_buffer(res.std_err), ec);
-    ThrowIf(ec && ec != boost::asio::error::eof,
-            std::format("Read stderr message of {} faild since {}", command_path, ec.message()));
+    throw_if(ec && ec != boost::asio::error::eof,
+             std::format("Read stderr message of {} faild since {}", command_path, ec.message()));
 
     res.exit_code = proc.wait();
     return res;

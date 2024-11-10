@@ -266,14 +266,14 @@ namespace linter::git {
 
     auto author(commit_cptr commit) -> signature {
       const auto *sig_ptr = ::git_commit_author(commit);
-      ThrowIf(sig_ptr == nullptr, "The returned git_signature pointer is null");
+      throw_if(sig_ptr == nullptr, "The returned git_signature pointer is null");
       auto sig = convert_to_signature(sig_ptr);
       return sig;
     }
 
     auto committer(commit_cptr commit) -> signature {
       const auto *sig_ptr = ::git_commit_committer(commit);
-      ThrowIf(sig_ptr == nullptr, "The returned git_signature pointer is null");
+      throw_if(sig_ptr == nullptr, "The returned git_signature pointer is null");
       auto sig = convert_to_signature(sig_ptr);
       return sig;
     }
@@ -431,10 +431,10 @@ namespace linter::git {
       return deltas;
     }
 
-    auto deltas(git::repo_ptr repo, const std::string &branch1, const std::string &branch2)
+    auto deltas(repo_ptr repo, const std::string &ref1, const std::string &ref2)
       -> std::vector<git::diff_delta_detail> {
-      auto oid1     = ref::name_to_oid(repo, branch1);
-      auto oid2     = ref::name_to_oid(repo, branch2);
+      auto oid1     = ref::name_to_oid(repo, ref1);
+      auto oid2     = ref::name_to_oid(repo, ref2);
       auto *commit1 = commit::lookup(repo, &oid1);
       auto *commit2 = commit::lookup(repo, &oid2);
       auto *tree1   = commit::tree(commit1);
@@ -448,6 +448,16 @@ namespace linter::git {
       auto ret = deltas(diff);
       diff::free(diff);
       return ret;
+    }
+
+    auto changed_files(repo_ptr repo, const std::string &target_ref, const std::string &source_ref)
+      -> std::vector<std::string> {
+      auto details = deltas(repo, target_ref, source_ref);
+      auto res     = std::vector<std::string>{};
+      for (const auto &delta: details) {
+        res.emplace_back(delta.new_file.relative_path);
+      }
+      return res;
     }
 
   } // namespace diff

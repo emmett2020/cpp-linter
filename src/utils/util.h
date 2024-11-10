@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <stdexcept>
 #include <string_view>
@@ -30,7 +31,7 @@ namespace linter {
   /// @brief: Throw a std::runtime_error with given msg if condition is true.
   /// @param: condition Condition to be checked.
   /// @param: msg Message used to be construct std::runtime_error.
-  inline void ThrowIf(bool condition, const std::string &msg) {
+  inline void throw_if(bool condition, const std::string &msg) {
     if (condition) {
       throw std::runtime_error{msg};
     }
@@ -45,7 +46,7 @@ namespace linter {
   template <noexcept_str_func Func>
   void ThrowIf(bool condition, Func &&func) {
     if (condition) {
-      auto msg = std::forward(func)();
+      auto msg = std::forward<Func>(func)();
       throw std::runtime_error{msg};
     }
   }

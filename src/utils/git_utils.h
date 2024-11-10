@@ -453,9 +453,16 @@ namespace linter::git {
     /// @brief A simple implmentation which uses for_each to get diff delta details.
     auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail>;
 
-    /// @brief A simple implmentation which compares branch1 with branch2's differences.
-    auto deltas(git::repo_ptr repo, const std::string &branch1, const std::string &branch2)
+    /// @brief A simple implmentation which compares ref1 with ref2's differences.
+    auto deltas(repo_ptr repo, const std::string &ref1, const std::string &ref2)
       -> std::vector<git::diff_delta_detail>;
+
+    /// @brief Get changed files between two refs.
+    /// @return The modified and new added file names in source reference.
+    auto changed_files(repo_ptr repo, const std::string &target_ref, const std::string &source_ref)
+      -> std::vector<std::string>;
+
+
   } // namespace diff
 
   namespace oid {
@@ -529,19 +536,19 @@ namespace linter::git {
   auto convert(object_ptr obj) -> T {
     auto type = object::type(obj);
     if constexpr (std::same_as<std::decay_t<T>, commit_ptr>) {
-      ThrowIf(type != object_t::commit, "The given object isn't git_commit*");
+      throw_if(type != object_t::commit, "The given object isn't git_commit*");
       return reinterpret_cast<commit_ptr>(obj);
     }
     if constexpr (std::same_as<std::decay_t<T>, tree_ptr>) {
-      ThrowIf(type != object_t::tree, "The given object isn't git_tree*");
+      throw_if(type != object_t::tree, "The given object isn't git_tree*");
       return reinterpret_cast<tree_ptr>(obj);
     }
     if constexpr (std::same_as<std::decay_t<T>, blob_ptr>) {
-      ThrowIf(type != object_t::blob, "The given object isn't git_blob*");
+      throw_if(type != object_t::blob, "The given object isn't git_blob*");
       return reinterpret_cast<blob_ptr>(obj);
     }
     if constexpr (std::same_as<std::decay_t<T>, tag_ptr>) {
-      ThrowIf(type != object_t::tag, "The given object isn't git_blob*");
+      throw_if(type != object_t::tag, "The given object isn't git_blob*");
       return reinterpret_cast<tag_ptr>(obj);
     }
   }
