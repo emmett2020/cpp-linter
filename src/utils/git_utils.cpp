@@ -366,6 +366,14 @@ namespace linter::git {
       return buffer;
     }
 
+    auto to_str(oid_cptr oid_ptr) -> std::string {
+      auto buffer = std::string{};
+      // +1 is for null terminated.
+      buffer.resize(GIT_OID_MAX_HEXSIZE + 1);
+      git_oid_tostr(buffer.data(), buffer.size(), oid_ptr);
+      return buffer;
+    }
+
     auto equal(git_oid o1, git_oid o2) -> bool {
       return git_oid_equal(&o1, &o2) == 1;
     }
@@ -423,6 +431,12 @@ namespace linter::git {
     auto type(object_cptr obj) -> object_t {
       auto tp = git_object_type(obj);
       return convert_to_object_t(tp);
+    }
+
+    auto id(object_cptr obj) -> oid_cptr {
+      const auto *ret = git_object_id(obj);
+      ThrowIf(ret == nullptr, [] noexcept { return git_error_last()->message; });
+      return ret;
     }
 
 

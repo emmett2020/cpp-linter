@@ -53,6 +53,7 @@ namespace linter::git {
   using diff_hunk_ptr    = git_diff_hunk *;
   using diff_line_ptr    = git_diff_line *;
   using object_ptr       = git_object *;
+  using oid_ptr          = git_oid *;
 
   using repo_cptr         = const git_repository *;
   using config_cptr       = const git_config *;
@@ -67,6 +68,7 @@ namespace linter::git {
   using diff_hunk_cptr    = const git_diff_hunk *;
   using diff_line_cptr    = const git_diff_line *;
   using object_cptr       = const git_object *;
+  using oid_cptr          = const git_oid *;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
@@ -380,6 +382,7 @@ namespace linter::git {
     /// @brief Format a git_oid into a buffer as a hex format c-string.
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_tostr
     auto to_str(git_oid oid) -> std::string;
+    auto to_str(oid_cptr oid_ptr) -> std::string;
 
     /// @brief Compare two oid structures for equality
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_equal
@@ -428,6 +431,9 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_type
     auto type(object_cptr obj) -> object_t;
 
+    /// @brief Get the id (SHA1) of a repository object
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_id
+    auto id(object_cptr obj) -> oid_cptr;
 
   } // namespace object
 

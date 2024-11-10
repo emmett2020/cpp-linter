@@ -30,7 +30,8 @@ namespace {
 
     auto *commit1 = git::revparse::single(repo, "refs/heads/main");
     auto c1_type  = git::object::type(commit1);
-    std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), "xx");
+    auto c1_oid   = git::oid::to_str(git::object::id(commit1));
+    std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), c1_oid);
     assert(git::object::type(commit1) == git::object_t::commit);
 
     auto *commit2 = git::revparse::single(repo, "HEAD");
@@ -39,6 +40,8 @@ namespace {
 
     git::ref::free(branch1);
     git::ref::free(branch2);
+    git::object::free(commit1);
+    git::object::free(commit2);
   }
 } // namespace
 
