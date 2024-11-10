@@ -361,7 +361,7 @@ namespace linter::git {
       return ::git_diff_foreach(diff, file_cb, binary_cb, hunk_cb, line_cb, payload);
     }
 
-    auto details(diff_ptr diff) -> std::vector<diff_delta_detail> {
+    auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail> {
       auto line_cb =
         [](diff_delta_cptr cur_delta,
            diff_hunk_cptr cur_hunk,
@@ -429,6 +429,25 @@ namespace linter::git {
       auto deltas = std::vector<diff_delta_detail>{};
       for_each(diff, nullptr, nullptr, nullptr, line_cb, &deltas);
       return deltas;
+    }
+
+    auto deltas(git::repo_ptr repo, const std::string &branch1, const std::string &branch2)
+      -> std::vector<git::diff_delta_detail> {
+      auto oid1     = ref::name_to_oid(repo, branch1);
+      auto oid2     = ref::name_to_oid(repo, branch2);
+      auto *commit1 = commit::lookup(repo, &oid1);
+      auto *commit2 = commit::lookup(repo, &oid2);
+      auto *tree1   = commit::tree(commit1);
+      auto *tree2   = commit::tree(commit2);
+
+      auto *diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
+      commit::free(commit1);
+      commit::free(commit2);
+      object::free(reinterpret_cast<git::object_ptr>(tree1));
+      object::free(reinterpret_cast<git::object_ptr>(tree2));
+      auto ret = deltas(diff);
+      diff::free(diff);
+      return ret;
     }
 
   } // namespace diff

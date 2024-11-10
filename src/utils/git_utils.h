@@ -450,9 +450,12 @@ namespace linter::git {
       diff_line_cb line_cb,
       void *payload) -> int;
 
-    /// @brief A simple implmentation which uses for_each to get diff details.
-    auto details(diff_ptr diff) -> std::vector<diff_delta_detail>;
+    /// @brief A simple implmentation which uses for_each to get diff delta details.
+    auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail>;
 
+    /// @brief A simple implmentation which compares branch1 with branch2's differences.
+    auto deltas(git::repo_ptr repo, const std::string &branch1, const std::string &branch2)
+      -> std::vector<git::diff_delta_detail>;
   } // namespace diff
 
   namespace oid {

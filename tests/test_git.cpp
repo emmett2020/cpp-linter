@@ -17,7 +17,7 @@ int main() {
   auto empty        = git::repo::is_empty(repo);
   auto *config      = git::repo::config(repo);
   auto *diff        = git::diff::index_to_workdir(repo, nullptr, nullptr);
-  auto diff_details = git::diff::details(diff);
+  auto diff_details = git::diff::deltas(diff);
 
   for (const auto &file: diff_details) {
     std::println(
