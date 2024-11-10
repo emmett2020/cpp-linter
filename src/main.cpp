@@ -28,8 +28,9 @@ namespace {
     git::branch_t branch2_type) {
     auto *branch1 = git::branch::lookup(repo, branch1_name, branch1_type);
     auto *branch2 = git::branch::lookup(repo, branch2_name, branch2_type);
-
     auto *commit1 = git::revparse::single(repo, branch1_name);
+
+    auto oid = git::ref::name_to_oid(repo, branch1_name);
     assert(git::object::type(commit1) == git::object_t::commit);
 
     // auto c1_type  = git::object::type(commit1);
@@ -145,10 +146,17 @@ int main() {
   // }
   //
 
-  branch_to_branch(repo, "main", git::branch_t::local, "test", git::branch_t::local);
+  // branch_to_branch(repo, "main", git::branch_t::local, "test", git::branch_t::local);
+
+  auto oid = git::ref::name_to_oid(repo, "refs/heads/main");
+  std::cout << git::oid::to_str(oid) << "\n";
+  auto *obj = git::object::lookup(repo, &oid, git::object_t::commit);
+  assert(git::oid::to_str(oid) == git::oid::to_str(git::object::id(obj)));
+  auto *commit = git::convert<git::commit_ptr>(obj);
 
   // std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
   git::config::free(config);
+  git::object::free(obj);
   git::shutdown();
 }

@@ -7,6 +7,7 @@
 #include <git2/commit.h>
 #include <git2/diff.h>
 #include <git2/errors.h>
+#include <git2/object.h>
 #include <git2/rebase.h>
 #include <git2/repository.h>
 #include <git2/types.h>
@@ -367,7 +368,7 @@ namespace linter::git {
   } // namespace diff
 
   namespace oid {
-    auto to_str(git_oid oid) -> std::string {
+    auto to_str(const git_oid &oid) -> std::string {
       auto buffer = std::string{};
       // +1 is for null terminated.
       buffer.resize(GIT_OID_MAX_HEXSIZE + 1);
@@ -451,8 +452,15 @@ namespace linter::git {
 
     auto id(object_cptr obj) -> oid_cptr {
       const auto *ret = ::git_object_id(obj);
-      ThrowIf(ret == nullptr, [] noexcept { return git_error_last()->message; });
+      ThrowIf(ret == nullptr, [] noexcept { return ::git_error_last()->message; });
       return ret;
+    }
+
+    auto lookup(repo_ptr repo, oid_cptr oid, object_t type) -> object_ptr {
+      auto *obj = object_ptr{nullptr};
+      auto ret  = git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
+      ThrowIf(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return obj;
     }
 
 

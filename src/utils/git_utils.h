@@ -1,5 +1,6 @@
 #pragma once
 
+#include "utils/util.h"
 #include <cstdint>
 #include <cstring>
 #include <git2/deprecated.h>
@@ -49,6 +50,7 @@ namespace linter::git {
   using tree_ptr         = git_tree *;
   using index_ptr        = git_index *;
   using blob_ptr         = git_blob *;
+  using tag_ptr          = git_tag *;
   using diff_delta_ptr   = git_diff_delta *;
   using diff_hunk_ptr    = git_diff_hunk *;
   using diff_line_ptr    = git_diff_line *;
@@ -64,6 +66,7 @@ namespace linter::git {
   using tree_cptr         = const git_tree *;
   using index_cptr        = const git_index *;
   using blob_cptr         = const blob_ptr *;
+  using tag_cptr          = const git_tag *;
   using diff_delta_cptr   = const git_diff_delta *;
   using diff_hunk_cptr    = const git_diff_hunk *;
   using diff_line_cptr    = const git_diff_line *;
@@ -235,6 +238,19 @@ namespace linter::git {
     return object_t::any;
   }
 
+  constexpr auto convert_to_git_otype(object_t tp) -> git_otype {
+    switch (tp) {
+    case object_t::any   : return GIT_OBJ_ANY;
+    case object_t::bad   : return GIT_OBJ_BAD;
+    case object_t::tag   : return GIT_OBJ_TAG;
+    case object_t::blob  : return GIT_OBJ_BLOB;
+    case object_t::tree  : return GIT_OBJ_TREE;
+    case object_t::commit: return GIT_OBJ_COMMIT;
+    default              : return GIT_OBJ_ANY;
+    }
+    return GIT_OBJ_ANY;
+  }
+
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
   auto delta_status_t_str(delta_status_t status) -> std::string;
   auto file_mode_t_str(file_mode_t mode) -> std::string;
@@ -385,7 +401,7 @@ namespace linter::git {
   namespace oid {
     /// @brief Format a git_oid into a buffer as a hex format c-string.
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_tostr
-    auto to_str(git_oid oid) -> std::string;
+    auto to_str(const git_oid &oid) -> std::string;
     auto to_str(oid_cptr oid_ptr) -> std::string;
 
     /// @brief Compare two oid structures for equality
@@ -443,6 +459,32 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_id
     auto id(object_cptr obj) -> oid_cptr;
 
+    /// @brief Lookup a reference to one of the objects in a repository.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_lookup
+    auto lookup(repo_ptr repo, oid_cptr oid, object_t type) -> object_ptr;
+
   } // namespace object
+
+  template <typename T>
+  auto convert(object_ptr obj) -> T {
+    auto type = object::type(obj);
+    if constexpr (std::same_as<std::decay_t<T>, commit_ptr>) {
+      ThrowIf(type != object_t::commit, "The given object isn't git_commit*");
+      return reinterpret_cast<commit_ptr>(obj);
+    }
+    if constexpr (std::same_as<std::decay_t<T>, tree_ptr>) {
+      ThrowIf(type != object_t::tree, "The given object isn't git_tree*");
+      return reinterpret_cast<tree_ptr>(obj);
+    }
+    if constexpr (std::same_as<std::decay_t<T>, blob_ptr>) {
+      ThrowIf(type != object_t::blob, "The given object isn't git_blob*");
+      return reinterpret_cast<blob_ptr>(obj);
+    }
+    if constexpr (std::same_as<std::decay_t<T>, tag_ptr>) {
+      ThrowIf(type != object_t::tag, "The given object isn't git_blob*");
+      return reinterpret_cast<tag_ptr>(obj);
+    }
+  }
+
 
 } // namespace linter::git
