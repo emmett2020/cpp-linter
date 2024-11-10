@@ -119,6 +119,12 @@ namespace linter::git {
     all,
   };
 
+  enum class branch_t : uint8_t {
+    local,
+    remote,
+    all
+  };
+
   struct diff_line_details {
     diff_line_t origin;
     std::int64_t old_lineno;
@@ -207,6 +213,7 @@ namespace linter::git {
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
   auto diff_line_type_str(diff_line_t tp) -> std::string;
   auto ref_type_str(ref_t tp) -> std::string;
+  auto branch_type_str(branch_t tp) -> std::string;
 
   /// @brief Init the global state.
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
@@ -284,6 +291,10 @@ namespace linter::git {
     /// @brief Determine if HEAD points to the given branch
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
     bool is_head(reference_cptr branch);
+
+    /// @brief Lookup a branch by its name in a repository.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/branch/git_branch_lookup
+    auto lookup(repo_ptr repo, const std::string &name, branch_t branch_type) -> reference_ptr;
 
   } // namespace branch
 

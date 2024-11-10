@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <git2/branch.h>
 #include <git2/diff.h>
 #include <git2/errors.h>
 #include <git2/rebase.h>
@@ -95,12 +96,20 @@ namespace linter::git {
 
   auto ref_type_str(ref_t tp) -> std::string {
     switch (tp) {
-    case ref_t::oid     : return "oid";
-    case ref_t::install : return "install";
+    case ref_t::direct  : return "direct";
     case ref_t::symbolic: return "symbolic";
+    case ref_t::all     : return "all";
     default             : return "invalid";
     }
     return "invalid";
+  }
+
+  auto branch_type_str(branch_t tp) -> std::string {
+    switch (tp) {
+    case branch_t::local : return "local";
+    case branch_t::remote: return "remote";
+    case branch_t::all   : return "all";
+    }
   }
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
@@ -190,6 +199,22 @@ namespace linter::git {
       auto ret = git_branch_is_head(branch);
       ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
       return ret == 1;
+    }
+
+    auto lookup(repo_ptr repo, const std::string &name, branch_t branch_type) -> reference_ptr {
+      auto convert_to = [&]() {
+        switch (branch_type) {
+        case branch_t::local : return git_branch_t::GIT_BRANCH_LOCAL;
+        case branch_t::remote: return git_branch_t::GIT_BRANCH_REMOTE;
+        case branch_t::all   : return git_branch_t::GIT_BRANCH_ALL;
+        }
+        return GIT_BRANCH_ALL;
+      };
+
+      auto *res = reference_ptr{nullptr};
+      auto ret  = git_branch_lookup(&res, repo, name.c_str(), convert_to());
+      ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+      return res;
     }
 
   } // namespace branch
