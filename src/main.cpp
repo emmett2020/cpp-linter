@@ -20,33 +20,23 @@ void ForClangTidy() {
 
 namespace {
 
-  void branch_to_branch(
-    git::repo_ptr repo,
-    const std::string &branch1_name,
-    git::branch_t branch1_type,
-    const std::string &branch2_name,
-    git::branch_t branch2_type) {
-    auto *branch1 = git::branch::lookup(repo, branch1_name, branch1_type);
-    auto *branch2 = git::branch::lookup(repo, branch2_name, branch2_type);
-    auto *commit1 = git::revparse::single(repo, branch1_name);
+  auto branch_to_branch(git::repo_ptr repo, const std::string &branch1, const std::string &branch2)
+    -> std::vector<git::diff_delta_detail> {
+    auto oid1     = git::ref::name_to_oid(repo, branch1);
+    auto oid2     = git::ref::name_to_oid(repo, branch2);
+    auto *commit1 = git::commit::lookup(repo, &oid1);
+    auto *commit2 = git::commit::lookup(repo, &oid2);
+    auto *tree1   = git::commit::tree(commit1);
+    auto *tree2   = git::commit::tree(commit2);
 
-    auto oid = git::ref::name_to_oid(repo, branch1_name);
-    assert(git::object::type(commit1) == git::object_t::commit);
-
-    // auto c1_type  = git::object::type(commit1);
-    // auto c1_oid   = git::oid::to_str(git::object::id(commit1));
-    // std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), c1_oid);
-
-    auto *commit2 = git::revparse::single(repo, branch2_name);
-    assert(git::object::type(commit2) == git::object_t::commit);
-
-    // auto commit1_tree = git::tree(commit1);
-
-
-    git::ref::free(branch1);
-    git::ref::free(branch2);
-    git::object::free(commit1);
-    git::object::free(commit2);
+    auto *diff = git::diff::tree_to_tree(repo, tree1, tree2, nullptr);
+    git::commit::free(commit1);
+    git::commit::free(commit2);
+    git::object::free(reinterpret_cast<git::object_ptr>(tree1));
+    git::object::free(reinterpret_cast<git::object_ptr>(tree2));
+    auto ret = git::diff::details(diff);
+    git::diff::free(diff);
+    return ret;
   }
 
 } // namespace
@@ -104,64 +94,64 @@ int main() {
   auto num_deltas    = git::diff::num_deltas(diff);
   const auto *deltas = git::diff::get_delta(diff, 0);
 
-  auto diff_details = git::diff::details(diff);
+  auto diff_details = branch_to_branch(repo, "refs/heads/main", "refs/heads/test");
+  // auto diff_details = git::diff::details(diff);
   // std::println("old_file_path: {}, new_file_path: {}, similarity: {}",
   //              diff_details.old_file_path,
   //              diff_details.new_file_path,
   //              diff_details.similarity);
 
-  // for (const auto &file: diff_details) {
-  //   std::println(
-  //     "rel_path:{}\nrel_path {}\nfile num: {}\nflag: {}\nstatus: {}\n",
-  //     file.old_file.relative_path,
-  //     file.new_file.relative_path,
-  //     file.file_num,
-  //     git::file_flag_t_str(file.flags),
-  //     git::delta_status_t_str(file.status));
-  //
-  //   std::println("\ndetails: ");
-  //   std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
-  //                file.old_file.oid,
-  //                file.old_file.size,
-  //                git::file_flag_t_str(file.old_file.flags),
-  //                git::file_mode_t_str(file.old_file.mode));
-  //   std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
-  //                file.new_file.oid,
-  //                file.new_file.size,
-  //                git::file_flag_t_str(file.new_file.flags),
-  //                git::file_mode_t_str(file.new_file.mode));
-  //
-  //   for (const auto &hunk: file.hunks) {
-  //     std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
-  //                hunk.header,
-  //                hunk.old_start,
-  //                hunk.old_lines,
-  //                hunk.new_start,
-  //                hunk.new_lines);
-  //
-  //     for (const auto &line: hunk.lines) {
-  //       std::print("line content: {}", line.content);
-  //     }
-  //   }
-  // }
-  //
+  for (const auto &file: diff_details) {
+    std::println(
+      "rel_path:{}\nrel_path {}\nfile num: {}\nflag: {}\nstatus: {}\n",
+      file.old_file.relative_path,
+      file.new_file.relative_path,
+      file.file_num,
+      git::file_flag_t_str(file.flags),
+      git::delta_status_t_str(file.status));
 
-  // branch_to_branch(repo, "main", git::branch_t::local, "test", git::branch_t::local);
+    std::println("\ndetails: ");
+    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
+                 file.old_file.oid,
+                 file.old_file.size,
+                 git::file_flag_t_str(file.old_file.flags),
+                 git::file_mode_t_str(file.old_file.mode));
+    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
+                 file.new_file.oid,
+                 file.new_file.size,
+                 git::file_flag_t_str(file.new_file.flags),
+                 git::file_mode_t_str(file.new_file.mode));
 
-  auto oid = git::ref::name_to_oid(repo, "refs/heads/main");
-  std::cout << git::oid::to_str(oid) << "\n";
-  auto *obj = git::object::lookup(repo, &oid, git::object_t::commit);
-  assert(git::oid::to_str(oid) == git::oid::to_str(git::object::id(obj)));
-  auto *commit = git::convert<git::commit_ptr>(obj);
-  auto cnt     = git::commit::parent_count(commit);
-  auto sig     = git::commit::author(commit);
-  auto msg     = git::commit::message(commit);
+    for (const auto &hunk: file.hunks) {
+      std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
+                 hunk.header,
+                 hunk.old_start,
+                 hunk.old_lines,
+                 hunk.new_start,
+                 hunk.new_lines);
 
-  std::print("{}, {}, {}, {}, {}\n", cnt, sig.name, sig.email, sig.when.sec, msg);
+      for (const auto &line: hunk.lines) {
+        std::print("line content: {}", line.content);
+      }
+    }
+  }
+
+  // auto oid = git::ref::name_to_oid(repo, "refs/heads/main");
+  // std::cout << git::oid::to_str(oid) << "\n";
+  // auto *obj = git::object::lookup(repo, &oid, git::object_t::commit);
+  // assert(git::oid::to_str(oid) == git::oid::to_str(git::object::id(obj)));
+  // auto *commit = git::convert<git::commit_ptr>(obj);
+  // auto cnt     = git::commit::parent_count(commit);
+  // auto sig     = git::commit::author(commit);
+  // auto msg     = git::commit::message(commit);
+  //
+  // std::cout << git::oid::to_str(git::commit::parent_id(commit, 2)) << "\n";
+  //
+  // std::print("{}, {}, {}, {}, {}\n", cnt, sig.name, sig.email, sig.when.sec, msg);
 
   // std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);
   git::config::free(config);
-  git::object::free(obj);
+  // git::object::free(obj);
   git::shutdown();
 }

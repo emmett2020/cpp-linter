@@ -407,6 +407,8 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parentcount
     auto parent_count(commit_cptr commit) -> std::uint32_t;
 
+    void free(commit_ptr commit);
+
   } // namespace commit
 
   /// @brief

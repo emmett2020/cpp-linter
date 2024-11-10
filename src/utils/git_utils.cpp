@@ -312,6 +312,10 @@ namespace linter::git {
       return git_commit_parentcount(commit);
     }
 
+    void free(commit_ptr commit) {
+      git::object::free(reinterpret_cast<object_ptr>(commit));
+    }
+
   } // namespace commit
 
   namespace diff {
