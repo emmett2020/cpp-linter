@@ -28,7 +28,7 @@ namespace linter::git {
     return git_libgit2_shutdown();
   }
 
-  auto delta_status_str(delta_status_t status) -> std::string {
+  auto delta_status_t_str(delta_status_t status) -> std::string {
     switch (status) {
     case delta_status_t::unmodified : return "unmodified";
     case delta_status_t::added      : return "added";
@@ -46,7 +46,7 @@ namespace linter::git {
     return "unknown";
   }
 
-  auto file_mode_str(file_mode_t mode) -> std::string {
+  auto file_mode_t_str(file_mode_t mode) -> std::string {
     switch (mode) {
     case file_mode_t::unreadable     : return "unreadable";
     case file_mode_t::tree           : return "tree";
@@ -59,7 +59,7 @@ namespace linter::git {
     return "unknown";
   }
 
-  auto file_flag_str(std::uint32_t flags) -> std::string {
+  auto file_flag_t_str(std::uint32_t flags) -> std::string {
     auto res    = std::string{};
     auto concat = [&](std::uint32_t exactor, std::string_view msg) {
       if (flags & exactor) {
@@ -78,7 +78,7 @@ namespace linter::git {
     return res;
   }
 
-  auto diff_line_type_str(diff_line_t tp) -> std::string {
+  auto diff_line_t_str(diff_line_t tp) -> std::string {
     switch (tp) {
     case diff_line_t::context      : return "context";
     case diff_line_t::addition     : return "addition";
@@ -94,7 +94,7 @@ namespace linter::git {
     return "unknown";
   }
 
-  auto ref_type_str(ref_t tp) -> std::string {
+  auto ref_t_str(ref_t tp) -> std::string {
     switch (tp) {
     case ref_t::direct  : return "direct";
     case ref_t::symbolic: return "symbolic";
@@ -104,12 +104,25 @@ namespace linter::git {
     return "invalid";
   }
 
-  auto branch_type_str(branch_t tp) -> std::string {
+  auto branch_t_str(branch_t tp) -> std::string {
     switch (tp) {
     case branch_t::local : return "local";
     case branch_t::remote: return "remote";
     case branch_t::all   : return "all";
     }
+    return "unknown";
+  }
+
+  auto object_t_str(object_t tp) -> std::string {
+    switch (tp) {
+    case object_t::any   : return "any";
+    case object_t::commit: return "commit";
+    case object_t::bad   : return "bad";
+    case object_t::tag   : return "tag";
+    case object_t::blob  : return "blob";
+    case object_t::tree  : return "tree";
+    }
+    return "unknown";
   }
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
@@ -289,7 +302,7 @@ namespace linter::git {
 
         if (delta_iter == deltas.end()) {
           auto delta = diff_delta_detail{
-            .status     = convert_to_delta_status(cur_delta->status),
+            .status     = convert_to_delta_status_t(cur_delta->status),
             .flags      = cur_delta->flags,
             .similarity = cur_delta->similarity,
             .file_num   = cur_delta->nfiles,
@@ -297,12 +310,12 @@ namespace linter::git {
                            .relative_path = cur_delta->old_file.path,
                            .size          = cur_delta->old_file.size,
                            .flags         = cur_delta->old_file.flags,
-                           .mode          = convert_to_file_mode(cur_delta->old_file.mode)},
+                           .mode          = convert_to_file_mode_t(cur_delta->old_file.mode)},
             .new_file   = {.oid           = cur_new_id,
                            .relative_path = cur_delta->new_file.path,
                            .size          = cur_delta->new_file.size,
                            .flags         = cur_delta->new_file.flags,
-                           .mode          = convert_to_file_mode(cur_delta->new_file.mode)},
+                           .mode          = convert_to_file_mode_t(cur_delta->new_file.mode)},
           };
           deltas.emplace_back(std::move(delta));
           delta_iter = --(deltas.end());
@@ -324,8 +337,8 @@ namespace linter::git {
           hook_iter = --(delta_iter->hunks.end());
         }
 
-        auto line = diff_line_details{
-          .origin           = convert_to_diff_line_type(cur_line->origin),
+        auto line = diff_line_detail{
+          .origin           = convert_to_diff_line_t(cur_line->origin),
           .old_lineno       = cur_line->old_lineno,
           .new_lineno       = cur_line->new_lineno,
           .num_lines        = cur_line->num_lines,
@@ -405,6 +418,11 @@ namespace linter::git {
   namespace object {
     void free(object_ptr obj) {
       git_object_free(obj);
+    }
+
+    auto type(object_cptr obj) -> object_t {
+      auto tp = git_object_type(obj);
+      return convert_to_object_t(tp);
     }
 
 

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <git2/deprecated.h>
 #include <git2/types.h>
 #include <vector>
 #include <string>
@@ -128,7 +129,16 @@ namespace linter::git {
     all
   };
 
-  struct diff_line_details {
+  enum class object_t : uint8_t {
+    any,
+    bad,
+    commit,
+    tree,
+    blob,
+    tag,
+  };
+
+  struct diff_line_detail {
     diff_line_t origin;
     std::int64_t old_lineno;
     std::int64_t new_lineno;
@@ -143,7 +153,7 @@ namespace linter::git {
     std::int32_t old_lines;
     std::int32_t new_start;
     std::int32_t new_lines;
-    std::vector<diff_line_details> lines;
+    std::vector<diff_line_detail> lines;
   };
 
   struct diff_file_detail {
@@ -164,7 +174,7 @@ namespace linter::git {
     std::vector<diff_hunk_detail> hunks;
   };
 
-  constexpr auto convert_to_delta_status(git_delta_t t) -> delta_status_t {
+  constexpr auto convert_to_delta_status_t(git_delta_t t) -> delta_status_t {
     switch (t) {
     case GIT_DELTA_UNMODIFIED: return delta_status_t::unmodified;
     case GIT_DELTA_ADDED     : return delta_status_t::added;
@@ -181,7 +191,7 @@ namespace linter::git {
     return delta_status_t::unknown;
   }
 
-  constexpr auto convert_to_file_mode(uint16_t m) -> file_mode_t {
+  constexpr auto convert_to_file_mode_t(uint16_t m) -> file_mode_t {
     switch (m) {
     case 0000000: return file_mode_t::unreadable;
     case 0040000: return file_mode_t::tree;
@@ -194,7 +204,7 @@ namespace linter::git {
     return file_mode_t::unknown;
   }
 
-  constexpr auto convert_to_diff_line_type(char m) -> diff_line_t {
+  constexpr auto convert_to_diff_line_t(char m) -> diff_line_t {
     switch (m) {
     case ' ': return diff_line_t::context;
     case '+': return diff_line_t::addition;
@@ -210,13 +220,27 @@ namespace linter::git {
     return diff_line_t::unknown;
   }
 
-  auto delta_status_str(delta_status_t status) -> std::string;
-  auto file_mode_str(file_mode_t mode) -> std::string;
-  auto file_flag_str(std::uint32_t flag) -> std::string;
+  constexpr auto convert_to_object_t(git_otype tp) -> object_t {
+    switch (tp) {
+    case GIT_OBJ_ANY   : return object_t::any;
+    case GIT_OBJ_BAD   : return object_t::bad;
+    case GIT_OBJ_TAG   : return object_t::tag;
+    case GIT_OBJ_BLOB  : return object_t::blob;
+    case GIT_OBJ_TREE  : return object_t::tree;
+    case GIT_OBJ_COMMIT: return object_t::commit;
+    default            : return object_t::any;
+    }
+    return object_t::any;
+  }
+
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
-  auto diff_line_type_str(diff_line_t tp) -> std::string;
-  auto ref_type_str(ref_t tp) -> std::string;
-  auto branch_type_str(branch_t tp) -> std::string;
+  auto delta_status_t_str(delta_status_t status) -> std::string;
+  auto file_mode_t_str(file_mode_t mode) -> std::string;
+  auto file_flag_t_str(std::uint32_t flag) -> std::string;
+  auto diff_line_t_str(diff_line_t tp) -> std::string;
+  auto ref_t_str(ref_t tp) -> std::string;
+  auto branch_t_str(branch_t tp) -> std::string;
+  auto object_t_str(object_t tp) -> std::string;
 
   /// @brief Init the global state.
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
@@ -399,6 +423,10 @@ namespace linter::git {
     /// @brief Close an open object
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_free
     void free(object_ptr obj);
+
+    /// @brief Get the object type of an object
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_type
+    auto type(object_cptr obj) -> object_t;
 
 
   } // namespace object

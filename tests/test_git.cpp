@@ -25,20 +25,20 @@ int main() {
       file.old_file.relative_path,
       file.new_file.relative_path,
       file.file_num,
-      git::file_flag_str(file.flags),
-      git::delta_status_str(file.status));
+      git::file_flag_t_str(file.flags),
+      git::delta_status_t_str(file.status));
 
     std::println("\ndetails: ");
     std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
                  file.old_file.oid,
                  file.old_file.size,
-                 git::file_flag_str(file.old_file.flags),
-                 git::file_mode_str(file.old_file.mode));
+                 git::file_flag_t_str(file.old_file.flags),
+                 git::file_mode_t_str(file.old_file.mode));
     std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
                  file.new_file.oid,
                  file.new_file.size,
-                 git::file_flag_str(file.new_file.flags),
-                 git::file_mode_str(file.new_file.mode));
+                 git::file_flag_t_str(file.new_file.flags),
+                 git::file_mode_t_str(file.new_file.mode));
 
     for (const auto &hunk: file.hunks) {
       std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
