@@ -108,13 +108,6 @@ namespace {
     }
 
     auto statistic = parse_clang_tidy_stderr(std_err);
-    spdlog::debug(statistic.to_str());
-
-    if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
-      spdlog::info("fast exit");
-      return statistic;
-    }
-
     return statistic;
   }
 
@@ -148,6 +141,11 @@ int main() {
 
     for (const auto &file: changed_files) {
       auto statistic = run_clang_tidy_once(clang_tidy_exe, file, options);
+      spdlog::debug(statistic.to_str());
+      if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
+        spdlog::info("fast exit");
+        return -1;
+      }
     }
   }
 

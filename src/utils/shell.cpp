@@ -15,8 +15,8 @@
 namespace linter::shell {
   namespace bp = boost::process::v2;
 
-  auto Execute(std::string_view command_path, const Options& options, const Envionment& env)
-    -> Result {
+  auto execute(std::string_view command_path, const options& opts, const envionment& env)
+    -> result {
     auto context = boost::asio::io_context{};
     auto rp_out  = boost::asio::readable_pipe{context};
     auto rp_err  = boost::asio::readable_pipe{context};
@@ -24,11 +24,11 @@ namespace linter::shell {
     auto proc = bp::process(
       context,
       command_path,
-      options,
+      opts,
       bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err},
       bp::process_environment{env});
     auto ec  = boost::system::error_code{};
-    auto res = Result{};
+    auto res = result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
     throw_if(ec && ec != boost::asio::error::eof,
              std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
@@ -42,7 +42,7 @@ namespace linter::shell {
     return res;
   }
 
-  auto Execute(std::string_view command_path, const Options& options) -> Result {
+  auto execute(std::string_view command_path, const options& opts) -> result {
     auto context = boost::asio::io_context{};
     auto rp_out  = boost::asio::readable_pipe{context};
     auto rp_err  = boost::asio::readable_pipe{context};
@@ -50,10 +50,10 @@ namespace linter::shell {
     auto proc = bp::process(
       context,
       command_path,
-      options,
+      opts,
       bp::process_stdio{.in = {}, .out = rp_out, .err = rp_err});
     auto ec  = boost::system::error_code{};
-    auto res = Result{};
+    auto res = result{};
     boost::asio::read(rp_out, boost::asio::dynamic_buffer(res.std_out), ec);
     throw_if(ec && ec != boost::asio::error::eof,
              std::format("Read stdout message of {} faild since {}", command_path, ec.message()));
@@ -67,9 +67,9 @@ namespace linter::shell {
     return res;
   }
 
-  auto Which(std::string command) -> Result {
+  auto which(std::string command) -> result {
     constexpr auto which = std::string_view{"/usr/bin/which"};
-    auto res             = Execute(which, {std::move(command)});
+    auto res             = execute(which, {std::move(command)});
     res.std_out          = Trim(res.std_out);
     return res;
   }

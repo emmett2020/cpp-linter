@@ -76,7 +76,7 @@ namespace linter {
 
   auto run_clang_tidy(std::string_view clang_tidy_cmd,
                       const clang_tidy_option& option,
-                      std::string_view file_path) -> shell::Result;
+                      std::string_view file_path) -> shell::result;
 
 
 } // namespace linter

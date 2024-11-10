@@ -140,7 +140,7 @@ namespace linter {
   auto find_clang_tool_exe_path(std::string_view tool_name, std::string_view version)
     -> std::string {
     auto command                = std::format("{}-{}", tool_name, version);
-    auto [ec, std_out, std_err] = shell::Which(command);
+    auto [ec, std_out, std_err] = shell::which(command);
     throw_if(ec != 0, std_err);
     return std_out;
   }
@@ -150,7 +150,7 @@ namespace linter {
   /// @param file The full file path which is going to be checked
   auto run_clang_tidy(std::string_view clang_tidy_cmd,
                       const clang_tidy_option& option,
-                      std::string_view file) -> shell::Result {
+                      std::string_view file) -> shell::result {
     auto opts = std::vector<std::string>{};
     if (!option.database.empty()) {
       opts.emplace_back(std::format("-p={}", option.database));
@@ -182,7 +182,7 @@ namespace linter {
     auto arg_str = opts | std::views::join_with(' ') | std::ranges::to<std::string>();
     spdlog::info("Running {} {}", clang_tidy_cmd, arg_str);
 
-    return shell::Execute(clang_tidy_cmd, opts);
+    return shell::execute(clang_tidy_cmd, opts);
   }
 
   auto get_repo_full_path() -> std::string {
