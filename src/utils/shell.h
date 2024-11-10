@@ -11,11 +11,16 @@ namespace linter::shell {
     std::string std_err;
   };
 
-  using envionment = std::unordered_map<std::string, std::string>;
-  using options    = std::vector<std::string>;
+  using envrionment = std::unordered_map<std::string, std::string>;
+  using options     = std::vector<std::string>;
 
-  auto execute(std::string_view command_path, const options& opts, const envionment& env) -> result;
-  auto execute(std::string_view command_path, const options& opts) -> result;
+  auto execute(std::string_view command,
+               const options& opts,
+               const envrionment& env,
+               std::string_view start_dir = "") -> result;
+  auto execute(std::string_view command, const options& opts, std::string_view start_dir = "")
+    -> result;
+
   auto which(std::string command) -> result;
 } // namespace linter::shell
 
