@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cctype>
 #include <print>
 #include <ranges>
@@ -29,10 +30,8 @@ namespace {
   }
 
   struct user_options {
-    // Common option.
     std::string log_level;
 
-    // Git repository option.
     std::string repo_path;
     std::string target_ref;
     // https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request
@@ -68,7 +67,8 @@ namespace {
     env::set_cache(kGithubSha, "");
     env::set_cache(kGithubRef, "refs/heads/test");
 
-    param.log_level               = "DEBUG";
+    param.log_level               = "TRACE";
+    param.enable_clang_tidy       = true;
     param.clang_tidy_fast_exit    = false;
     param.clang_tidy_version      = "20";
     param.tidy_option.config_file = ".clang-tidy";
@@ -85,8 +85,37 @@ namespace {
     return param;
   }
 
-  bool run_clang_tidy_once(const std::string &file, const user_options &options) {
-    return true;
+  auto run_clang_tidy_once(
+    const std::string &clang_tidy_exe,
+    const std::string &file,
+    const user_options &options) -> tidy_statistic {
+    auto [ec, std_out, std_err] = run_clang_tidy(clang_tidy_exe, options.tidy_option, file);
+    spdlog::trace("{} original return code:\n{}", clang_tidy_exe, ec);
+    spdlog::trace("{} original stdout:\n{}", clang_tidy_exe, std_out);
+    spdlog::trace("{} original stderr:\n{}", clang_tidy_exe, std_err);
+
+    auto [noti_lines, codes] = parse_clang_tidy_stdout(std_out);
+    for (const auto &[line, code]: std::ranges::views::zip(noti_lines, codes)) {
+      spdlog::trace(
+        "{}:{}:{}: {}: {} {}",
+        line.file_name,
+        line.row_idx,
+        line.col_idx,
+        line.serverity,
+        line.brief,
+        line.diagnostic);
+      spdlog::trace("{}", code);
+    }
+
+    auto statistic = parse_clang_tidy_stderr(std_err);
+    spdlog::debug(statistic.to_str());
+
+    if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
+      spdlog::info("fast exit");
+      return statistic;
+    }
+
+    return statistic;
   }
 
   void setup() {
@@ -112,35 +141,16 @@ int main() {
   auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
   print_changed_files(changed_files);
 
-  // if (param.enable_clang_tidy) {
-  //   auto clang_tool_exe = find_clang_tool_exe_path("clang-tidy", param.clang_tidy_version);
-  //   throw_if(clang_tool_exe.empty(), "find clang tidy executable failed");
-  // }
+  if (options.enable_clang_tidy) {
+    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
+    spdlog::info("clang tidy executable path: {}", clang_tidy_exe);
+    throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
 
-  // for (const auto &file: changed_files) {
-  //   auto [ec, std_out, std_err] = run_clang_tidy(clang_tool_exe, param.tidy_option, file);
-  //   auto [noti_lines, codes]    = parse_clang_tidy_stdout(std_out);
-  //
-  //   auto statistic = parse_clang_tidy_stderr(std_err);
-  //   std::println("{} warnings generated.", statistic.total_warnings);
-  //   std::println("{} errors generated.", statistic.total_errors);
-  //   if (param.clang_tidy_fast_exit && statistic.total_errors > 0) {
-  //     spdlog::info("fast exit");
-  //     return -1;
-  //   }
-  //
-  //   for (const auto &[line, code]: std::ranges::views::zip(noti_lines, codes)) {
-  //     std::println(
-  //       "{}:{}:{}: {}: {} {}",
-  //       line.file_name,
-  //       line.row_idx,
-  //       line.col_idx,
-  //       line.serverity,
-  //       line.brief,
-  //       line.diagnostic);
-  //     std::print("{}", code);
-  //   }
-  // }
+    for (const auto &file: changed_files) {
+      auto statistic = run_clang_tidy_once(clang_tidy_exe, file, options);
+    }
+  }
+
 
   auto teardown = [&]() {
     git::repo::free(repo);

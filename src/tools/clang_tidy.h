@@ -51,6 +51,16 @@ namespace linter {
     std::uint32_t non_user_code_warnings    = 0;
     std::uint32_t no_lint_warnings          = 0;
     std::uint32_t warnings_trated_as_errors = 0;
+
+    [[nodiscard]] auto to_str() const noexcept -> std::string {
+      auto statistics  = std::string{};
+      statistics      += std::format("Total warnings: {}\n", total_warnings);
+      statistics      += std::format("Total errors: {}\n", total_warnings);
+      statistics      += std::format("Non user code warnings: {}\n", non_user_code_warnings);
+      statistics      += std::format("No lint warnings: {}\n", no_lint_warnings);
+      statistics      += std::format("Warnings trated as errors: {}\n", warnings_trated_as_errors);
+      return statistics;
+    }
   };
 
   auto find_clang_tool_exe_path(std::string_view tool_name, std::string_view version)
