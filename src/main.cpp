@@ -4,6 +4,7 @@
 #include <ranges>
 
 #include <spdlog/spdlog.h>
+#include <string>
 
 #include "github/api.h"
 #include "tools/clang_tidy.h"
@@ -16,6 +17,22 @@ using namespace std::string_literals;
 void ForClangTidy() {
   int *hi = 0;
 }
+
+namespace {
+  void branch_to_branch(
+    git::repo_ptr repo,
+    const std::string &branch1_name,
+    git::branch_t branch1_type,
+    const std::string &branch2_name,
+    git::branch_t branch2_type) {
+    auto *branch1 = git::branch::lookup(repo, branch1_name, branch1_type);
+    auto *branch2 = git::branch::lookup(repo, branch2_name, branch2_type);
+
+
+    git::ref::free(branch1);
+    git::ref::free(branch2);
+  }
+} // namespace
 
 int main() {
   // spdlog::set_level(spdlog::level::trace); // FOR DEBUG

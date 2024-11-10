@@ -9,6 +9,7 @@
 #include <git2.h>
 
 /// TODO: maybe a standlone repository and add libgit2 as submodule
+/// TODO: could we use unique_ptr and automaticly free the allocated pointer?
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -50,6 +51,7 @@ namespace linter::git {
   using diff_delta_ptr   = git_diff_delta *;
   using diff_hunk_ptr    = git_diff_hunk *;
   using diff_line_ptr    = git_diff_line *;
+  using object_ptr       = git_object *;
 
   using repo_cptr         = const git_repository *;
   using config_cptr       = const git_config *;
@@ -63,6 +65,7 @@ namespace linter::git {
   using diff_delta_cptr   = const git_diff_delta *;
   using diff_hunk_cptr    = const git_diff_hunk *;
   using diff_line_cptr    = const git_diff_line *;
+  using object_cptr       = const git_object *;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
@@ -313,11 +316,14 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_free
     void free(diff_ptr diff);
 
-    /// @brief: Create a diff between the repository index and the workdir
-    /// directory.
-    /// @link:
-    /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
+    /// @brief: Create a diff between the repository index and the workdir directory.
+    /// @link: https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
     auto index_to_workdir(repo_ptr repo, index_ptr index, diff_options_cptr opts) -> diff_ptr;
+
+    /// @brief: Create a diff with the difference between two tree objects.
+    /// @link: https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_tree_to_tree
+    auto tree_to_tree(repo_ptr repo, tree_ptr old_tree, tree_ptr new_tree, diff_options_cptr opts)
+      -> diff_ptr;
 
     /// @brief Initialize diff options structure
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
@@ -372,9 +378,29 @@ namespace linter::git {
     auto is_remote(reference_ptr ref) -> bool;
 
     /// @brief Free the given reference.
-    /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
     void free(reference_ptr ref);
 
+    /// @brief: Lookup a reference by name in a repository.
+    /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master, refs/tags/v0.1.0, ...)
+    /// @link: https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_lookup
+    auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr;
+
   } // namespace ref
+
+  namespace revparse {
+    /// @brief Find a single object, as specified by a revision string.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/revparse/git_revparse_single
+    auto single(repo_ptr repo, const std::string &spec);
+
+  }; // namespace revparse
+
+  namespace object {
+    /// @brief Close an open object
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_free
+    void free(object_ptr obj);
+
+
+  } // namespace object
 
 } // namespace linter::git

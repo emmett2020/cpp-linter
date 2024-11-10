@@ -241,6 +241,14 @@ namespace linter::git {
       return ptr;
     }
 
+    auto tree_to_tree(repo_ptr repo, tree_ptr old_tree, tree_ptr new_tree, diff_options_cptr opts)
+      -> diff_ptr {
+      auto *ptr = diff_ptr{nullptr};
+      auto ret  = git_diff_tree_to_tree(&ptr, repo, old_tree, new_tree, opts);
+      ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+      return ptr;
+    }
+
     void init_option(diff_options_ptr opts) {
       auto ret = git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
       ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
@@ -375,6 +383,32 @@ namespace linter::git {
       git_reference_free(ref);
     }
 
+    auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr {
+      auto *ref = reference_ptr{nullptr};
+      auto ret  = git_reference_lookup(&ref, repo, name.c_str());
+      ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+      return ref;
+    }
+
   } // namespace ref
+
+  namespace revparse {
+    auto single(repo_ptr repo, const std::string &spec) {
+      auto *obj = object_ptr{nullptr};
+      auto ret  = git_revparse_single(&obj, repo, spec.c_str());
+      ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });
+      return obj;
+    }
+
+  }; // namespace revparse
+
+  namespace object {
+    void free(object_ptr obj) {
+      git_object_free(obj);
+    }
+
+
+  } // namespace object
+
 
 } // namespace linter::git
