@@ -406,7 +406,7 @@ namespace linter::git {
   } // namespace ref
 
   namespace revparse {
-    auto single(repo_ptr repo, const std::string &spec) {
+    auto single(repo_ptr repo, const std::string &spec) -> object_ptr {
       auto *obj = object_ptr{nullptr};
       auto ret  = git_revparse_single(&obj, repo, spec.c_str());
       ThrowIf(ret < 0, [] noexcept { return git_error_last()->message; });

@@ -28,6 +28,14 @@ namespace {
     auto *branch1 = git::branch::lookup(repo, branch1_name, branch1_type);
     auto *branch2 = git::branch::lookup(repo, branch2_name, branch2_type);
 
+    auto *commit1 = git::revparse::single(repo, "refs/heads/main");
+    auto c1_type  = git::object::type(commit1);
+    std::println("commit1 type: {}, id: {}", git::object_t_str(c1_type), "xx");
+    assert(git::object::type(commit1) == git::object_t::commit);
+
+    auto *commit2 = git::revparse::single(repo, "HEAD");
+    assert(git::object::type(commit2) == git::object_t::commit);
+
 
     git::ref::free(branch1);
     git::ref::free(branch2);
@@ -93,41 +101,43 @@ int main() {
   //              diff_details.new_file_path,
   //              diff_details.similarity);
 
-  for (const auto &file: diff_details) {
-    std::println(
-      "rel_path:{}\nrel_path {}\nfile num: {}\nflag: {}\nstatus: {}\n",
-      file.old_file.relative_path,
-      file.new_file.relative_path,
-      file.file_num,
-      git::file_flag_t_str(file.flags),
-      git::delta_status_t_str(file.status));
+  // for (const auto &file: diff_details) {
+  //   std::println(
+  //     "rel_path:{}\nrel_path {}\nfile num: {}\nflag: {}\nstatus: {}\n",
+  //     file.old_file.relative_path,
+  //     file.new_file.relative_path,
+  //     file.file_num,
+  //     git::file_flag_t_str(file.flags),
+  //     git::delta_status_t_str(file.status));
+  //
+  //   std::println("\ndetails: ");
+  //   std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
+  //                file.old_file.oid,
+  //                file.old_file.size,
+  //                git::file_flag_t_str(file.old_file.flags),
+  //                git::file_mode_t_str(file.old_file.mode));
+  //   std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
+  //                file.new_file.oid,
+  //                file.new_file.size,
+  //                git::file_flag_t_str(file.new_file.flags),
+  //                git::file_mode_t_str(file.new_file.mode));
+  //
+  //   for (const auto &hunk: file.hunks) {
+  //     std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
+  //                hunk.header,
+  //                hunk.old_start,
+  //                hunk.old_lines,
+  //                hunk.new_start,
+  //                hunk.new_lines);
+  //
+  //     for (const auto &line: hunk.lines) {
+  //       std::print("line content: {}", line.content);
+  //     }
+  //   }
+  // }
+  //
 
-    std::println("\ndetails: ");
-    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
-                 file.old_file.oid,
-                 file.old_file.size,
-                 git::file_flag_t_str(file.old_file.flags),
-                 git::file_mode_t_str(file.old_file.mode));
-    std::println("oid: {}\nsize: {}\nflag: {}\nmode: {}\n",
-                 file.new_file.oid,
-                 file.new_file.size,
-                 git::file_flag_t_str(file.new_file.flags),
-                 git::file_mode_t_str(file.new_file.mode));
-
-    for (const auto &hunk: file.hunks) {
-      std::print("hunk header: {}\nold_start: {}\nold_lines: {}\nnew_start: {}\nnew_lines: {}\n",
-                 hunk.header,
-                 hunk.old_start,
-                 hunk.old_lines,
-                 hunk.new_start,
-                 hunk.new_lines);
-
-      for (const auto &line: hunk.lines) {
-        std::print("line content: {}", line.content);
-      }
-    }
-  }
-
+  branch_to_branch(repo, "main", git::branch_t::local, "test", git::branch_t::local);
 
   // std::print("{}, {}, {}, {}", state, path, empty, num_deltas);
   git::repo::free(repo);

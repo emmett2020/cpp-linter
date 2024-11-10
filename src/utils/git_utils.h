@@ -415,7 +415,7 @@ namespace linter::git {
   namespace revparse {
     /// @brief Find a single object, as specified by a revision string.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/revparse/git_revparse_single
-    auto single(repo_ptr repo, const std::string &spec);
+    auto single(repo_ptr repo, const std::string &spec) -> object_ptr;
 
   }; // namespace revparse
 
