@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <git2/types.h>
 #include <vector>
 #include <string>
 
@@ -111,6 +112,13 @@ namespace linter::git {
     unknown       = '?',
   };
 
+  enum class ref_t : uint8_t {
+    invalid,
+    direct, // OID
+    symbolic,
+    all,
+  };
+
   struct diff_line_details {
     diff_line_t origin;
     std::int64_t old_lineno;
@@ -198,6 +206,7 @@ namespace linter::git {
   auto file_flag_str(std::uint32_t flag) -> std::string;
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
   auto diff_line_type_str(diff_line_t tp) -> std::string;
+  auto ref_type_str(ref_t tp) -> std::string;
 
   /// @brief Init the global state.
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
@@ -336,5 +345,25 @@ namespace linter::git {
     auto equal(git_oid o1, git_oid o2) -> bool;
 
   } // namespace oid
+
+  namespace ref {
+    /// @brief Get the type of a reference.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_type
+    auto type(reference_cptr ref) -> ref_t;
+
+    /// @brief Check if a reference is a local branch.
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_branch
+    auto is_branch(reference_ptr ref) -> bool;
+
+
+    /// @brief Check if a reference is a remote tracking branch
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_remote
+    auto is_remote(reference_ptr ref) -> bool;
+
+    /// @brief Free the given reference.
+    /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
+    void free(reference_ptr ref);
+
+  } // namespace ref
 
 } // namespace linter::git

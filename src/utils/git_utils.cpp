@@ -93,6 +93,16 @@ namespace linter::git {
     return "unknown";
   }
 
+  auto ref_type_str(ref_t tp) -> std::string {
+    switch (tp) {
+    case ref_t::oid     : return "oid";
+    case ref_t::install : return "install";
+    case ref_t::symbolic: return "symbolic";
+    default             : return "invalid";
+    }
+    return "invalid";
+  }
+
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool {
     return file1.relative_path == file2.relative_path;
   }
@@ -315,5 +325,31 @@ namespace linter::git {
     }
 
   } // namespace oid
+
+  namespace ref {
+    auto type(reference_cptr ref) -> ref_t {
+      auto ret = git_reference_type(ref);
+      switch (ret) {
+      case git_ref_t::GIT_REFERENCE_INVALID : return ref_t::invalid;
+      case git_ref_t::GIT_REFERENCE_SYMBOLIC: return ref_t::symbolic;
+      case git_ref_t::GIT_REFERENCE_DIRECT  : return ref_t::direct;
+      case git_ref_t::GIT_REFERENCE_ALL     : return ref_t::all;
+      }
+      return ref_t::invalid;
+    }
+
+    auto is_branch(reference_ptr ref) -> bool {
+      return git_reference_is_branch(ref) == 1;
+    }
+
+    auto is_remote(reference_ptr ref) -> bool {
+      return git_reference_is_remote(ref) == 1;
+    }
+
+    void free(reference_ptr ref) {
+      git_reference_free(ref);
+    }
+
+  } // namespace ref
 
 } // namespace linter::git
