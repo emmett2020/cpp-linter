@@ -62,12 +62,12 @@ namespace {
 
   /// WARN: Theses just for debug
   void set_pull_request_debug_env(user_options &param) {
-    env::set_cache(kGithubRepository, "/temp/temp");
-    env::set_cache(kGithubEventName, kGithubEventPullRequest);
-    env::set_cache(kGithubSha, "");
-    env::set_cache(kGithubRef, "refs/heads/test");
+    env::set_cache(github_repository, "/temp/temp");
+    env::set_cache(github_event_name, github_event_pull_request);
+    env::set_cache(github_sha, "");
+    env::set_cache(github_ref, "refs/heads/test");
 
-    param.log_level               = "TRACE";
+    param.log_level               = "DEBUG";
     param.enable_clang_tidy       = true;
     param.clang_tidy_fast_exit    = false;
     param.clang_tidy_version      = "20";
@@ -79,9 +79,9 @@ namespace {
   auto load_user_options() -> user_options {
     auto param = user_options{};
     set_pull_request_debug_env(param);
-    param.repo_path  = env::get(kGithubRepository);
-    param.source_sha = env::get(kGithubSha);
-    param.source_ref = env::get(kGithubRef);
+    param.repo_path  = env::get(github_repository);
+    param.source_sha = env::get(github_sha);
+    param.source_ref = env::get(github_ref);
     return param;
   }
 
@@ -133,8 +133,9 @@ int main() {
 
   auto *repo         = git::repo::open(options.repo_path);
   auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
-  auto github_client = github_api_client{};
   print_changed_files(changed_files);
+
+  auto github_client = github_api_client{};
 
   if (options.enable_clang_tidy) {
     auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
@@ -146,11 +147,11 @@ int main() {
       spdlog::debug(statistic.to_str());
       if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
         spdlog::info("fast exit");
+        github_client.update_issue_comment();
         return -1;
       }
     }
   }
-
 
   auto teardown = [&]() {
     git::repo::free(repo);

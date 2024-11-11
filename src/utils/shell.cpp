@@ -127,7 +127,7 @@ namespace linter::shell {
   auto which(std::string command) -> result {
     constexpr auto which = std::string_view{"/usr/bin/which"};
     auto res             = execute(which, {std::move(command)});
-    res.std_out          = Trim(res.std_out);
+    res.std_out          = trim(res.std_out);
     return res;
   }
 

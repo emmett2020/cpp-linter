@@ -16,56 +16,33 @@
 #include "utils/git_utils.h"
 
 namespace linter {
-  struct RateLimitHeaders {
+  struct rate_limit_headers {
     std::size_t reset     = 0;
     std::size_t remaining = 0;
     std::size_t retry     = 0;
   };
 
-  constexpr auto kGithubAPI              = "https://api.github.com";
-  constexpr auto kEnableDebug            = "ENABLE_DEBUG";
-  constexpr auto kGithubEventPullRequest = "pull_request";
-  constexpr auto kGithubEventPush        = "push";
+  constexpr auto github_api                = "https://api.github.com";
+  constexpr auto enable_debug              = "ENABLE_DEBUG";
+  constexpr auto github_event_pull_request = "pull_request";
+  constexpr auto github_event_push         = "push";
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
-  constexpr auto kGithubRepository = "GITHUB_REPOSITORY";
-  constexpr auto kGithubToken      = "GITHUB_TOKEN";
-  constexpr auto kGithubEventName  = "GITHUB_EVENT_NAME";
-  constexpr auto kGithubEventPath  = "GITHUB_EVENT_PATH";
-  constexpr auto kGithubSha        = "GITHUB_SHA";
-  constexpr auto kGithubRef        = "GITHUB_REF";
+  constexpr auto github_repository = "GITHUB_REPOSITORY";
+  constexpr auto github_token      = "GITHUB_TOKEN";
+  constexpr auto github_event_name = "GITHUB_EVENT_NAME";
+  constexpr auto github_event_path = "GITHUB_EVENT_PATH";
+  constexpr auto github_sha        = "GITHUB_SHA";
+  constexpr auto github_ref        = "GITHUB_REF";
 
   /// Reads from the actual Github runner.
-  struct GithubEnv {
+  struct github_env {
     std::string repository;
     std::string event_name;
     std::string event_path;
     std::string sha;
     std::string token;
-  };
-
-  struct repository {
-    explicit repository(const std::string& repo_path) {
-      repo = git::repo::open(repo_path); // NOLINT
-    }
-
-    auto get_changed_files(const std::string& target_branch, const std::string& cur_branch)
-      -> std::vector<std::string> {
-      auto deltas = git::diff::deltas(repo, target_branch, cur_branch);
-      auto res    = std::vector<std::string>{};
-      for (const auto& delta: deltas) {
-        res.emplace_back(delta.new_file.relative_path);
-      }
-      return res;
-    }
-
-    ~repository() {
-      git::shutdown();
-    }
-
-  private:
-    git::repo_ptr repo = nullptr;
   };
 
   class github_api_client {
@@ -75,22 +52,30 @@ namespace linter {
       infer_configs();
     }
 
-    // Return response
-    void send_request(std::string_view method,
-                      std::string_view payload,
-                      const std::unordered_map<std::string, std::string>& headers) {
+    bool update_issue_comment() {
+      auto headers = httplib::Headers{
+        {"Accept", "application/vnd.github.use_diff"},
+        {"Authorization", std::format("token {}", github_env_.token)}
+      };
+      auto path     = std::format("/repos/{}", github_env_.repository);
+      auto response = client.Get(path, headers);
+      throw_if(response->status != 200,
+               std::format("Get changed files failed. Status code: {}", response->status));
+      spdlog::debug(response->body);
+
+      return true;
     }
 
     auto get_changed_files() -> std::vector<std::string> {
       auto path = std::format("/repos/{}", github_env_.repository);
-      if (github_env_.event_name == kGithubEventPullRequest) {
+      if (github_env_.event_name == github_event_pull_request) {
         path += std::format("/pulls/{}", pull_request_number_);
       } else {
-        ThrowUnless(github_env_.event_name == kGithubEventPush, "unsupported event");
+        throw_unless(github_env_.event_name == github_event_push, "unsupported event");
         path += std::format("/commits/{}", github_env_.sha);
       }
-      spdlog::info("Fetching changed files from: {}{}", kGithubAPI, path);
-      auto client  = httplib::Client{kGithubAPI};
+      spdlog::info("Fetching changed files from: {}{}", github_api, path);
+      auto client  = httplib::Client{github_api};
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", github_env_.token)}
@@ -103,16 +88,13 @@ namespace linter {
       return {}; // parse
     }
 
-    void parse_response() {
-    }
-
   private:
     void load_envionment_variables() {
-      github_env_.repository = env::get(kGithubRepository);
-      github_env_.token      = env::get(kGithubToken);
-      github_env_.event_name = env::get(kGithubEventName);
-      github_env_.event_path = env::get(kGithubEventPath);
-      github_env_.sha        = env::get(kGithubSha);
+      github_env_.repository = env::get(github_repository);
+      github_env_.token      = env::get(github_token);
+      github_env_.event_name = env::get(github_event_name);
+      github_env_.event_path = env::get(github_event_path);
+      github_env_.sha        = env::get(github_sha);
     }
 
     void infer_configs() {
@@ -123,11 +105,9 @@ namespace linter {
       }
     }
 
-    GithubEnv github_env_;
+    github_env github_env_;
     bool enable_debug_               = false;
     std::size_t pull_request_number_ = -1;
+    httplib::Client client{github_api};
   };
-
-  std::vector<std::string> ParseDiff();
-
 } // namespace linter

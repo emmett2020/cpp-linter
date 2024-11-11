@@ -50,7 +50,7 @@ namespace linter {
       auto file_name        = std::string_view{*iter++};
       auto row_idx          = std::string_view{*iter++};
       auto col_idx          = std::string_view{*iter++};
-      auto serverity        = TrimLeft(std::string_view{*iter++});
+      auto serverity        = trim_left(std::string_view{*iter++});
       auto brief_diagnostic = std::string_view{*iter++};
 
       if (!std::ranges::all_of(row_idx, ::isdigit)) {

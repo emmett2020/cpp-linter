@@ -9,7 +9,7 @@
 #include "utils/shell.h"
 
 namespace linter {
-  struct ClangTidyAdivce { };
+  struct clang_tidy_adivce { };
 
   struct tidy_header_line {
     std::string file_name;
