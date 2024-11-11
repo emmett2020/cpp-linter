@@ -74,9 +74,11 @@ namespace linter {
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic;
 
-  auto run_clang_tidy(std::string_view clang_tidy_cmd,
-                      const clang_tidy_option& option,
-                      std::string_view file_path) -> shell::result;
+  auto run_clang_tidy(
+    std::string_view clang_tidy_cmd,
+    const clang_tidy_option& option,
+    std::string_view repo_path,
+    std::string_view file_path) -> shell::result;
 
 
 } // namespace linter

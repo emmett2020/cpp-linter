@@ -89,7 +89,8 @@ namespace {
     const std::string &clang_tidy_exe,
     const std::string &file,
     const user_options &options) -> tidy_statistic {
-    auto [ec, std_out, std_err] = run_clang_tidy(clang_tidy_exe, options.tidy_option, file);
+    auto [ec, std_out, std_err] =
+      run_clang_tidy(clang_tidy_exe, options.tidy_option, options.repo_path, file);
     spdlog::trace("{} original return code:\n{}", clang_tidy_exe, ec);
     spdlog::trace("{} original stdout:\n{}", clang_tidy_exe, std_out);
     spdlog::trace("{} original stderr:\n{}", clang_tidy_exe, std_err);
@@ -134,28 +135,20 @@ int main() {
   auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
   print_changed_files(changed_files);
 
-  // auto [ec, out, err] = shell::execute("/usr/bin/clang-tidy-20", {"main.cpp"}, "/temp/temp");
-  auto [ec, out, err] = shell::execute("/usr/bin/clang-tidy-20", {"main.cpp"});
-  std::println("{} ", ec);
-  std::println("{} ", out);
-  std::println("{} ", err);
+  if (options.enable_clang_tidy) {
+    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
+    spdlog::info("clang tidy executable path: {}", clang_tidy_exe);
+    throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
 
-  std::cout << shell::which("clang-tidy-20").std_out;
-
-  // if (options.enable_clang_tidy) {
-  //   auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
-  //   spdlog::info("clang tidy executable path: {}", clang_tidy_exe);
-  //   throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
-  //
-  //   for (const auto &file: changed_files) {
-  //     auto statistic = run_clang_tidy_once(clang_tidy_exe, file, options);
-  //     spdlog::debug(statistic.to_str());
-  //     if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
-  //       spdlog::info("fast exit");
-  //       return -1;
-  //     }
-  //   }
-  // }
+    for (const auto &file: changed_files) {
+      auto statistic = run_clang_tidy_once(clang_tidy_exe, file, options);
+      spdlog::debug(statistic.to_str());
+      if (statistic.total_errors > 0 && options.clang_tidy_fast_exit) {
+        spdlog::info("fast exit");
+        return -1;
+      }
+    }
+  }
 
 
   auto teardown = [&]() {
