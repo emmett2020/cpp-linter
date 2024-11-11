@@ -67,7 +67,7 @@ namespace {
     env::set_cache(github_sha, "");
     env::set_cache(github_ref, "refs/heads/test");
 
-    param.log_level               = "DEBUG";
+    param.log_level               = "TRACE";
     param.enable_clang_tidy       = true;
     param.clang_tidy_fast_exit    = false;
     param.clang_tidy_version      = "20";

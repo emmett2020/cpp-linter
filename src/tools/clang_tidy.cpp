@@ -13,12 +13,18 @@
 #include <vector>
 
 #include <spdlog/spdlog.h>
+#include <boost/regex.hpp>
+#include <boost/regex.h>
+// #include <boost/regex/v5/regex_match.hpp>
+// #include <boost/regex/v5/match_results.hpp>
+// #include <boost/regex/v5/match_flags.hpp>
 
 #include "utils/shell.h"
 #include "utils/util.h"
 
 namespace linter {
   using namespace std::string_view_literals;
+
   namespace {
     enum class LineType : std::uint8_t {
       NOTIFICATION,
@@ -26,7 +32,7 @@ namespace linter {
       FIX_SUGGESTION
     };
 
-    constexpr auto kSupportedServerity     = {"warning"sv, "info"sv, "error"sv};
+    constexpr auto supported_serverity     = {"warning"sv, "info"sv, "error"sv};
     constexpr auto kTotalWraningsGenerated = "warnings generated."sv;
 
     /// @brief: Only do some check.
@@ -59,7 +65,7 @@ namespace linter {
       if (!std::ranges::all_of(col_idx, ::isdigit)) {
         return std::nullopt;
       }
-      if (!std::ranges::contains(kSupportedServerity, serverity)) {
+      if (!std::ranges::contains(supported_serverity, serverity)) {
         return std::nullopt;
       }
 
@@ -114,20 +120,36 @@ namespace linter {
     return std::make_tuple(tidy_header_lines, details);
   }
 
+  constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated";
+  constexpr auto warnings_generated = "^(\\d+) warnings generated.";
+  constexpr auto suppressed = "^Suppressed (\\d+) warnings *(\\d+) in non-user code"; // TODO:
+  constexpr auto warnings_trated_as_errors = "^(\\d+) warnings treated as errors";
+
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
     auto statistic = tidy_statistic{};
-    static constexpr auto warning_and_error = "([:lower:]+) warnings and ([:digit:]+) error generated"sv;
 
     for (auto part: std::views::split(std_err, '\n')) {
-      auto line = std::string_view{part};
-      if (line.find(kTotalWraningsGenerated) != std::string::npos) {
-        auto total = std::views::split(line, ' ')
-                   | std::views::take(1)
-                   | std::views::transform([](auto num_str) {
-                       return std::stoull(std::string(num_str.data(), num_str.size()));
-                     });
-        statistic.total_warnings = total.front();
-      } else if (line.starts_with("Suppressed")) {
+      auto line  = std::string{part.data(), part.size()};
+      auto match = boost::smatch{};
+      spdlog::trace("Parsing: {}", line);
+
+      if (auto regex = boost::regex{warning_and_error};
+          boost::regex_match(line, match, regex, boost::match_extra)) {
+        spdlog::trace("Result: warning: {}, errors: {}", match[0].str(), match[1].str());
+        statistic.total_errors = stoi(match[1]);
+      } else if (auto regex = boost::regex{warnings_generated};
+                 boost::regex_match(line, match, regex, boost::match_extra)) {
+        spdlog::trace("Result: total warnings: {}", match[0].str());
+        statistic.total_warnings = stoi(match[0].str());
+      } else if (auto regex = boost::regex{suppressed};
+                 boost::regex_match(line, match, regex, boost::match_extra)) {
+        spdlog::trace("Result: suppressed: {}", match[0].str());
+        statistic.total_suppressed_warnings = stoi(match[0].str());
+      } else if (auto regex = boost::regex{warnings_trated_as_errors};
+                 boost::regex_match(line, match, regex, boost::match_extra)) {
+        spdlog::trace("Result: warnings trated as errors: {}", match[0].str());
+        statistic.warnings_trated_as_errors = stoi(match[0].str());
+      } else {
       }
     }
 

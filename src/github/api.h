@@ -23,7 +23,6 @@ namespace linter {
   };
 
   constexpr auto github_api                = "https://api.github.com";
-  constexpr auto enable_debug              = "ENABLE_DEBUG";
   constexpr auto github_event_pull_request = "pull_request";
   constexpr auto github_event_push         = "push";
 
