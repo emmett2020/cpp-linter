@@ -133,6 +133,7 @@ int main() {
 
   auto *repo         = git::repo::open(options.repo_path);
   auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
+  auto github_client = github_api_client{};
   print_changed_files(changed_files);
 
   if (options.enable_clang_tidy) {

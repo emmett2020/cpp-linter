@@ -68,20 +68,20 @@ namespace linter {
     git::repo_ptr repo = nullptr;
   };
 
-  class GithubApiClient {
+  class github_api_client {
   public:
-    GithubApiClient() {
-      LoadEnvionmentVariables();
-      InferConfigs();
+    github_api_client() {
+      load_envionment_variables();
+      infer_configs();
     }
 
     // Return response
-    void SendRequest(std::string_view method,
-                     std::string_view payload,
-                     const std::unordered_map<std::string, std::string>& headers) {
+    void send_request(std::string_view method,
+                      std::string_view payload,
+                      const std::unordered_map<std::string, std::string>& headers) {
     }
 
-    auto GetChangedFiles() -> std::vector<std::string> {
+    auto get_changed_files() -> std::vector<std::string> {
       auto path = std::format("/repos/{}", github_env_.repository);
       if (github_env_.event_name == kGithubEventPullRequest) {
         path += std::format("/pulls/{}", pull_request_number_);
@@ -103,11 +103,11 @@ namespace linter {
       return {}; // parse
     }
 
-    void ParseResponse() {
+    void parse_response() {
     }
 
   private:
-    void LoadEnvionmentVariables() {
+    void load_envionment_variables() {
       github_env_.repository = env::get(kGithubRepository);
       github_env_.token      = env::get(kGithubToken);
       github_env_.event_name = env::get(kGithubEventName);
@@ -115,7 +115,7 @@ namespace linter {
       github_env_.sha        = env::get(kGithubSha);
     }
 
-    void InferConfigs() {
+    void infer_configs() {
       if (!github_env_.event_path.empty()) {
         auto file = std::ifstream(github_env_.event_name);
         auto data = nlohmann::json::parse(file);
