@@ -22,7 +22,7 @@ ENDIF()
 
 # TODO: add an example about how to use boost in CMake
 # TODO: add a startup repository
-find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system)
+find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex)
 
 set(SRC_FILE
   src/main.cpp

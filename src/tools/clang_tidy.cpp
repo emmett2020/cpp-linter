@@ -18,6 +18,7 @@
 #include "utils/util.h"
 
 namespace linter {
+  using namespace std::string_view_literals;
   namespace {
     enum class LineType : std::uint8_t {
       NOTIFICATION,
@@ -25,7 +26,6 @@ namespace linter {
       FIX_SUGGESTION
     };
 
-    using namespace std::string_view_literals;
     constexpr auto kSupportedServerity     = {"warning"sv, "info"sv, "error"sv};
     constexpr auto kTotalWraningsGenerated = "warnings generated."sv;
 
@@ -93,11 +93,11 @@ namespace linter {
 
     for (auto part: std::views::split(output, '\n')) {
       auto line = std::string_view{part};
-      spdlog::debug(std::format("Parsing clang-dity output line: {}", line));
+      spdlog::trace("Parsing clang-dity output line:\n{}", line);
 
       auto header_line = ParseClangTidyHeaderLine(line);
       if (header_line) {
-        spdlog::debug("The parsing line is a header line.");
+        spdlog::trace("The parsing line is a header line.");
 
         tidy_header_lines.emplace_back(header_line.value());
         details.emplace_back();
@@ -116,7 +116,7 @@ namespace linter {
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
     auto statistic = tidy_statistic{};
-
+    static constexpr auto warning_and_error = "([:lower:]+) warnings and ([:digit:]+) error generated"sv;
 
     for (auto part: std::views::split(std_err, '\n')) {
       auto line = std::string_view{part};
