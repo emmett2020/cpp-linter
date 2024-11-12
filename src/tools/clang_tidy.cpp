@@ -116,10 +116,11 @@ namespace linter {
     return std::make_tuple(tidy_header_lines, details);
   }
 
-  constexpr auto warning_and_error         = "^(\\d+) warnings and (\\d+) error generated";
-  constexpr auto warnings_generated        = "^(\\d+) warnings generated.";
-  constexpr auto suppressed                = "^Suppressed (\\d+) warnings";
-  constexpr auto warnings_trated_as_errors = "^(\\d+) warnings treated as errors";
+  constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated";
+  constexpr auto warnings_generated = "^(\\d+) warnings generated.";
+  constexpr auto errors_generated   = "^(\\d+) errors generated.";
+  constexpr auto suppressed         = R"(Suppressed (\d+) warnings \((\d+) in non-user code\)\.)";
+  constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
     auto statistic = tidy_statistic{};
@@ -137,11 +138,16 @@ namespace linter {
                  boost::regex_match(line, match, regex, boost::match_extra)) {
         spdlog::trace("Result: total warnings: {}", match[1].str());
         statistic.total_warnings = stoi(match[1].str());
+      } else if (auto regex = boost::regex{errors_generated};
+                 boost::regex_match(line, match, regex, boost::match_extra)) {
+        spdlog::trace("Result: total errors: {}", match[1].str());
+        statistic.total_errors = stoi(match[1].str());
       } else if (auto regex = boost::regex{suppressed};
                  boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: suppressed: {}", match[1].str());
+        spdlog::trace("Result: suppressed: {}, non user code warnings: {}", match[1].str(), match[2].str());
         statistic.total_suppressed_warnings = stoi(match[1].str());
-      } else if (auto regex = boost::regex{warnings_trated_as_errors};
+        statistic.non_user_code_warnings = stoi(match[2].str());
+      } else if (auto regex = boost::regex{warnings_as_errors};
                  boost::regex_match(line, match, regex, boost::match_extra)) {
         spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
         statistic.warnings_trated_as_errors = stoi(match[1].str());
