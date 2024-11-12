@@ -116,9 +116,9 @@ namespace linter {
     return std::make_tuple(tidy_header_lines, details);
   }
 
-  constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated";
-  constexpr auto warnings_generated = "^(\\d+) warnings generated.";
-  constexpr auto suppressed = "^Suppressed (\\d+) warnings *(\\d+) in non-user code"; // TODO:
+  constexpr auto warning_and_error         = "^(\\d+) warnings and (\\d+) error generated";
+  constexpr auto warnings_generated        = "^(\\d+) warnings generated.";
+  constexpr auto suppressed                = "^Suppressed (\\d+) warnings";
   constexpr auto warnings_trated_as_errors = "^(\\d+) warnings treated as errors";
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
@@ -131,20 +131,20 @@ namespace linter {
 
       if (auto regex = boost::regex{warning_and_error};
           boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: warning: {}, errors: {}", match[0].str(), match[1].str());
-        statistic.total_errors = stoi(match[1]);
+        spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
+        statistic.total_errors = stoi(match[2]);
       } else if (auto regex = boost::regex{warnings_generated};
                  boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: total warnings: {}", match[0].str());
-        statistic.total_warnings = stoi(match[0].str());
+        spdlog::trace("Result: total warnings: {}", match[1].str());
+        statistic.total_warnings = stoi(match[1].str());
       } else if (auto regex = boost::regex{suppressed};
                  boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: suppressed: {}", match[0].str());
-        statistic.total_suppressed_warnings = stoi(match[0].str());
+        spdlog::trace("Result: suppressed: {}", match[1].str());
+        statistic.total_suppressed_warnings = stoi(match[1].str());
       } else if (auto regex = boost::regex{warnings_trated_as_errors};
                  boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: warnings trated as errors: {}", match[0].str());
-        statistic.warnings_trated_as_errors = stoi(match[0].str());
+        spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
+        statistic.warnings_trated_as_errors = stoi(match[1].str());
       } else {
       }
     }

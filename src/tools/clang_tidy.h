@@ -56,7 +56,8 @@ namespace linter {
     [[nodiscard]] auto to_str() const noexcept -> std::string {
       auto statistics  = std::string{};
       statistics      += std::format("Total warnings: {}\n", total_warnings);
-      statistics      += std::format("Total errors: {}\n", total_warnings);
+      statistics      += std::format("Total errors: {}\n", total_errors);
+      statistics      += std::format("Total suppressed warnings: {}\n", total_suppressed_warnings);
       statistics      += std::format("Non user code warnings: {}\n", non_user_code_warnings);
       statistics      += std::format("No lint warnings: {}\n", no_lint_warnings);
       statistics      += std::format("Warnings trated as errors: {}\n", warnings_trated_as_errors);
