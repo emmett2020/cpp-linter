@@ -124,7 +124,6 @@ namespace linter {
   constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
-
     auto statistic = tidy_statistic{};
     auto warning_and_error_cb = [&](boost::smatch& match){
       spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
@@ -132,7 +131,7 @@ namespace linter {
       statistic.total_errors = stoi(match[2].str());
     };
 
-    auto warning_generated_cb = [&](boost::smatch& match){
+    auto warnings_generated_cb = [&](boost::smatch& match){
       spdlog::trace("Result: total warnings: {}", match[1].str());
       statistic.total_warnings = stoi(match[1].str());
     };
@@ -142,57 +141,35 @@ namespace linter {
       statistic.total_errors = stoi(match[1].str());
     };
 
+    auto suppressed_cb = [&](boost::smatch& match){
+      spdlog::trace("Result: suppressed: {}, non user code warnings: {}", match[1].str(), match[2].str());
+      statistic.total_suppressed_warnings = stoi(match[1].str());
+      statistic.non_user_code_warnings = stoi(match[2].str());
+    };
 
-    auto regexes = std::forward_list{warning_and_error, warnings_generated, errors_generated};
+    auto warnings_as_errors_cb = [&](boost::smatch& match){
+      spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
+      statistic.warnings_trated_as_errors = stoi(match[1].str());
+    };
 
     auto try_match = [&](const std::string& line, const char* regex_str, auto callback){
       auto regex = boost::regex{regex_str};
       auto match = boost::smatch{};
       auto matched = boost::regex_match(line, match, regex, boost::match_extra);
       if (matched) {
-        callback();
+        callback(match);
       }
-      regexes.remove(regex_str);
     };
 
-
     for (auto part: std::views::split(std_err, '\n')) {
       auto line  = std::string{part.data(), part.size()};
-      for (const auto *regex_str: regexes) {
-        try_match(line, regex_str, );
-      }
-  }
-
-    for (auto part: std::views::split(std_err, '\n')) {
-      auto line  = std::string{part.data(), part.size()};
-      auto match = boost::smatch{};
       spdlog::trace("Parsing: {}", line);
-
-      if (auto regex = boost::regex{warning_and_error};
-          boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
-        statistic.total_errors = stoi(match[2]);
-      } else if (auto regex = boost::regex{warnings_generated};
-                 boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: total warnings: {}", match[1].str());
-        statistic.total_warnings = stoi(match[1].str());
-      } else if (auto regex = boost::regex{errors_generated};
-                 boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: total errors: {}", match[1].str());
-        statistic.total_errors = stoi(match[1].str());
-      } else if (auto regex = boost::regex{suppressed};
-                 boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: suppressed: {}, non user code warnings: {}", match[1].str(), match[2].str());
-        statistic.total_suppressed_warnings = stoi(match[1].str());
-        statistic.non_user_code_warnings = stoi(match[2].str());
-      } else if (auto regex = boost::regex{warnings_as_errors};
-                 boost::regex_match(line, match, regex, boost::match_extra)) {
-        spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
-        statistic.warnings_trated_as_errors = stoi(match[1].str());
-      } else {
-      }
+      try_match(line, warning_and_error, warning_and_error_cb);
+      try_match(line, warnings_generated, warnings_generated_cb);
+      try_match(line, errors_generated, errors_generated_cb);
+      try_match(line, suppressed, suppressed_cb);
+      try_match(line, warnings_as_errors, warnings_as_errors_cb);
     }
-
     return statistic;
   }
 
