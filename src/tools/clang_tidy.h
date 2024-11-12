@@ -48,10 +48,10 @@ namespace linter {
   struct tidy_statistic {
     std::uint32_t total_warnings            = 0;
     std::uint32_t total_errors              = 0;
+    std::uint32_t warnings_trated_as_errors = 0;
     std::uint32_t total_suppressed_warnings = 0;
     std::uint32_t non_user_code_warnings    = 0;
     std::uint32_t no_lint_warnings          = 0;
-    std::uint32_t warnings_trated_as_errors = 0;
 
     [[nodiscard]] auto to_str() const noexcept -> std::string {
       auto statistics  = std::string{};

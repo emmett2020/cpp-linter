@@ -4,6 +4,7 @@
 #include <cctype>
 #include <cstdint>
 #include <format>
+#include <forward_list>
 #include <iterator>
 #include <optional>
 #include <ranges>
@@ -123,7 +124,44 @@ namespace linter {
   constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
   auto parse_clang_tidy_stderr(std::string_view std_err) -> tidy_statistic {
+
     auto statistic = tidy_statistic{};
+    auto warning_and_error_cb = [&](boost::smatch& match){
+      spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
+      statistic.total_warnings = stoi(match[1].str());
+      statistic.total_errors = stoi(match[2].str());
+    };
+
+    auto warning_generated_cb = [&](boost::smatch& match){
+      spdlog::trace("Result: total warnings: {}", match[1].str());
+      statistic.total_warnings = stoi(match[1].str());
+    };
+
+    auto errors_generated_cb = [&](boost::smatch& match){
+      spdlog::trace("Result: total errors: {}", match[1].str());
+      statistic.total_errors = stoi(match[1].str());
+    };
+
+
+    auto regexes = std::forward_list{warning_and_error, warnings_generated, errors_generated};
+
+    auto try_match = [&](const std::string& line, const char* regex_str, auto callback){
+      auto regex = boost::regex{regex_str};
+      auto match = boost::smatch{};
+      auto matched = boost::regex_match(line, match, regex, boost::match_extra);
+      if (matched) {
+        callback();
+      }
+      regexes.remove(regex_str);
+    };
+
+
+    for (auto part: std::views::split(std_err, '\n')) {
+      auto line  = std::string{part.data(), part.size()};
+      for (const auto *regex_str: regexes) {
+        try_match(line, regex_str, );
+      }
+  }
 
     for (auto part: std::views::split(std_err, '\n')) {
       auto line  = std::string{part.data(), part.size()};
