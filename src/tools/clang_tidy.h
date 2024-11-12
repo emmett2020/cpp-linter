@@ -32,12 +32,16 @@ namespace linter::clang_tidy {
   /// Represents statistics outputed by clang-tidy. It's usually the stderr
   /// messages of clang-tidy.
   struct statistic {
-    std::uint32_t total_warnings            = 0;
-    std::uint32_t total_errors              = 0;
+    std::uint32_t warnings                  = 0;
+    std::uint32_t errors                    = 0;
     std::uint32_t warnings_trated_as_errors = 0;
     std::uint32_t total_suppressed_warnings = 0;
     std::uint32_t non_user_code_warnings    = 0;
     std::uint32_t no_lint_warnings          = 0;
+
+    [[nodiscard]] auto total_errors() const noexcept -> std::uint32_t {
+      return errors + warnings_trated_as_errors;
+    }
   };
 
   struct result {

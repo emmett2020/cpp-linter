@@ -156,18 +156,18 @@ namespace linter::clang_tidy {
       auto stat                 = statistic{};
       auto warning_and_error_cb = [&](boost::smatch& match) {
         spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
-        stat.total_warnings = stoi(match[1].str());
-        stat.total_errors   = stoi(match[2].str());
+        stat.warnings = stoi(match[1].str());
+        stat.errors   = stoi(match[2].str());
       };
 
       auto warnings_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: total warnings: {}", match[1].str());
-        stat.total_warnings = stoi(match[1].str());
+        spdlog::trace("Result: warnings: {}", match[1].str());
+        stat.warnings = stoi(match[1].str());
       };
 
       auto errors_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: total errors: {}", match[1].str());
-        stat.total_errors = stoi(match[1].str());
+        spdlog::trace("Result: errors: {}", match[1].str());
+        stat.errors = stoi(match[1].str());
       };
 
       auto suppressed_cb = [&](boost::smatch& match) {
@@ -197,8 +197,8 @@ namespace linter::clang_tidy {
     }
 
     void print_statistic(const statistic& stat) {
-      spdlog::debug("Total errors: {}", stat.total_errors);
-      spdlog::debug("Total warnings: {}", stat.total_warnings);
+      spdlog::debug("Total errors: {}", stat.errors);
+      spdlog::debug("Total warnings: {}", stat.warnings);
       spdlog::debug("Warnings trated as errors: {}", stat.warnings_trated_as_errors);
       spdlog::debug("Total suppressed warnings: {}", stat.total_suppressed_warnings);
       spdlog::debug("Non user code warnings: {}", stat.non_user_code_warnings);
@@ -213,19 +213,16 @@ namespace linter::clang_tidy {
            const std::string& repo,
            const std::string& file) -> result {
     auto [ec, std_out, std_err] = execute(cmd, option, repo, file);
-    spdlog::trace("Original information:\nreturn code: {}\nstdout:\n{}\nstderr:\n{}",
+    spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}\nstderr:\n{}",
                   ec,
                   std_out,
                   std_err);
+    spdlog::debug("Successfully ran clang-tidy, now start to parse the outputs of it.");
     auto res = result{};
     res.diag = clang_tidy::parse_stdout(std_out);
     res.stat = clang_tidy::parse_stderr(std_err);
     print_statistic(res.stat);
-    throw_if(res.diag.size() != res.stat.total_errors + res.stat.total_warnings,
-             std::format("Internal error: diagnostics size: {} doesn't match {}+{}",
-                         res.diag.size(),
-                         res.stat.total_errors,
-                         res.stat.total_warnings));
+    spdlog::info("Got total errors: {}", res.stat.total_errors());
     return res;
   }
 

@@ -93,7 +93,7 @@ namespace {
     options.log_level                     = "TRACE";
     options.enable_clang_tidy             = true;
     options.clang_tidy_fast_exit          = false;
-    options.clang_tidy_version            = "18";
+    options.clang_tidy_version            = "20";
     options.clang_tidy_option.config_file = ".clang-tidy";
     options.clang_tidy_option.database    = "build";
     options.target_ref                    = "refs/heads/main";
@@ -132,7 +132,7 @@ int main() {
     for (const auto &file: changed_files) {
       auto result =
         clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, options.repo_path, file);
-      if (result.stat.total_errors > 0 && options.clang_tidy_fast_exit) {
+      if (result.stat.errors > 0 && options.clang_tidy_fast_exit) {
         spdlog::info("fast exit");
         // github_client.update_issue_comment();
         return -1;
