@@ -117,6 +117,15 @@ namespace linter {
     return std::make_tuple(tidy_header_lines, details);
   }
 
+  void try_match(const std::string& line, const char* regex_str, auto callback) {
+    auto regex = boost::regex{regex_str};
+    auto match = boost::smatch{};
+    auto matched = boost::regex_match(line, match, regex, boost::match_extra);
+    if (matched) {
+      callback(match);
+    }
+  };
+
   constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated";
   constexpr auto warnings_generated = "^(\\d+) warnings generated.";
   constexpr auto errors_generated   = "^(\\d+) errors generated.";
@@ -150,15 +159,6 @@ namespace linter {
     auto warnings_as_errors_cb = [&](boost::smatch& match){
       spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
       statistic.warnings_trated_as_errors = stoi(match[1].str());
-    };
-
-    auto try_match = [&](const std::string& line, const char* regex_str, auto callback){
-      auto regex = boost::regex{regex_str};
-      auto match = boost::smatch{};
-      auto matched = boost::regex_match(line, match, regex, boost::match_extra);
-      if (matched) {
-        callback(match);
-      }
     };
 
     for (auto part: std::views::split(std_err, '\n')) {
