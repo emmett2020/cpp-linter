@@ -30,12 +30,12 @@ namespace linter::clang_tidy {
       if (std::distance(parts.begin(), parts.end()) != 5) {
         return std::nullopt;
       }
-      auto iter             = parts.begin();
-      auto file_name        = std::string_view{*iter++};
-      auto row_idx          = std::string_view{*iter++};
-      auto col_idx          = std::string_view{*iter++};
-      auto serverity        = trim_left(std::string_view{*iter++});
-      auto brief_diagnostic = std::string_view{*iter++};
+      auto iter            = parts.begin();
+      auto file_name       = std::string_view{*iter++};
+      auto row_idx         = std::string_view{*iter++};
+      auto col_idx         = std::string_view{*iter++};
+      auto serverity       = trim_left(std::string_view{*iter++});
+      auto diagnostic_type = std::string_view{*iter++};
 
       if (!std::ranges::all_of(row_idx, ::isdigit)) {
         return std::nullopt;
@@ -47,23 +47,23 @@ namespace linter::clang_tidy {
         return std::nullopt;
       }
 
-      const auto* square_brackets = std::ranges::find(brief_diagnostic, '[');
-      if ((square_brackets == brief_diagnostic.end())
-          || (brief_diagnostic.size() < 3)
-          || (brief_diagnostic.back() != ']')) {
+      const auto* square_brackets = std::ranges::find(diagnostic_type, '[');
+      if ((square_brackets == diagnostic_type.end())
+          || (diagnostic_type.size() < 3)
+          || (diagnostic_type.back() != ']')) {
         return std::nullopt;
       }
-      auto brief      = std::string_view{brief_diagnostic.begin(), square_brackets};
-      auto diagnostic = std::string_view{square_brackets, brief_diagnostic.end()};
+      auto brief      = std::string_view{diagnostic_type.begin(), square_brackets};
+      auto diagnostic = std::string_view{square_brackets, diagnostic_type.end()};
 
-      auto header_line            = diagnostic_header{};
-      header_line.file_name       = file_name;
-      header_line.row_idx         = row_idx;
-      header_line.col_idx         = col_idx;
-      header_line.serverity       = serverity;
-      header_line.brief           = brief;
-      header_line.diagnostic_type = diagnostic;
-      return header_line;
+      auto header            = diagnostic_header{};
+      header.file_name       = file_name;
+      header.row_idx         = row_idx;
+      header.col_idx         = col_idx;
+      header.serverity       = serverity;
+      header.brief           = brief;
+      header.diagnostic_type = diagnostic;
+      return header;
     }
 
     auto execute(std::string_view cmd,
@@ -124,7 +124,7 @@ namespace linter::clang_tidy {
         auto header_line = parse_clang_tidy_header_line(line);
         if (header_line) {
           spdlog::trace(
-            "Result: {}:{}:{}: {} {} {}",
+            " Result: {}:{}:{}: {}:{}{}",
             header_line->file_name,
             header_line->row_idx,
             header_line->col_idx,
@@ -157,23 +157,25 @@ namespace linter::clang_tidy {
     auto parse_stderr(std::string_view std_err) -> statistic {
       auto stat                 = statistic{};
       auto warning_and_error_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: warning: {}, errors: {}", match[1].str(), match[2].str());
+        spdlog::trace(" Result: {} warnings and {} error generated.",
+                      match[1].str(),
+                      match[2].str());
         stat.warnings = stoi(match[1].str());
         stat.errors   = stoi(match[2].str());
       };
 
       auto warnings_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: warnings: {}", match[1].str());
+        spdlog::trace(" Result: {} warnings generated.", match[1].str());
         stat.warnings = stoi(match[1].str());
       };
 
       auto errors_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: errors: {}", match[1].str());
+        spdlog::trace(" Result: {} errors generated.", match[1].str());
         stat.errors = stoi(match[1].str());
       };
 
       auto suppressed_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: suppressed: {}, non user code warnings: {}",
+        spdlog::trace(" Result: Suppressed {} warnings ({} in non-user code).",
                       match[1].str(),
                       match[2].str());
         stat.total_suppressed_warnings = stoi(match[1].str());
@@ -181,7 +183,7 @@ namespace linter::clang_tidy {
       };
 
       auto suppressed_and_nolint_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: suppressed: {}, non user code warnings: {}",
+        spdlog::trace(" Result: Suppressed {} warnings ({} in non-user code, {} NOLINT).",
                       match[1].str(),
                       match[2].str(),
                       match[3].str());
@@ -191,8 +193,8 @@ namespace linter::clang_tidy {
       };
 
       auto warnings_as_errors_cb = [&](boost::smatch& match) {
-        spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
-        stat.warnings_trated_as_errors = stoi(match[1].str());
+        spdlog::trace(" Result: {} warnings treated as errors", match[1].str());
+        stat.warnings_treated_as_errors = stoi(match[1].str());
       };
 
       for (auto part: std::views::split(std_err, '\n')) {
@@ -212,7 +214,7 @@ namespace linter::clang_tidy {
     void print_statistic(const statistic& stat) {
       spdlog::debug("Errors: {}", stat.errors);
       spdlog::debug("Warnings: {}", stat.warnings);
-      spdlog::debug("Warnings trated as errors: {}", stat.warnings_trated_as_errors);
+      spdlog::debug("Warnings treated as errors: {}", stat.warnings_treated_as_errors);
       spdlog::debug("Total suppressed warnings: {}", stat.total_suppressed_warnings);
       spdlog::debug("Non user code warnings: {}", stat.non_user_code_warnings);
       spdlog::debug("No lint warnings: {}", stat.no_lint_warnings);
@@ -226,7 +228,7 @@ namespace linter::clang_tidy {
            const std::string& repo,
            const std::string& file) -> result {
     auto [ec, std_out, std_err] = execute(cmd, option, repo, file);
-    spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}\nstderr:\n{}",
+    spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
                   ec,
                   std_out,
                   std_err);
