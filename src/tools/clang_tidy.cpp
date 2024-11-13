@@ -242,9 +242,9 @@ namespace linter::clang_tidy {
     res.origin_stderr = std::move(std_err);
 
     if (res.pass) {
-      spdlog::info("Clang-tidy result: pass, information:\n{}", res.pass, res.origin_stderr);
+      spdlog::info("Clang-tidy result: pass, information:\n{}", res.origin_stderr);
     } else {
-      spdlog::error("Clang-tidy result: fail, information:\n{}", res.pass, res.origin_stderr);
+      spdlog::error("Clang-tidy result: fail, information:\n{}", res.origin_stderr);
     }
     return res;
   }

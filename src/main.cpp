@@ -90,7 +90,7 @@ namespace {
     env::set_cache(github_sha, "");
     env::set_cache(github_ref, "refs/heads/test");
 
-    options.log_level                     = "DEBUG";
+    options.log_level                     = "TRACE";
     options.enable_clang_tidy             = true;
     options.clang_tidy_fast_exit          = false;
     options.clang_tidy_version            = "20";
@@ -134,7 +134,7 @@ int main() {
         clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, options.repo_path, file);
       if (!result.pass && options.clang_tidy_fast_exit) {
         spdlog::info("fast exit");
-        // github_client.update_issue_comment();
+        github_client.update_issue_comment();
         return -1;
       }
     }

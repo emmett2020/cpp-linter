@@ -51,17 +51,22 @@ namespace linter {
       infer_configs();
     }
 
+    static void check_http_status_code(int code) {
+      throw_if(code == 404, "Resource not found");
+      throw_if(code == 422, "Validation failed");
+      throw_if(code != 200, std::format("http status code error: {}", code));
+    }
+
     bool update_issue_comment() {
+      spdlog::info("Updating issue comment");
       auto headers = httplib::Headers{
-        {"Accept", "application/vnd.github.use_diff"},
+        {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
-      auto path     = std::format("/repos/{}", github_env_.repository);
+      auto path     = std::format("/repos/{}/issues/comments", github_env_.repository);
       auto response = client.Get(path, headers);
-      throw_if(response->status != 200,
-               std::format("Get changed files failed. Status code: {}", response->status));
-      spdlog::debug(response->body);
-
+      check_http_status_code(response->status);
+      spdlog::trace(response->body);
       return true;
     }
 
