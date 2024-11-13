@@ -146,9 +146,9 @@ namespace linter::clang_tidy {
       return diags;
     }
 
-    constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated.";
-    constexpr auto warnings_generated = "^(\\d+) warnings generated.";
-    constexpr auto errors_generated   = "^(\\d+) errors generated.";
+    constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) errors? generated.";
+    constexpr auto warnings_generated = "^(\\d+) warnings? generated.";
+    constexpr auto errors_generated   = "^(\\d+) errors? generated.";
     constexpr auto suppressed         = R"(Suppressed (\d+) warnings \((\d+) in non-user code\)\.)";
     constexpr auto suppressed_lint =
       R"(Suppressed (\d+) warnings \((\d+) in non-user code, (\d+) NOLINT\)\.)";
@@ -157,7 +157,7 @@ namespace linter::clang_tidy {
     auto parse_stderr(std::string_view std_err) -> statistic {
       auto stat                 = statistic{};
       auto warning_and_error_cb = [&](boost::smatch& match) {
-        spdlog::trace(" Result: {} warnings and {} error generated.",
+        spdlog::trace(" Result: {} warnings and {} error(s) generated.",
                       match[1].str(),
                       match[2].str());
         stat.warnings = stoi(match[1].str());
@@ -165,12 +165,12 @@ namespace linter::clang_tidy {
       };
 
       auto warnings_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace(" Result: {} warnings generated.", match[1].str());
+        spdlog::trace(" Result: {} warning(s) generated.", match[1].str());
         stat.warnings = stoi(match[1].str());
       };
 
       auto errors_generated_cb = [&](boost::smatch& match) {
-        spdlog::trace(" Result: {} errors generated.", match[1].str());
+        spdlog::trace(" Result: {} error(s) generated.", match[1].str());
         stat.errors = stoi(match[1].str());
       };
 
