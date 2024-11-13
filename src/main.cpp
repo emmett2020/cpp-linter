@@ -42,8 +42,10 @@ namespace {
 
   /// https://docs.github.com/en/actions/writing-workflows/choosing-when-your-workflow-runs/events-that-trigger-workflows#pull_request
   struct user_options {
+    bool use_on_local = false;
     std::string log_level;
-    std::string repo_path;
+    std::string repo_path; // the path to repo, without owner
+    std::string repo;      // owner/repo
     std::string target_ref;
     std::string source_sha;
     std::string source_ref;
@@ -57,6 +59,8 @@ namespace {
   void print_full_options(const user_options &options) {
     spdlog::debug("Log level: {}", options.log_level);
     spdlog::debug("Repository path: {}", options.repo_path);
+    spdlog::debug("Repository: {}", options.repo);
+    spdlog::debug("Repository full path: {}/{}", options.repo_path, options.repo);
     spdlog::debug("Repository target ref: {}", options.target_ref);
     spdlog::debug("Repository source ref: {}", options.source_ref);
     spdlog::debug("Repository source sha: {}", options.source_sha);
@@ -85,13 +89,14 @@ namespace {
 
   /// WARN: Theses just for debug
   void set_pull_request_debug_env(user_options &options) {
-    env::set_cache(github_repository, "/temp/temp");
+    env::set_cache(github_repository, "emmett2020/temp");
     env::set_cache(github_event_name, github_event_pull_request);
     env::set_cache(github_sha, "");
     env::set_cache(github_ref, "refs/heads/test");
+    env::set_cache(github_token, "");
 
     options.log_level                     = "TRACE";
-    options.enable_clang_tidy             = true;
+    options.enable_clang_tidy             = false;
     options.clang_tidy_fast_exit          = false;
     options.clang_tidy_version            = "20";
     options.clang_tidy_option.config_file = ".clang-tidy";
@@ -103,7 +108,7 @@ namespace {
   auto load_user_options() -> user_options {
     auto param = user_options{};
     set_pull_request_debug_env(param);
-    param.repo_path  = env::get(github_repository);
+    param.repo       = env::get(github_repository);
     param.source_sha = env::get(github_sha);
     param.source_ref = env::get(github_ref);
     return param;
@@ -116,13 +121,15 @@ int main() {
   auto options = load_user_options();
   set_log_level(options.log_level);
   print_full_options(options);
+  const auto repo_full_path = options.repo_path + "/" + options.repo;
 
   git::setup();
-  auto *repo         = git::repo::open(options.repo_path);
+  auto *repo         = git::repo::open(repo_full_path);
   auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
   print_changed_files(changed_files);
 
   auto github_client = github_api_client{};
+  github_client.update_issue_comment();
 
   if (options.enable_clang_tidy) {
     auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
@@ -131,10 +138,9 @@ int main() {
 
     for (const auto &file: changed_files) {
       auto result =
-        clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, options.repo_path, file);
+        clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, repo_full_path, file);
       if (!result.pass && options.clang_tidy_fast_exit) {
         spdlog::info("fast exit");
-        github_client.update_issue_comment();
         return -1;
       }
     }

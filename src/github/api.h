@@ -28,7 +28,7 @@ namespace linter {
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
-  constexpr auto github_repository = "GITHUB_REPOSITORY";
+  constexpr auto github_repository = "GITHUB_REPOSITORY"; // The owner and repository name
   constexpr auto github_token      = "GITHUB_TOKEN";
   constexpr auto github_event_name = "GITHUB_EVENT_NAME";
   constexpr auto github_event_path = "GITHUB_EVENT_PATH";
@@ -57,13 +57,21 @@ namespace linter {
       throw_if(code != 200, std::format("http status code error: {}", code));
     }
 
+    static void print_request(const httplib::Client& request) {
+      spdlog::trace("request: ");
+      spdlog::trace("host: {}", request.host());
+      spdlog::trace("port: {}", request.port());
+    }
+
     bool update_issue_comment() {
       spdlog::info("Updating issue comment");
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
-      auto path     = std::format("/repos/{}/issues/comments", github_env_.repository);
+      auto path = std::format("/repos/{}/issues/comments", github_env_.repository);
+      spdlog::trace("path: {}", path);
+
       auto response = client.Get(path, headers);
       check_http_status_code(response->status);
       spdlog::trace(response->body);
