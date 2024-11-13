@@ -3,6 +3,8 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
+#include <ranges>
 #include <string_view>
 #include <unordered_map>
 #include <print>
@@ -40,7 +42,8 @@ namespace linter {
     std::string repository;
     std::string event_name;
     std::string event_path;
-    std::string sha;
+    std::string source_sha;
+    std::string source_ref;
     std::string token;
   };
 
@@ -49,6 +52,9 @@ namespace linter {
     github_api_client() {
       load_envionment_variables();
       infer_configs();
+      if (github_env_.event_name == github_event_pull_request) {
+        parse_pr_number();
+      }
     }
 
     static void check_http_status_code(int code) {
@@ -63,13 +69,15 @@ namespace linter {
       spdlog::trace("port: {}", request.port());
     }
 
-    bool update_issue_comment() {
+    bool get_issue_comment() {
+      assert(github_env_.event_name == github_event_pull_request);
       spdlog::info("Updating issue comment");
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
-      auto path = std::format("/repos/{}/issues/comments", github_env_.repository);
+      auto path =
+        std::format("/repos/{}/issues/{}/comments", github_env_.repository, pull_request_number_);
       spdlog::trace("path: {}", path);
 
       auto response = client.Get(path, headers);
@@ -84,7 +92,7 @@ namespace linter {
         path += std::format("/pulls/{}", pull_request_number_);
       } else {
         throw_unless(github_env_.event_name == github_event_push, "unsupported event");
-        path += std::format("/commits/{}", github_env_.sha);
+        path += std::format("/commits/{}", github_env_.source_sha);
       }
       spdlog::info("Fetching changed files from: {}{}", github_api, path);
       auto client  = httplib::Client{github_api};
@@ -106,7 +114,18 @@ namespace linter {
       github_env_.token      = env::get(github_token);
       github_env_.event_name = env::get(github_event_name);
       github_env_.event_path = env::get(github_event_path);
-      github_env_.sha        = env::get(github_sha);
+      github_env_.source_sha = env::get(github_sha);
+      github_env_.source_ref = env::get(github_ref);
+    }
+
+    /// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
+    void parse_pr_number() {
+      assert(!github_env_.source_ref.empty());
+      auto parts = std::views::split(github_env_.source_ref, '/')
+                 | std::ranges::to<std::vector<std::string>>();
+      throw_if(parts.size() != 4,
+               std::format("source ref format error: {}", github_env_.source_ref));
+      pull_request_number_ = std::stoi(parts[2]);
     }
 
     void infer_configs() {

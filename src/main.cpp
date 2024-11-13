@@ -92,7 +92,7 @@ namespace {
     env::set_cache(github_repository, "emmett2020/temp");
     env::set_cache(github_event_name, github_event_pull_request);
     env::set_cache(github_sha, "");
-    env::set_cache(github_ref, "refs/heads/test");
+    env::set_cache(github_ref, "refs/pull/7/merge");
     env::set_cache(github_token, "");
 
     options.log_level                     = "TRACE";
@@ -129,7 +129,7 @@ int main() {
   print_changed_files(changed_files);
 
   auto github_client = github_api_client{};
-  github_client.update_issue_comment();
+  github_client.get_issue_comment();
 
   if (options.enable_clang_tidy) {
     auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
