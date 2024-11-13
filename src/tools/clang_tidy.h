@@ -48,6 +48,7 @@ namespace linter::clang_tidy {
     bool pass = false;
     statistic stat;
     diagnostics diag;
+    std::string origin_stderr;
   };
 
   /// The option to be passed into clang-tidy executable.

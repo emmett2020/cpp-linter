@@ -154,6 +154,7 @@ namespace linter::clang_tidy {
       R"(Suppressed (\d+) warnings \((\d+) in non-user code, (\d+) NOLINT\)\.)";
     constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
+    /// TODO: should we parse stderr?
     auto parse_stderr(std::string_view std_err) -> statistic {
       auto stat                 = statistic{};
       auto warning_and_error_cb = [&](boost::smatch& match) {
@@ -227,18 +228,24 @@ namespace linter::clang_tidy {
            const option& option,
            const std::string& repo,
            const std::string& file) -> result {
+    spdlog::info("Start to run clang-tidy");
     auto [ec, std_out, std_err] = execute(cmd, option, repo, file);
     spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
                   ec,
                   std_out,
                   std_err);
-    spdlog::debug("Successfully ran clang-tidy, now start to parse the outputs of it.");
-    auto res = result{};
-    res.pass = ec == 0;
-    res.diag = clang_tidy::parse_stdout(std_out);
-    res.stat = clang_tidy::parse_stderr(std_err);
-    print_statistic(res.stat);
-    spdlog::info("Got total errors: {}", res.stat.total_errors());
+
+    spdlog::info("Successfully ran clang-tidy, now start to parse the outputs of it.");
+    auto res          = result{};
+    res.pass          = ec == 0;
+    res.diag          = clang_tidy::parse_stdout(std_out);
+    res.origin_stderr = std::move(std_err);
+
+    if (res.pass) {
+      spdlog::info("Clang-tidy result: pass, information:\n{}", res.pass, res.origin_stderr);
+    } else {
+      spdlog::error("Clang-tidy result: fail, information:\n{}", res.pass, res.origin_stderr);
+    }
     return res;
   }
 

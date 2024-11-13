@@ -90,7 +90,7 @@ namespace {
     env::set_cache(github_sha, "");
     env::set_cache(github_ref, "refs/heads/test");
 
-    options.log_level                     = "TRACE";
+    options.log_level                     = "DEBUG";
     options.enable_clang_tidy             = true;
     options.clang_tidy_fast_exit          = false;
     options.clang_tidy_version            = "20";
