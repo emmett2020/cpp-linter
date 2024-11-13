@@ -1,8 +1,10 @@
 #include "git_utils.h"
-#include "utils/util.h"
+
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <string>
+
 #include <git2/branch.h>
 #include <git2/commit.h>
 #include <git2/diff.h>
@@ -12,9 +14,8 @@
 #include <git2/repository.h>
 #include <git2/signature.h>
 #include <git2/types.h>
-#include <iostream>
-#include <print>
-#include <string>
+
+#include "utils/util.h"
 
 namespace linter::git {
   namespace {

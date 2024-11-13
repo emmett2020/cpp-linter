@@ -1,17 +1,18 @@
 #pragma once
 
-#include "utils/util.h"
 #include <cstdint>
 #include <cstring>
-#include <git2/deprecated.h>
-#include <git2/types.h>
 #include <vector>
 #include <string>
 
 #include <git2.h>
+#include <git2/deprecated.h>
+#include <git2/types.h>
 
-/// TODO: maybe a standlone repository and add libgit2 as submodule
-/// TODO: could we use unique_ptr and automaticly free the allocated pointer?
+#include "utils/util.h"
+
+/// TODO: Maybe a standlone repository with libgit2 as submodule
+/// TODO: Could we use unique_ptr and automaticly free the allocated pointer?
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -410,9 +411,6 @@ namespace linter::git {
     void free(commit_ptr commit);
 
   } // namespace commit
-
-  /// @brief
-  /// @link
 
   namespace diff {
     /// @brief Deallocate a diff.
