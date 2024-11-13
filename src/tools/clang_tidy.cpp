@@ -150,6 +150,8 @@ namespace linter::clang_tidy {
     constexpr auto warnings_generated = "^(\\d+) warnings generated.";
     constexpr auto errors_generated   = "^(\\d+) errors generated.";
     constexpr auto suppressed         = R"(Suppressed (\d+) warnings \((\d+) in non-user code\)\.)";
+    constexpr auto suppressed_lint =
+      R"(Suppressed (\d+) warnings \((\d+) in non-user code, (\d+) NOLINT\)\.)";
     constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
     auto parse_stderr(std::string_view std_err) -> statistic {
@@ -178,6 +180,16 @@ namespace linter::clang_tidy {
         stat.non_user_code_warnings    = stoi(match[2].str());
       };
 
+      auto suppressed_and_nolint_cb = [&](boost::smatch& match) {
+        spdlog::trace("Result: suppressed: {}, non user code warnings: {}",
+                      match[1].str(),
+                      match[2].str(),
+                      match[3].str());
+        stat.total_suppressed_warnings = stoi(match[1].str());
+        stat.non_user_code_warnings    = stoi(match[2].str());
+        stat.no_lint_warnings          = stoi(match[3].str());
+      };
+
       auto warnings_as_errors_cb = [&](boost::smatch& match) {
         spdlog::trace("Result: warnings trated as errors: {}", match[1].str());
         stat.warnings_trated_as_errors = stoi(match[1].str());
@@ -191,6 +203,7 @@ namespace linter::clang_tidy {
         try_match(line, errors_generated, errors_generated_cb);
         try_match(line, suppressed, suppressed_cb);
         try_match(line, warnings_as_errors, warnings_as_errors_cb);
+        try_match(line, suppressed_lint, suppressed_and_nolint_cb);
       }
 
       return stat;
