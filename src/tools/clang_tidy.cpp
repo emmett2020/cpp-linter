@@ -146,7 +146,7 @@ namespace linter::clang_tidy {
       return diags;
     }
 
-    constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated";
+    constexpr auto warning_and_error  = "^(\\d+) warnings and (\\d+) error generated.";
     constexpr auto warnings_generated = "^(\\d+) warnings generated.";
     constexpr auto errors_generated   = "^(\\d+) errors generated.";
     constexpr auto suppressed         = R"(Suppressed (\d+) warnings \((\d+) in non-user code\)\.)";
@@ -197,8 +197,8 @@ namespace linter::clang_tidy {
     }
 
     void print_statistic(const statistic& stat) {
-      spdlog::debug("Total errors: {}", stat.errors);
-      spdlog::debug("Total warnings: {}", stat.warnings);
+      spdlog::debug("Errors: {}", stat.errors);
+      spdlog::debug("Warnings: {}", stat.warnings);
       spdlog::debug("Warnings trated as errors: {}", stat.warnings_trated_as_errors);
       spdlog::debug("Total suppressed warnings: {}", stat.total_suppressed_warnings);
       spdlog::debug("Non user code warnings: {}", stat.non_user_code_warnings);
@@ -219,6 +219,7 @@ namespace linter::clang_tidy {
                   std_err);
     spdlog::debug("Successfully ran clang-tidy, now start to parse the outputs of it.");
     auto res = result{};
+    res.pass = ec == 0;
     res.diag = clang_tidy::parse_stdout(std_out);
     res.stat = clang_tidy::parse_stderr(std_err);
     print_statistic(res.stat);

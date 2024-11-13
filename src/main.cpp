@@ -132,7 +132,7 @@ int main() {
     for (const auto &file: changed_files) {
       auto result =
         clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, options.repo_path, file);
-      if (result.stat.errors > 0 && options.clang_tidy_fast_exit) {
+      if (!result.pass && options.clang_tidy_fast_exit) {
         spdlog::info("fast exit");
         // github_client.update_issue_comment();
         return -1;
