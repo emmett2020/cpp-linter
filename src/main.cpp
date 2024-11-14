@@ -124,27 +124,27 @@ int main() {
   const auto repo_full_path = options.repo_path + "/" + options.repo;
 
   git::setup();
-  auto *repo         = git::repo::open(repo_full_path);
-  auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
-  print_changed_files(changed_files);
+  auto *repo = git::repo::open(repo_full_path);
+  // auto changed_files = git::diff::changed_files(repo, options.target_ref, options.source_ref);
+  // print_changed_files(changed_files);
 
   auto github_client = github_api_client{};
-  github_client.get_issue_comment();
+  github_client.get_issue_comment_id();
 
-  if (options.enable_clang_tidy) {
-    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
-    spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
-    throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
-
-    for (const auto &file: changed_files) {
-      auto result =
-        clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, repo_full_path, file);
-      if (!result.pass && options.clang_tidy_fast_exit) {
-        spdlog::info("fast exit");
-        return -1;
-      }
-    }
-  }
+  // if (options.enable_clang_tidy) {
+  //   auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
+  //   spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
+  //   throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
+  //
+  //   for (const auto &file: changed_files) {
+  //     auto result =
+  //       clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, repo_full_path, file);
+  //     if (!result.pass && options.clang_tidy_fast_exit) {
+  //       spdlog::info("fast exit");
+  //       return -1;
+  //     }
+  //   }
+  // }
 
   git::repo::free(repo);
   git::shutdown();

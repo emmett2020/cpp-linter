@@ -1,9 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
 #include <iterator>
+#include <optional>
 #include <ranges>
 #include <string_view>
 #include <unordered_map>
@@ -24,6 +26,8 @@ namespace linter {
     std::size_t retry     = 0;
   };
 
+  // constexpr auto app_name                  = "linter";
+  constexpr auto app_name                  = "emmett2020"; // For test
   constexpr auto github_api                = "https://api.github.com";
   constexpr auto github_event_pull_request = "pull_request";
   constexpr auto github_event_push         = "push";
@@ -69,27 +73,78 @@ namespace linter {
       spdlog::trace("port: {}", request.port());
     }
 
-    bool get_issue_comment() {
+    void get_issue_comment_id() {
+      spdlog::info("Start to get issue comment id for pull request: {}.", pr_number_);
       assert(github_env_.event_name == github_event_pull_request);
-      spdlog::info("Updating issue comment");
+
+      auto path = std::format("/repos/{}/issues/{}/comments", github_env_.repository, pr_number_);
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", github_env_.token)}
       };
-      auto path =
-        std::format("/repos/{}/issues/{}/comments", github_env_.repository, pull_request_number_);
       spdlog::trace("path: {}", path);
 
       auto response = client.Get(path, headers);
       check_http_status_code(response->status);
-      spdlog::trace(response->body);
-      return true;
+      spdlog::trace("Get github response body: {}", response->body);
+
+      // data type check
+      auto comments = nlohmann::json::parse(response->body);
+      if (comments.is_null()) {
+        spdlog::info("The pull request number {} doesn't have any comments yet", pr_number_);
+        return;
+      }
+      throw_unless(comments.is_array(), "issue comments are not an array");
+      if (comments.empty()) {
+        spdlog::info("The pull request number {} doesn't have any comments yet", pr_number_);
+        return;
+      }
+
+      auto comment = std::ranges::find_if(comments, [](nlohmann::json& comment) {
+        if (!comment.contains("/user/login"_json_pointer)) {
+          return false;
+        }
+        auto& login = comment["user"]["login"];
+        return *login.get_ptr<std::string*>() == app_name;
+      });
+      if (comment == comments.end()) {
+        spdlog::info("The lint doesn't comments on pull request number {} yet", pr_number_);
+        return;
+      }
+
+      (*comment)["id"].get_to(comment_id_);
+      spdlog::info("Got comment id {} in {}", comment_id_, pr_number_);
     }
+
+    void add_comment(const std::string& body) {
+      spdlog::info("Start to add issue comment for pr {}", pr_number_);
+
+      const auto path =
+        std::format("/repos/{}/issues/{}/comments", github_env_.repository, pr_number_);
+      const auto headers = httplib::Headers{
+        {"Accept", "application/vnd.github.use_diff"},
+        {"Authorization", std::format("token {}", github_env_.token)}
+      };
+      spdlog::trace("Path: {}, Body: {}", path, body);
+
+      auto response = client.Post(path, headers, body, "text/plain");
+      spdlog::trace("Get github response body: {}", response->body);
+      check_http_status_code(response->status);
+    }
+
+    // void update_comment() {
+    //   if (comment_id_.empty()) {
+    //     add_comment();
+    //     return;
+    //   }
+    //
+    //   spdlog::info("Updating issue comment");
+    // }
 
     auto get_changed_files() -> std::vector<std::string> {
       auto path = std::format("/repos/{}", github_env_.repository);
       if (github_env_.event_name == github_event_pull_request) {
-        path += std::format("/pulls/{}", pull_request_number_);
+        path += std::format("/pulls/{}", pr_number_);
       } else {
         throw_unless(github_env_.event_name == github_event_push, "unsupported event");
         path += std::format("/commits/{}", github_env_.source_sha);
@@ -125,20 +180,21 @@ namespace linter {
                  | std::ranges::to<std::vector<std::string>>();
       throw_if(parts.size() != 4,
                std::format("source ref format error: {}", github_env_.source_ref));
-      pull_request_number_ = std::stoi(parts[2]);
+      pr_number_ = std::stoi(parts[2]);
     }
 
     void infer_configs() {
       if (!github_env_.event_path.empty()) {
         auto file = std::ifstream(github_env_.event_name);
         auto data = nlohmann::json::parse(file);
-        data.at("number").get_to(pull_request_number_);
+        data.at("number").get_to(pr_number_);
       }
     }
 
     github_env github_env_;
-    bool enable_debug_               = false;
-    std::size_t pull_request_number_ = -1;
+    bool enable_debug_     = false;
+    std::size_t pr_number_ = -1;
+    std::uint32_t comment_id_;
     httplib::Client client{github_api};
   };
 } // namespace linter
