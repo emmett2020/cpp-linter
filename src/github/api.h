@@ -62,10 +62,11 @@ namespace linter {
       }
     }
 
-    static void check_http_status_code(int code) {
-      throw_if(code == 404, "Resource not found");
-      throw_if(code == 422, "Validation failed");
-      throw_if(code != 200, std::format("http status code error: {}", code));
+    static void check_http_response(const httplib::Result& response) {
+      auto code          = response->status / 100;
+      const auto& reason = response->reason;
+      throw_unless(code == 1 || code == 2,
+                   std::format("Got http status code: {}, reason: {}", response->status, reason));
     }
 
     static void print_request(const httplib::Client& request) {
@@ -96,7 +97,8 @@ namespace linter {
       spdlog::trace("path: {}", path);
 
       auto response = client.Get(path, headers);
-      check_http_status_code(response->status);
+
+      check_http_response(response);
       spdlog::trace("Get github response body: {}", response->body);
 
       // data type check
@@ -118,7 +120,7 @@ namespace linter {
       }
 
       (*comment)["id"].get_to(comment_id_);
-      spdlog::info("Got comment id {} in {}", comment_id_, pr_number_);
+      spdlog::info("Got comment id {} in  pr {}", comment_id_, pr_number_);
     }
 
     void add_comment(const std::string& body) {
@@ -134,11 +136,7 @@ namespace linter {
 
       auto response = client.Post(path, headers, body, "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
-      if (response->status == 201) {
-        spdlog::info("Succussfully created the new comment for {}", pr_number_);
-      } else {
-        check_http_status_code(response->status);
-      }
+      check_http_response(response);
 
       auto comment = nlohmann::json::parse(response->body);
       throw_unless(comment.is_object(), "comment isn't object");
@@ -147,14 +145,32 @@ namespace linter {
       spdlog::info("The new added comment id is {}", comment_id_);
     }
 
-    // void update_comment() {
-    //   if (comment_id_.empty()) {
-    //     add_comment();
-    //     return;
-    //   }
-    //
-    //   spdlog::info("Updating issue comment");
-    // }
+    void update_comment(const std::string& body) {
+      throw_if(comment_id_ == -1, "doesn't have comment_id yet");
+      throw_if(pr_number_ == -1, "doesn't have comment_id yet");
+      spdlog::info("Start to update issue comment");
+
+      const auto path =
+        std::format("/repos/{}/issues/comments/{}", github_env_.repository, comment_id_);
+      const auto headers = httplib::Headers{
+        {"Accept", "application/vnd.github.use_diff"},
+        {"Authorization", std::format("token {}", github_env_.token)}
+      };
+      spdlog::trace("Path: {}, Body: {}", path, body);
+
+      auto response = client.Post(path, headers, body, "text/plain");
+      spdlog::trace("Get github response body: {}", response->body);
+      check_http_response(response);
+      spdlog::info("Successfully update comment {} of pr {}", comment_id_, pr_number_);
+    }
+
+    void add_or_update_comment(const std::string& body) {
+      if (comment_id_ == -1) {
+        add_comment(body);
+      } else {
+        update_comment(body);
+      }
+    }
 
     auto get_changed_files() -> std::vector<std::string> {
       auto path = std::format("/repos/{}", github_env_.repository);
@@ -207,9 +223,9 @@ namespace linter {
     }
 
     github_env github_env_;
-    bool enable_debug_     = false;
-    std::size_t pr_number_ = -1;
-    std::uint32_t comment_id_;
+    bool enable_debug_        = false;
+    std::size_t pr_number_    = -1;
+    std::uint32_t comment_id_ = -1;
     httplib::Client client{github_api};
   };
 } // namespace linter
