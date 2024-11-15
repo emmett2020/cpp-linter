@@ -130,6 +130,7 @@ int main() {
 
   auto github_client = github_api_client{};
   github_client.get_issue_comment_id();
+  github_client.add_or_update_comment(R"({"body": "hello1"})");
 
   // if (options.enable_clang_tidy) {
   //   auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
