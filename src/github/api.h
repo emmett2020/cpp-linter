@@ -15,6 +15,7 @@
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
+#include "nlohmann/json_fwd.hpp"
 #include "utils/env_manager.h"
 #include "utils/util.h"
 #include "utils/git_utils.h"
@@ -27,7 +28,7 @@ namespace linter {
   };
 
   // constexpr auto app_name                  = "linter";
-  constexpr auto app_name                  = "emmett2020"; // For test
+  constexpr auto our_name                  = "emmett2020"; // For test
   constexpr auto github_api                = "https://api.github.com";
   constexpr auto github_event_pull_request = "pull_request";
   constexpr auto github_event_push         = "push";
@@ -73,6 +74,16 @@ namespace linter {
       spdlog::trace("port: {}", request.port());
     }
 
+    static auto is_our_comment(const nlohmann::json& comment) -> bool {
+      if (!comment.contains("/user/login"_json_pointer)) {
+        return true;
+      }
+      auto name = std::string{};
+      comment["user"]["login"].get_to(name);
+      return name == our_name;
+    }
+
+    // TODO: Maybe do it in another thread to speed up or do it in same thread to eliminate call times?
     void get_issue_comment_id() {
       spdlog::info("Start to get issue comment id for pull request: {}.", pr_number_);
       assert(github_env_.event_name == github_event_pull_request);
@@ -100,13 +111,7 @@ namespace linter {
         return;
       }
 
-      auto comment = std::ranges::find_if(comments, [](nlohmann::json& comment) {
-        if (!comment.contains("/user/login"_json_pointer)) {
-          return false;
-        }
-        auto& login = comment["user"]["login"];
-        return *login.get_ptr<std::string*>() == app_name;
-      });
+      auto comment = std::ranges::find_if(comments, is_our_comment);
       if (comment == comments.end()) {
         spdlog::info("The lint doesn't comments on pull request number {} yet", pr_number_);
         return;
@@ -129,7 +134,13 @@ namespace linter {
 
       auto response = client.Post(path, headers, body, "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
+      if (response->status == 201) {
+        spdlog::info("Succussfully created the new comment {} for {}");
+      }
       check_http_status_code(response->status);
+
+      (response->body)["id"].get_to(comment_id_);
+      spdlog::info("Got comment id {} in {}", comment_id_, pr_number_);
     }
 
     // void update_comment() {
