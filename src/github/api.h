@@ -135,12 +135,16 @@ namespace linter {
       auto response = client.Post(path, headers, body, "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
       if (response->status == 201) {
-        spdlog::info("Succussfully created the new comment {} for {}");
+        spdlog::info("Succussfully created the new comment for {}", pr_number_);
+      } else {
+        check_http_status_code(response->status);
       }
-      check_http_status_code(response->status);
 
-      (response->body)["id"].get_to(comment_id_);
-      spdlog::info("Got comment id {} in {}", comment_id_, pr_number_);
+      auto comment = nlohmann::json::parse(response->body);
+      throw_unless(comment.is_object(), "comment isn't object");
+
+      comment["id"].get_to(comment_id_);
+      spdlog::info("The new added comment id is {}", comment_id_);
     }
 
     // void update_comment() {
