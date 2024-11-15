@@ -1,6 +1,16 @@
 name: 'Hello World'
 description: 'Greet someone'
+author: emmettzhang2020@outlook.com
+branding:
+  icon: "check-circle"
+  color: "green"
 inputs:
+  clang-tidy-version:
+    description: |
+      Choose which clang-tidy version you want to use
+    required: true
+    default: 18
+
   who-to-greet:  # id of input
     description: 'Who to greet'
     required: true
