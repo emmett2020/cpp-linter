@@ -10,11 +10,11 @@ inputs:
       Choose which clang-tidy version you want to use
     required: true
     default: 18
+  log_level:
+    description: |
+      Set log level for c/c++ linter
+    default: ERROR
 
-  who-to-greet:  # id of input
-    description: 'Who to greet'
-    required: true
-    default: 'World'
 outputs:
   random-number:
     description: "Random number"
@@ -27,17 +27,11 @@ runs:
       shell: bash
       env:
         INPUT_WHO_TO_GREET: ${{ inputs.who-to-greet }}
-
-    - name: Random Number Generator
-      id: random-number-generator
-      run: echo "random-number=$(echo $RANDOM)" >> $GITHUB_OUTPUT
+    - name: Install dependencies on Linux
+      if: runner.os == 'Linux'
       shell: bash
-
-    - name: Set GitHub Path
-      run: echo "$GITHUB_ACTION_PATH" >> $GITHUB_PATH
-      shell: bash
-      env:
-        GITHUB_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        echo "On Linux"
 
     - name: Run goodbye.sh
       run: entrypoint.sh
