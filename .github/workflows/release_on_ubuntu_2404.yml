@@ -1,4 +1,4 @@
-name: Deployment On Ubuntu24.04
+name: Release On Ubuntu24.04
 on:
   push:
     branches: [master, main]
@@ -8,7 +8,8 @@ jobs:
     uses: ./.github/workflows/build_and_test_on_ubuntu_2404.yml
 
     
-  real:
+  start-to-package:
+    runs-on: ubuntu-24.04
     steps:
       - name: Install Deployment Dependencies
         run: |
