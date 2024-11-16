@@ -42,6 +42,8 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt install ninja-build;
+          sudo apt install libboost-all-dev;
+          sudo apt install libgit2-dev;
 
       - name: CMake
         run: |
