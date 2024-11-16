@@ -8,6 +8,7 @@ jobs:
     uses: ./.github/workflows/build_and_test_on_ubuntu2404.yml
 
     
+  real:
     steps:
       - name: Install Deployment Dependencies
         run: |
