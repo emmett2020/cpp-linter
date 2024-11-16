@@ -5,7 +5,7 @@ on:
 
 jobs:
   build-and-test:
-    uses: ./.github/workflows/build_and_test_on_ubuntu2404.yml
+    uses: ./.github/workflows/build_and_test_on_ubuntu_2404.yml
 
     
   real:
