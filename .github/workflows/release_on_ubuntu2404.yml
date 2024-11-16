@@ -1,0 +1,21 @@
+name: Deployment On Ubuntu24.04
+on:
+  push:
+    branches: [master, main]
+
+jobs:
+  build-and-test:
+    uses: build_and_test_on_ubuntu2404.yml
+
+    
+    steps:
+      - name: Install Deployment Dependencies
+        run: |
+          sudo apt install pax-utils
+
+      - name: Pack
+        run: |
+          sudo ./package.sh
+
+
+
