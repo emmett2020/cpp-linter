@@ -1,7 +1,7 @@
 name: Build And Test On Ubuntu 24.04
 on:
   push:
-    branches: [main]
+    branches: [master, main]
 
 jobs:
   build-and-test:
