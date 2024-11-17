@@ -34,7 +34,7 @@ runs:
       run: |
         echo "Install dependencies on Linux"
         release_version=$(cat VERSION)
-        wget "linter_${release_version}_ubuntu24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
+        wget "linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
         tar -xvf linter.tar.gz
         export PATH=`pwd`/linter/bin:$PATH
         linter --version
