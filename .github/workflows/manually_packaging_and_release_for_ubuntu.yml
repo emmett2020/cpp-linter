@@ -130,6 +130,7 @@ jobs:
 
       - name: Pack
         run: |
+          echo "xxxxx: v${{ steps.var.outputs.release_version }}"
           sudo ./package.sh
 
       - name: Rename Packages
