@@ -43,7 +43,9 @@ runs:
         ls -lrth dist
         export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}"
         cd dist/bin
-        linter --version
+        ls -lrth
+        readelf -l linter | grep interpreter
+        ./linter --version
         ldd linter
 
     # - name: Run goodbye.sh
