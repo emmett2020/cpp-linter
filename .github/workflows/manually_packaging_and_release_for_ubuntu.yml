@@ -135,6 +135,7 @@ jobs:
           sudo ./package.sh
 
       - name: Rename Packages
+        shell: bash
         run: |
           mv "build/dist.tar.gz" "build/${{ steps.var.pkg_name }}.tar.gz"
 
