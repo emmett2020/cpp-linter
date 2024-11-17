@@ -127,6 +127,7 @@ jobs:
       - name: Install Packaging Dependencies
         run: |
           sudo apt install -y pax-utils
+          sudo apt install -y patchelf
 
       - name: Pack
         run: |
