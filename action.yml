@@ -40,7 +40,7 @@ runs:
         ls -lrth
         export PATH=`pwd`/dist/bin:$PATH
         echo "PATH: $PATH"
-        ls -lrth 
+        ls -lrth dist
         linter --version
         ldd linter
 
