@@ -39,6 +39,7 @@ runs:
         echo "current path: `pwd`"
         ls -lrth
         export PATH=`pwd`/dist/bin:$PATH
+
         echo "PATH: $PATH"
         ls -lrth dist
         linter --version
