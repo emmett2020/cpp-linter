@@ -132,6 +132,8 @@ jobs:
 
       - name: Pack
         run: |
+          echo "${{ steps.var.pkg_name }}"
+          echo "build/${{ steps.var.pkg_name }}"
           sudo ./package.sh
 
       - name: Rename Packages
