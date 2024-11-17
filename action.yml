@@ -41,11 +41,11 @@ runs:
 
         echo "PATH: $PATH"
         ls -lrth dist
-        export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}"
+
         cd dist/bin
         ls -lrth
         readelf -l linter | grep interpreter
-        ./linter --version
+        LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}" ./linter --version
         ldd linter
 
     # - name: Run goodbye.sh
