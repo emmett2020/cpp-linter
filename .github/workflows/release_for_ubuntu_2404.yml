@@ -1,4 +1,4 @@
-name: Release On Ubuntu24.04
+name: Release For Ubuntu24.04
 on:
   push:
     branches: [master, main]
