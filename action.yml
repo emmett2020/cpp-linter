@@ -41,8 +41,9 @@ runs:
 
         echo "PATH: $PATH"
         ls -lrth dist
-        ldd linter
+        export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}"
         linter --version
+        ldd linter
 
     # - name: Run goodbye.sh
     #   run: entrypoint.sh
