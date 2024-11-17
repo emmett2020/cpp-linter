@@ -40,4 +40,9 @@ jobs:
       - name: Pack
         run: |
           sudo ./package.sh
+      - name: Upload
+        uses: actions/upload-artifact
+        with:
+          name: ${{ runner.os }}-${{ runner.arch }}-release-binary
+          path: build/linter.tar.gz
 
