@@ -39,6 +39,7 @@ runs:
         mkdir linter
         tar -xvf linter.tar.gz -C linter
         echo "current path: `pwd`"
+        ls
         export PATH=`pwd`/linter/bin:$PATH
         linter --version
         ldd linter
