@@ -37,7 +37,7 @@ jobs:
           # Compiler
           echo "CC=gcc-14" >> ${GITHUB_ENV}
           echo "CXX=g++-14" >> ${GITHUB_ENV}
-          echo "Set compiler: CXX: g++-${major}"
+          echo "Set compiler: CXX: g++-14"
 
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
           echo "pkg_name=linter_${release_version}_ubuntu-24.04_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
