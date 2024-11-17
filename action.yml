@@ -42,6 +42,7 @@ runs:
         echo "PATH: $PATH"
         ls -lrth dist
         export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}"
+        cd dist/bin
         linter --version
         ldd linter
 
