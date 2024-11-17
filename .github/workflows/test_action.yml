@@ -1,0 +1,16 @@
+name: Build And Test On Ubuntu 24.04
+on:
+  push:
+    branches: [master, main]
+
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      - uses: ./
+

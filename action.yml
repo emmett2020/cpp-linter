@@ -12,13 +12,14 @@ inputs:
     default: 18
   log_level:
     description: |
-      Set log level for c/c++ linter
+      Set log level for linter
     default: ERROR
 
 outputs:
   random-number:
     description: "Random number"
     value: ${{ steps.random-number-generator.outputs.random-number }}
+
 runs:
   using: "composite"
   steps:
@@ -31,10 +32,16 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        echo "On Linux"
+        echo "Install dependencies on Linux"
+        release_version=$(cat VERSION)
+        wget "linter_${release_version}_ubuntu24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
+        tar -xvf linter.tar.gz
+        export PATH=`pwd`/linter/bin:$PATH
+        linter --version
+        ldd linter
 
-    - name: Run goodbye.sh
-      run: entrypoint.sh
-      shell: bash
+    # - name: Run goodbye.sh
+    #   run: entrypoint.sh
+    #   shell: bash
 
 
