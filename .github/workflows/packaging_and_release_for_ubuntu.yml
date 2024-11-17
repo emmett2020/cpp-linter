@@ -13,6 +13,10 @@ on:
     paths:
       - VERSION
 
+permissions:
+  contents: write
+  discussions: write
+
 jobs:
   build-test-package-release:
     name: "Release linter on ubuntu-24.04 gcc-14"
