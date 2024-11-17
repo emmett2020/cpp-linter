@@ -35,6 +35,8 @@ runs:
         echo "Install dependencies on Linux"
         release_version=$(cat VERSION)
         wget "https://github.com/emmett2020/linter/releases/download/v${release_version}/linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
+        [[ -d liner ]] && rm -rf linter
+        mkdir linter
         tar -xvf linter.tar.gz -C linter
         echo "current path: `pwd`"
         export PATH=`pwd`/linter/bin:$PATH
