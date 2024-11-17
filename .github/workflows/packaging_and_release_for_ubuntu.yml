@@ -1,4 +1,6 @@
 # This file represents a workflow of packaging and release.
+# This workflow will be automatically ran whenever adjust VERSION file and pull
+# this changes to main branches.
 
 name: Packaging and Release For Ubuntu
 on:
@@ -6,15 +8,15 @@ on:
     branches: [main]
     paths:
       - VERSION
-  pull-request:
+  pull_request:
     branches: [main]
     paths:
       - VERSION
 
 jobs:
   build-test-package-release:
-    name: "Linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
-    runs-on: ${{ inputs.runs-on }}
+    name: "Linter ${{ steps.var.outputs.release_version }} ubuntu-24.04 gcc-14"
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -33,21 +35,12 @@ jobs:
           fi
 
           # Compiler
-          compiler=$(echo ${{ inputs.compiler }} | cut -d'-' -f1)
-          compiler_version=$(echo ${{ inputs.compiler }} | cut -d'-' -f2)
-          major=$(echo ${compiler_version} | cut -d'.' -f1)
-          if [[ "${compiler}" == "clang" ]]; then
-            echo "CC=clang-${major}" >> ${GITHUB_ENV}
-            echo "CXX=clang++-${major}" >> ${GITHUB_ENV}
-            echo "Set compiler: CXX: clang++-${major}"
-          else
-            echo "CC=gcc-${major}" >> ${GITHUB_ENV}
-            echo "CXX=g++-${major}" >> ${GITHUB_ENV}
-            echo "Set compiler: CXX: g++-${major}"
-          fi
+          echo "CC=gcc-14" >> ${GITHUB_ENV}
+          echo "CXX=g++-14" >> ${GITHUB_ENV}
+          echo "Set compiler: CXX: g++-${major}"
 
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
-          echo "pkg_name=linter_${release_version}_${{ inputs.runs-on }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
+          echo "pkg_name=linter_${release_version}_ubuntu-24.04_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
