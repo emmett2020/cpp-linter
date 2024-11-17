@@ -102,6 +102,7 @@ jobs:
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
           echo "pkg_name=linter_${release_version}_${{ runner.os }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
           echo ${GITHUB_OUTPUT}
+          echo "release-version: ${release_version}"
 
       - name: Install Building Dependencies
         run: |
