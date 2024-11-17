@@ -145,7 +145,7 @@ jobs:
         if: ${{ inputs.whether-upload }} == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v{{ steps.var.outputs.release_version }}"
+          tag_name: "v${{ steps.var.outputs.release_version }}"
           files: |
             "build/${{ steps.var.outputs.pkg_name }}.tar.gz"
 
