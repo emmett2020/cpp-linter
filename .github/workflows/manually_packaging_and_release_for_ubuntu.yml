@@ -72,7 +72,7 @@ jobs:
         with:
           submodules: true
 
-      - name: Validate and Set Variable
+      - name: Validate and Set Variables
         id: var
         shell: bash
         run: |
@@ -98,8 +98,10 @@ jobs:
             echo "CXX=g++-${major}" >> ${GITHUB_ENV}
             echo "Set compiler: CXX: g++-${major}"
           fi
+
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
           echo "pkg_name=linter_${release_version}_${{ runner.os }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
+          echo ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
