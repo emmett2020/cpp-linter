@@ -60,6 +60,10 @@ on:
           - None
         default: Unittests
 
+permissions:
+  contents: write
+  discussions: write
+
 jobs:
   build-test-package-release:
     name: "Linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
@@ -134,9 +138,6 @@ jobs:
           mv "build/dist.tar.gz" "build/${{ steps.var.pkg_name }}.tar.gz"
 
       - name: Release to Github Release Page
-        permissions:
-          contents: write
-          discussions: write
         if: ${{ inputs.whether-upload }} == 'true'
         uses: softprops/action-gh-release@v2
         with:
