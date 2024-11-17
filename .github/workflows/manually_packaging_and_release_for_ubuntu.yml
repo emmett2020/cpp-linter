@@ -1,0 +1,134 @@
+# This file represents a workflow of manually packaging and release.
+# Usually, this workflow is used to debug a release version of a specific
+# version of Ubuntu or manually release an urgent version on ubuntu. Thus this
+# workflow may not contains a complete test suite.
+# If you are interesting with normal release process, you may refer to
+# packaging_and_release_for_xxx.yml
+
+name: Manually Packaging and Release For Ubuntu
+on:
+  workflow_dispatch:
+    inputs:
+      whether-upload:
+        description: |
+          Whether upload artifacts to the Github release page.
+          If enabled this option, you should also appropriatly config the release-version field.
+          Otherwise, you can just ignore the release-version option.
+        required: true
+        default: false
+        type: boolean
+      release-version:
+        description: "Release Version. Usually, it's format is xx.xx.xx"
+        required: false
+        type: string
+      runs-on:
+        description: "Runner to use for the build"
+        required: true
+        type: choice
+        options:
+          - ubuntu-20.04
+          - ubuntu-22.04
+          - ubuntu-24.04
+        default: ubuntu-22.04
+      compiler:
+        description: "The compiler to build artifacts"
+        required: true
+        type: choice
+        options:
+          - gcc-14.2.0
+          - gcc-13.2.1
+          - clang-15.0.1
+        default: gcc-14.2.0
+      cpp-flags:
+        description: "The cpp flags to build artifacts"
+        type: string
+      build-type:
+        description: "The build type of this artifacts"
+        type: choice
+        options:
+          - Debug
+          - Release
+        default: Release
+      tests:
+        description: "Which test suites to run during release"
+        type: choice
+        options:
+          - Unittests
+          - None
+        default: Unittests
+
+jobs:
+  build-test-package-release:
+    name: "Linter-${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  Whether-Upload-${{ inputs.whether-upload }}"
+    runs-on: ${{ inputs.runs-on }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Validate and Set Variable
+        id: var
+        shell: bash
+        run: |
+          # Check version string.
+          release_version=$(echo ${{ inputs.release-version }} | xargs)
+          if [[ "${{ inputs.whether-upload }}" = "true" ]]; then
+            if [[ ! "${release_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Release VERSION format is uncorrect. release-version: ${release_version}"
+              exit -1
+            fi
+          fi
+
+          # Check and set compiler.
+          compiler=$(echo ${{ inputs.compiler }} | cut -d'-' -f1)
+          compiler_version=$(echo ${{ inputs.compiler }} | cut -d'-' -f2)
+          major=$(echo ${compiler_version} | cut -d'.' -f1)
+          if [[ "${compiler}" == "clang" ]]; then
+            echo "CC=clang-${major}" >> ${GITHUB_ENV}
+            echo "CXX=clang++-${major}" >> ${GITHUB_ENV}
+          else
+            echo "CC=gcc-${major}" >> ${GITHUB_ENV}
+            echo "CXX=g++-${major}" >> ${GITHUB_ENV}
+          fi
+          echo "Set compiler: CC: ${CC}, CXX: ${CXX}"
+          echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
+
+      - name: Install Building Dependencies
+        run: |
+          sudo apt install ninja-build;
+          sudo apt install libboost-all-dev;
+          sudo apt install libgit2-dev;
+
+      - name: CMake
+        run: |
+          set -ex;
+          cmake -S . -B build -GNinja \
+            -DCMAKE_CXX_FLAGS="${{ inputs.cpp-flags }}" \
+            -DCMAKE_BUILD_TYPE="${{ inputs.build-type }}";
+
+      - name: Compile
+        run: |
+          cmake --build build -v
+
+      - name: Run Unittests
+        if: ${{ inputs.tests }} == "Unittests"
+        run: |
+          ./build/tests/test_git;
+
+      - name: Install Packaging Dependencies
+        run: |
+          sudo apt install pax-utils
+
+      - name: Pack
+        run: |
+          sudo ./package.sh
+
+      - name: Upload
+        if: steps.var.whether-upload == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: "linter_${{ steps.var.release_version }}_${{ runner.os }}_${{ runner.arch }}"
+          path: build/linter.tar.gz
+          if-no-files-found: error
+
