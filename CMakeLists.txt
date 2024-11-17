@@ -32,15 +32,14 @@ set(SRC_FILE
   src/tools/clang_tidy.cpp
   src/github/api.cpp
 )
-add_executable(main ${SRC_FILE})
-target_include_directories(main PRIVATE ${Boost_INCLUDE_DIRS}
-                                        ${linter_root}/src)
-target_link_libraries(main ${Boost_LIBRARIES}
-                           spdlog
-                           range-v3
-                           httplib
-                           nlohmann_json
-                           git2
-                         )
+add_executable(linter ${SRC_FILE})
+target_include_directories(linter PRIVATE ${Boost_INCLUDE_DIRS}
+                                          ${linter_root}/src)
+target_link_libraries(linter ${Boost_LIBRARIES}
+                             spdlog
+                             range-v3
+                             httplib
+                             nlohmann_json
+                             git2)
 
 add_subdirectory(tests)
