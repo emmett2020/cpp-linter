@@ -100,9 +100,7 @@ jobs:
           fi
 
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
-          echo "pkg_name=linter_${release_version}_${{ runner.os }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
-          echo ${GITHUB_OUTPUT}
-          echo "release-version: ${release_version}"
+          echo "pkg_name=linter_${release_version}_${{ inputs.run-on }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
@@ -132,8 +130,6 @@ jobs:
 
       - name: Pack
         run: |
-          echo "${{ steps.var.outputs.pkg_name }}"
-          echo "build/${{ steps.var.pkg_name }}"
           sudo ./package.sh
 
       - name: Rename Packages
