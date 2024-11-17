@@ -143,6 +143,6 @@ jobs:
         with:
           tag_name: "v${{ steps.var.outputs.release_version }}"
           files: |
-            "build/${{ steps.var.outputs.pkg_name }}.tar.gz"
+            build/${{ steps.var.outputs.pkg_name }}.tar.gz
 
 
