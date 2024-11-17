@@ -13,7 +13,7 @@ on:
         description: |
           Whether upload artifacts to the Github release page.
           If enabled this option, you should also appropriatly config the release-version field.
-          Otherwise, you can just ignore the release-version option.
+          Also, you can just ignore the release-version option if you just want to debug.
         required: true
         default: false
         type: boolean
@@ -29,7 +29,7 @@ on:
           - ubuntu-20.04
           - ubuntu-22.04
           - ubuntu-24.04
-        default: ubuntu-22.04
+        default: ubuntu-24.04
       compiler:
         description: "The compiler to build artifacts"
         required: true
@@ -59,7 +59,7 @@ on:
 
 jobs:
   build-test-package-release:
-    name: "Linter-${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  Whether-Upload-${{ inputs.whether-upload }}"
+    name: "Linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
     runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout Repository
