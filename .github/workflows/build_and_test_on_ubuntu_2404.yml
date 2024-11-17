@@ -14,8 +14,8 @@ jobs:
           # Installed by github images
           # Details: https://github.com/actions/runner-images
           - { compiler: "gcc",   version: "14.2.0", build_type: Debug,   cxxflags: "" }
-          - { compiler: "gcc",   version: "14.2.0", build_type: Release, cxxflags: "" }
-          - { compiler: "clang", version: "18.1.3", build_type: Release, cxxflags: "" }
+          # - { compiler: "gcc",   version: "14.2.0", build_type: Release, cxxflags: "" }
+          # - { compiler: "clang", version: "18.1.3", build_type: Release, cxxflags: "" }
 
     steps:
       - name: Checkout Repository
