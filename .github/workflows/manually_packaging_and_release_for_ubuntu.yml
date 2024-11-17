@@ -137,9 +137,10 @@ jobs:
         permissions:
           contents: write
           discussions: write
-        if: startsWith(github.ref, 'refs/tags/') && ${{ inputs.whether-upload }} == 'true'
+        if: ${{ inputs.whether-upload }} == 'true'
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: "v{steps.var.release_version}"
           files: |
             "build/${{ steps.var.pkg_name }}.tar.gz"
 
