@@ -41,6 +41,8 @@ runs:
         echo "current path: `pwd`"
         ls
         export PATH=`pwd`/linter/bin:$PATH
+        echo "PATH: $PATH"
+        ls linter
         linter --version
         ldd linter
 
