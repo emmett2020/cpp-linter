@@ -32,8 +32,7 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        echo "Install dependencies on Linux"
-        release_version=$(cat VERSION)
+        release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
         wget "https://github.com/emmett2020/linter/releases/download/v${release_version}/linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
         tar -xvf linter.tar.gz
         echo "current path: `pwd`"
@@ -42,8 +41,8 @@ runs:
 
         echo "PATH: $PATH"
         ls -lrth dist
-        linter --version
         ldd linter
+        linter --version
 
     # - name: Run goodbye.sh
     #   run: entrypoint.sh

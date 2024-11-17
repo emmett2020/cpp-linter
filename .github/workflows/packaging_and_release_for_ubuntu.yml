@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           # Check version string.
-          release_version=$(cat VERSION)
+          release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
           if [[ ! "${release_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "VERSION format isn't correct. version: ${release_version}"
             exit -1
