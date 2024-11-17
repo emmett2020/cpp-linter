@@ -87,18 +87,19 @@ jobs:
           if [[ "${compiler}" == "clang" ]]; then
             echo "CC=clang-${major}" >> ${GITHUB_ENV}
             echo "CXX=clang++-${major}" >> ${GITHUB_ENV}
+            echo "Set compiler: CXX: clang++-${major}"
           else
             echo "CC=gcc-${major}" >> ${GITHUB_ENV}
             echo "CXX=g++-${major}" >> ${GITHUB_ENV}
+            echo "Set compiler: CXX: g++-${major}"
           fi
-          echo "Set compiler: CC: ${CC}, CXX: ${CXX}"
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
-          sudo apt install ninja-build;
-          sudo apt install libboost-all-dev;
-          sudo apt install libgit2-dev;
+          sudo apt install -y ninja-build;
+          sudo apt install -y libboost-all-dev;
+          sudo apt install -y libgit2-dev;
 
       - name: CMake
         run: |
@@ -118,7 +119,7 @@ jobs:
 
       - name: Install Packaging Dependencies
         run: |
-          sudo apt install pax-utils
+          sudo apt install -y pax-utils
 
       - name: Pack
         run: |
@@ -129,6 +130,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: "linter_${{ steps.var.release_version }}_${{ runner.os }}_${{ runner.arch }}"
-          path: build/linter.tar.gz
+          path: build/dist.tar.gz
           if-no-files-found: error
 

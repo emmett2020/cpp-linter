@@ -7,4 +7,4 @@ BUILD_PATH="${PROJECT_PATH}"/build
 
 lddtree "${BUILD_PATH}"/main --copy-to-tree "${BUILD_PATH}"/dist --libdir /lib --bindir /bin
 cd "${BUILD_PATH}"
-tar -cvf linter.tar.gz linter
+tar -cvf dist.tar.gz dist
