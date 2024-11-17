@@ -79,7 +79,7 @@ jobs:
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: "build/${{ steps.var.outputs.pkg_name }}.tar.gz"
+          name: "${{ steps.var.outputs.pkg_name }}.tar.gz"
           path: build/${{ steps.var.outputs.pkg_name }}.tar.gz
           if-no-files-found: error
 
