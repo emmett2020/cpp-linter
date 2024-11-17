@@ -1,4 +1,4 @@
-# This file represents a workflow of packing and release.
+# This file represents a workflow of packaging and release.
 
 name: Packaging and Release For Ubuntu
 on:
@@ -11,50 +11,9 @@ on:
     paths:
       - VERSION
 
-  # Manually release or debug the new version.
-  workflow_dispatch:
-    inputs:
-      release-version:
-        description: "Release Version"
-        required: true
-        type: string
-      whether-upload:
-        description: "Whether upload artifacts to the release page"
-        required: true
-        default: false
-        type: boolean
-      runs-on:
-        description: "Runner to use for the build"
-        required: true
-        type: choice
-        options:
-          - ubuntu-22.04
-          - ubuntu-24.04
-        default: ubuntu-22.04
-      compiler:
-        description: "Compiler to build artifacts"
-        required: true
-        type: choice
-        options:
-          - gcc-14.2.0
-          - gcc-13.2.1
-          - clang-15.0.1
-        default: gcc-14.2.0
-      cpp-flags:
-        description: "cpp flags"
-        type: string
-      build-type:
-        description: "CMake c++ build type"
-        type: choice
-        options:
-          - Debug
-          - Release
-        default: Release
-
-
 jobs:
   build-test-package-release:
-    name: "Release ${{ inputs.runs-on }} ${{ inputs.compiler }} ${{ inputs.release-version }} Upload-${{ inputs.whether-upload }}"
+    name: "Linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
     runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout Repository
@@ -62,25 +21,15 @@ jobs:
         with:
           submodules: true
 
-      - name: Validate Variable
+      - name: Validate and Set Variables
         id: var
         shell: bash
         run: |
           # Check version string.
-          if [[ "${{ github.event }}" = "workflow_dispatch" ]]; then
-            version=$(echo ${{ inputs.release-version }} | xargs)
-          else
-            if [[ ! -f "VERSION" ]]; then
-              echo "VERSION file not exists."
-              exit -1
-            fi
-            version=$(cat VERSION)
-          fi
-          if [[ "${{ github.event }}" = "push" ]] || [[ "${{ inputs.whether-upload }}" = "true" ]]; then
-            if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-              echo "VERSION format is uncorrect. version: ${version}"
-              exit -1
-            fi
+          release_version=$(cat VERSION)
+          if [[ ! "${release_version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "VERSION format isn't correct. version: ${release_version}"
+            exit -1
           fi
 
           # Compiler
@@ -90,23 +39,21 @@ jobs:
           if [[ "${compiler}" == "clang" ]]; then
             echo "CC=clang-${major}" >> ${GITHUB_ENV}
             echo "CXX=clang++-${major}" >> ${GITHUB_ENV}
+            echo "Set compiler: CXX: clang++-${major}"
           else
             echo "CC=gcc-${major}" >> ${GITHUB_ENV}
             echo "CXX=g++-${major}" >> ${GITHUB_ENV}
+            echo "Set compiler: CXX: g++-${major}"
           fi
-          echo "${CC}, ${CXX}"
 
-          echo "release-version=${version}">> ${GITHUB_OUTPUT}
-          echo "whether-upload=${whether-upload}">> ${GITHUB_OUTPUT}
-          echo "bin-basename=${{ runner.os }}-${{ runner.arch }}">> ${GITHUB_OUTPUT}
-          echo "compiler=${compiler}">> ${GITHUB_OUTPUT}
-          echo "compiler-version=${compiler_version}">> ${GITHUB_OUTPUT}
+          echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
+          echo "pkg_name=linter_${release_version}_${{ inputs.runs-on }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
-          sudo apt install ninja-build;
-          sudo apt install libboost-all-dev;
-          sudo apt install libgit2-dev;
+          sudo apt install -y ninja-build;
+          sudo apt install -y libboost-all-dev;
+          sudo apt install -y libgit2-dev;
 
       - name: CMake
         run: |
@@ -125,18 +72,29 @@ jobs:
 
       - name: Install Packaging Dependencies
         run: |
-          sudo apt install pax-utils
+          sudo apt install -y pax-utils
 
       - name: Pack
         run: |
           sudo ./package.sh
 
-      - name: Upload
-        if: steps.var.whether-upload == 'true'
+      - name: Rename Packages
+        shell: bash
+        run: |
+          mv build/dist.tar.gz build/${{ steps.var.outputs.pkg_name }}.tar.gz
+
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: "linter-${{ steps.var.bin-basename }}-${{ steps.var.release-version }}"
-          path: build/linter.tar.gz
+          name: "build/${{ steps.var.outputs.pkg_name }}.tar.gz"
+          path: build/${{ steps.var.outputs.pkg_name }}.tar.gz
           if-no-files-found: error
+
+      - name: Release to Github Release Page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.var.outputs.release_version }}
+          files: |
+            build/${{ steps.var.outputs.pkg_name }}.tar.gz
 
 
