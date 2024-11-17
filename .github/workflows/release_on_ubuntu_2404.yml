@@ -4,20 +4,40 @@ on:
     branches: [master, main]
 
 jobs:
-  build-and-test:
-    uses: ./.github/workflows/build_and_test_on_ubuntu_2404.yml
-
-    
-  start-to-package:
+  build-test-package-publish:
+    name: ubuntu-24.04-gcc-14.2.0-release
     runs-on: ubuntu-24.04
     steps:
-      - name: Install Deployment Dependencies
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Setup C/C++ Compiler
+        run: |
+          echo "CC=gcc-14" >> ${GITHUB_ENV}
+          echo "CXX=g++-14" >> ${GITHUB_ENV}
+      - name: Install Building Dependencies
+        run: |
+          sudo apt install ninja-build;
+          sudo apt install libboost-all-dev;
+          sudo apt install libgit2-dev;
+      - name: CMake
+        run: |
+          set -ex;
+          cmake -S . -B build -GNinja \
+            -DCMAKE_CXX_FLAGS="${{ matrix.cxxflags }}" \
+            -DCMAKE_BUILD_TYPE="${{ matrix.build_type }}";
+      - name: Compile
+        run: |
+          cmake --build build -v
+      - name: Run Unittests
+        run: |
+          ./build/tests/test_git;
+      - name: Install Packaging Dependencies
         run: |
           sudo apt install pax-utils
-
       - name: Pack
         run: |
           sudo ./package.sh
-
-
 

@@ -2,7 +2,6 @@ name: Build And Test On Ubuntu 24.04
 on:
   push:
     branches: [master, main]
-  workflow_call:
 
 jobs:
   build-and-test:
