@@ -1,4 +1,6 @@
-name: Manually Packaging and Release For Ubuntu
+# This file represents a workflow of packing and release.
+
+name: Packaging and Release For Ubuntu
 on:
   push:
     branches: [main]
