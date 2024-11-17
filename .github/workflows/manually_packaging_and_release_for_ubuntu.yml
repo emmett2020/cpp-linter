@@ -135,13 +135,13 @@ jobs:
       - name: Rename Packages
         shell: bash
         run: |
-          mv "build/dist.tar.gz" "build/${{ steps.var.outputs.pkg_name }}.tar.gz"
+          mv build/dist.tar.gz build/${{ steps.var.outputs.pkg_name }}.tar.gz
 
       - name: Release to Github Release Page
         if: ${{ inputs.whether-upload }} == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v${{ steps.var.outputs.release_version }}"
+          tag_name: v${{ steps.var.outputs.release_version }}
           files: |
             build/${{ steps.var.outputs.pkg_name }}.tar.gz
 
