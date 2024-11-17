@@ -46,7 +46,9 @@ runs:
         ls -lrth
         readelf -l linter | grep interpreter
         ls ../lib
-        LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}" ./linter --version
+        export LD_LIBRARY_PATH="`pwd`/../lib:${LD_LIBRARY_PATH}" 
+        ./linter --version
+        unset LD_LIBRARY_PATH
         ldd linter
 
     # - name: Run goodbye.sh
