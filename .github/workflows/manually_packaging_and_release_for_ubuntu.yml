@@ -1,10 +1,8 @@
-# This file represents a workflow of manually packaging and release.
-# Usually, this workflow has two mainly uses:
-#   1. Debug a release version of a specific Ubuntu version while you have got some problems in normal release process.
-#   2. Manually release an urgent version on ubuntu.
-# Note that if you want to do real release action, you must call this workflow
-# from a tagged branch. If you are interesting with normal release process, you
-# may refer to packaging_and_release_for_xxx.yml
+# This file represents a workflow of manually packaging and release. Usually,
+# this workflow has two mainly uses: 1. Debug a release version of a specific
+# Ubuntu version while you have got some problems in normal release process. 2.
+# Manually release an urgent version on ubuntu. If you are interesting with
+# normal release process, you may refer to packaging_and_release_for_xxx.yml
 
 name: Manually Packaging and Release For Ubuntu
 on:
@@ -141,7 +139,7 @@ jobs:
         if: ${{ inputs.whether-upload }} == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v{steps.var.release_version}"
+          tag_name: "v{{ steps.var.release_version }}"
           files: |
             "build/${{ steps.var.pkg_name }}.tar.gz"
 
