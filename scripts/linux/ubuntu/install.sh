@@ -5,7 +5,7 @@ CUR_SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 # This file needs sudo permission.
 # Install interpreter into desired directory.
 BINARY_NAME="cpp-linter"
-LIB_INSTALL_PATH="/usr/local/lib/${BINARY_NAME}/"
+LIB_INSTALL_PATH="/usr/local/lib/${BINARY_NAME}"
 BIN_INSTALL_PATH="/usr/local/bin/"
 
 # Refresh libraries
@@ -20,7 +20,7 @@ fi
 sudo mkdir -p ${LIB_INSTALL_PATH}
 sudo mkdir -p ${BIN_INSTALL_PATH}
 
-sudo mv ${CUR_SCRIPT_DIR}/lib/* ${LIB_INSTALL_PATH}
+sudo mv ${CUR_SCRIPT_DIR}/lib/${BINARY_NAME}/* ${LIB_INSTALL_PATH}
 sudo mv ${CUR_SCRIPT_DIR}/bin/* ${BIN_INSTALL_PATH}
 
 echo "Successfully install ${BINARY_NAME}"
