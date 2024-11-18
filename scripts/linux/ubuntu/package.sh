@@ -12,7 +12,7 @@ pushd "${PROJECT_BUILD_PATH}" &> /dev/null
 
 BINARY_NAME="cpp-linter"
 DISTRIBUTION_NAME="cpp-linter-dist"
-INTERPRETER_INSTALL_PATH="~/.local/lib/${BINARY_NAME}"
+INTERPRETER_INSTALL_PATH="/usr/local/lib/${BINARY_NAME}"
 
 echo "Start to package ${BINARY_NAME}"
 echo "1. Start to collect dependent shared libraries ${BINARY_NAME}"
