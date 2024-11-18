@@ -42,6 +42,7 @@ runs:
         echo "PATH: $PATH"
         ls -lrth dist
 
+
         # cd dist/bin
         ls -lrth
         readelf -l dist/bin/linter | grep interpreter
