@@ -46,6 +46,7 @@ runs:
         ls /usr/local/lib/cpp-linter/
         readelf -a /usr/local/bin/cpp-linter | grep PATH
 
+
         /usr/local/bin/cpp-linter --version
 
     # - name: Run goodbye.sh
