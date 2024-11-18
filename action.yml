@@ -48,6 +48,8 @@ runs:
         readelf -l dist/bin/linter | grep interpreter
         ls dist/lib
         export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}" 
+        cd scripts
+        ls -lrth
         linter --version
         unset LD_LIBRARY_PATH
         ldd linter
