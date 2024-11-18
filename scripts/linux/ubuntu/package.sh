@@ -28,7 +28,7 @@ patchelf --set-interpreter "${INTERPRETER_INSTALL_PATH}/${interpreter}" \
 
 echo "3. Start to set rpath for: ${BINARY_NAME}"
 # ORIGIN shouldn't be translated while BINARY_NAME should be translated.
-patchelf --set-rpath '$ORIGIN/../lib/'${BINARY_NAME} "${DISTRIBUTION_NAME}/bin/${BINARY_NAME}"
+patchelf --set-rpath --force-rpath '$ORIGIN/../lib/'${BINARY_NAME} "${DISTRIBUTION_NAME}/bin/${BINARY_NAME}"
 
 
 echo "4. Start to compress"
