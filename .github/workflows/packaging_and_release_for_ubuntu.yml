@@ -74,7 +74,7 @@ jobs:
 
       - name: Package
         run: |
-          sudo bash scripts/ubuntu/package.sh
+          bash scripts/linux/ubuntu/package.sh
 
       - name: Rename Distributions
         shell: bash
