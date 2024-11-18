@@ -32,23 +32,16 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
-        wget "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp-linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
-        tar -xvf cpp-linter.tar.gz
         echo "current path: `pwd`"
+        release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
+        wget "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
+        tar -xvf cpp-linter.tar.gz
+
+
+        cd cpp-linter-dist
         ls -lrth
-        export PATH=`pwd`/cpp-linter-dist/bin:$PATH
-
-        echo "PATH: $PATH"
-        ls -lrth dist
-
-
-        # cd dist/bin
-        cd scripts
-        ls -lrth
-        cpp-linter --version
-        unset LD_LIBRARY_PATH
-        ldd cpp-linter
+        ./install.sh
+        /usr/local/bin/cpp-linter --version
 
     # - name: Run goodbye.sh
     #   run: entrypoint.sh
