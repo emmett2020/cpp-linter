@@ -1,3 +1,2 @@
 #!/bin/bash
-
-apt-get install pax-utils
+sudo apt-get install pax-utils

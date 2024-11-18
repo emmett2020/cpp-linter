@@ -1,3 +1,2 @@
 #!/bin/bash
-
-apt-get install patchelf
+sudo apt-get install patchelf
