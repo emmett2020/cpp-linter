@@ -31,6 +31,13 @@ patchelf --set-rpath '$ORIGIN/../lib/${BINARY_NAME}' "${DISTRIBUTION_NAME}/bin/$
 
 
 echo "4. Start to compress"
+# -- cpp-linter-dist/
+# ------- install.sh
+# ------- uninstall.sh
+# ------- bin/
+# ------- lib/
+cp ${CUR_SCRIPT_DIR}/install.sh ${DISTRIBUTION_NAME}
+cp ${CUR_SCRIPT_DIR}/uninstall.sh ${DISTRIBUTION_NAME}
 tar -cvf ${DISTRIBUTION_NAME}.tar.gz ${DISTRIBUTION_NAME}
 popd &> /dev/null
 echo "Successfully packaged ${BINARY_NAME} and it's dependencies into ${DISTRIBUTION_NAME}"
