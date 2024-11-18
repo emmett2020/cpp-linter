@@ -20,8 +20,8 @@ fi
 sudo mkdir -p ${LIB_INSTALL_PATH}
 sudo mkdir -p ${BIN_INSTALL_PATH}
 
-sudo mv ./lib/* ${LIB_INSTALL_PATH}
-sudo mv ./bin/* ${BIN_INSTALL_PATH}
+sudo mv ${CUR_SCRIPT_DIR}/lib/* ${LIB_INSTALL_PATH}
+sudo mv ${CUR_SCRIPT_DIR}/bin/* ${BIN_INSTALL_PATH}
 
 echo "Successfully install ${BINARY_NAME}"
 echo "Binaries install path: ${BIN_INSTALL_PATH}"
