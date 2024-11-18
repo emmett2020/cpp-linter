@@ -126,8 +126,8 @@ jobs:
 
       - name: Install Packaging Dependencies
         run: |
-          bash scripts/linux/ubuntu/install_patchelf.sh
-          bash scripts/linux/ubuntu/install_lddtree.sh
+          bash scripts/linux/install_patchelf.sh
+          bash scripts/linux/install_lddtree.sh
 
       - name: Package
         run: |
