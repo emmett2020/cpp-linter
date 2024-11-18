@@ -64,7 +64,7 @@ permissions:
 
 jobs:
   build-test-package-release:
-    name: "Linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
+    name: "cpp-linter ${{ inputs.release-version }} ${{ inputs.runs-on }} ${{ inputs.compiler }}  whether-upload-${{ inputs.whether-upload }}"
     runs-on: ${{ inputs.runs-on }}
     steps:
       - name: Checkout Repository
@@ -100,7 +100,7 @@ jobs:
           fi
 
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
-          echo "pkg_name=linter_${release_version}_${{ inputs.runs-on }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
+          echo "pkg_name=cpp_linter_${release_version}_${{ inputs.runs-on }}_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
@@ -126,17 +126,17 @@ jobs:
 
       - name: Install Packaging Dependencies
         run: |
-          sudo apt install -y pax-utils
-          sudo apt install -y patchelf
+          bash scripts/linux/ubuntu/install_patchelf.sh
+          bash scripts/linux/ubuntu/install_lddtree.sh
 
       - name: Package
         run: |
-           bash scripts/ubuntu/package.sh
+           bash scripts/linux/ubuntu/package.sh
 
       - name: Rename Distributions
         shell: bash
         run: |
-          mv build/dist.tar.gz build/${{ steps.var.outputs.pkg_name }}.tar.gz
+          mv build/cpp-linter-dist.tar.gz build/${{ steps.var.outputs.pkg_name }}.tar.gz
 
       - name: Release to Github Release Page
         if: ${{ inputs.whether-upload }} == 'true'
