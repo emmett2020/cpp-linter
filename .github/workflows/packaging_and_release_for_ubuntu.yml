@@ -72,11 +72,11 @@ jobs:
           sudo apt install -y pax-utils
           sudo apt install -y patchelf
 
-      - name: Pack
+      - name: Package
         run: |
           sudo bash scripts/ubuntu/package.sh
 
-      - name: Rename Packages
+      - name: Rename Distributions
         shell: bash
         run: |
           mv build/dist.tar.gz build/${{ steps.var.outputs.pkg_name }}.tar.gz
