@@ -40,10 +40,9 @@ runs:
         cd cpp-linter-dist
         ls -lrth
         ./install.sh
-        /usr/local/bin/cpp-linter --version
 
-    # - name: Run goodbye.sh
-    #   run: entrypoint.sh
-    #   shell: bash
+    - name: Run entrypoint.sh
+      run: entrypoint.sh
+      shell: bash
 
 
