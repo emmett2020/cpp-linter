@@ -12,7 +12,7 @@ inputs:
     default: 18
   log_level:
     description: |
-      Set log level for linter
+      Set log level for cpp-linter
     default: ERROR
 
 outputs:
@@ -33,26 +33,22 @@ runs:
       shell: bash
       run: |
         release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
-        wget "https://github.com/emmett2020/linter/releases/download/v${release_version}/linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O linter.tar.gz
-        tar -xvf linter.tar.gz
+        wget "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp-linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
+        tar -xvf cpp-linter.tar.gz
         echo "current path: `pwd`"
         ls -lrth
-        export PATH=`pwd`/dist/bin:$PATH
+        export PATH=`pwd`/cpp-linter-dist/bin:$PATH
 
         echo "PATH: $PATH"
         ls -lrth dist
 
 
         # cd dist/bin
-        ls -lrth
-        readelf -l dist/bin/linter | grep interpreter
-        ls dist/lib
-        export LD_LIBRARY_PATH="`pwd`/dist/lib:${LD_LIBRARY_PATH}" 
         cd scripts
         ls -lrth
-        linter --version
+        cpp-linter --version
         unset LD_LIBRARY_PATH
-        ldd linter
+        ldd cpp-linter
 
     # - name: Run goodbye.sh
     #   run: entrypoint.sh

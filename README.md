@@ -1,4 +1,4 @@
-# linter
+# cpp-linter
 Platform: Linux
 
 # build

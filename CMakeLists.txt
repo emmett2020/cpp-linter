@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.13)
-project(linter)
+project(cpp-linter)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CXX_STANDARD_REQUIRED true)
@@ -20,8 +20,6 @@ IF(ENABLE_COVERAGE)
   set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} --coverage ")
 ENDIF()
 
-# TODO: add an example about how to use boost in CMake
-# TODO: add a startup repository
 find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex)
 
 set(SRC_FILE
@@ -32,14 +30,15 @@ set(SRC_FILE
   src/tools/clang_tidy.cpp
   src/github/api.cpp
 )
-add_executable(linter ${SRC_FILE})
-target_include_directories(linter PRIVATE ${Boost_INCLUDE_DIRS}
-                                          ${linter_root}/src)
-target_link_libraries(linter ${Boost_LIBRARIES}
-                             spdlog
-                             range-v3
-                             httplib
-                             nlohmann_json
-                             git2)
+
+add_executable(cpp-linter ${SRC_FILE})
+target_include_directories(cpp-linter PRIVATE ${Boost_INCLUDE_DIRS}
+                                              ${linter_root}/src)
+target_link_libraries(cpp-linter ${Boost_LIBRARIES}
+                                 spdlog
+                                 range-v3
+                                 httplib
+                                 nlohmann_json
+                                 git2)
 
 add_subdirectory(tests)
