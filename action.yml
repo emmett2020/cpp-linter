@@ -41,6 +41,11 @@ runs:
         ls -lrth
         ./install.sh
 
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        submodules: true
+
     - name: Run entrypoint.sh
       run: entrypoint.sh
       shell: bash
