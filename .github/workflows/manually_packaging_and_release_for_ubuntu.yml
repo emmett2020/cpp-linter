@@ -131,7 +131,7 @@ jobs:
 
       - name: Pack
         run: |
-          sudo ./scripts/ubuntu/package.sh
+           bash scripts/ubuntu/package.sh
 
       - name: Rename Packages
         shell: bash
