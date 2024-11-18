@@ -47,7 +47,7 @@ runs:
         submodules: true
 
     - name: Run entrypoint.sh
-      run: entrypoint.sh
+      run: bash entrypoint.sh
       shell: bash
 
 
