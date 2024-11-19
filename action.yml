@@ -5,15 +5,16 @@ branding:
   icon: "check-circle"
   color: "green"
 inputs:
+  log_level:
+    description: |
+      Set log level for cpp-linter
+    default: ERROR
+
   clang-tidy-version:
     description: |
       Choose which clang-tidy version you want to use
     required: true
     default: 18
-  log_level:
-    description: |
-      Set log level for cpp-linter
-    default: ERROR
 
 outputs:
   random-number:

@@ -1,11 +1,13 @@
 #include <algorithm>
+#include <boost/program_options/variables_map.hpp>
 #include <cctype>
 #include <print>
 #include <ranges>
+#include <string>
 
 #include <spdlog/spdlog.h>
 #include <git2/diff.h>
-#include <string>
+#include <boost/program_options.hpp>
 
 #include "tools/clang_tidy.h"
 #include "github/api.h"
@@ -15,6 +17,7 @@
 
 using namespace linter; // NOLINT
 using namespace std::string_literals;
+namespace po = boost::program_options;
 
 namespace {
   /// Find the full executable path of clang tools with specific version.
@@ -89,6 +92,7 @@ namespace {
 
   /// WARN: Theses just for debug
   void set_pull_request_debug_env(user_options &options) {
+    env::set_cache(github_ci, "false");
     env::set_cache(github_repository, "emmett2020/temp");
     env::set_cache(github_event_name, github_event_pull_request);
     env::set_cache(github_sha, "");
@@ -106,18 +110,35 @@ namespace {
 
   /// Load user options from github.
   auto load_user_options() -> user_options {
-    auto param = user_options{};
-    set_pull_request_debug_env(param);
-    param.repo       = env::get(github_repository);
-    param.source_sha = env::get(github_sha);
-    param.source_ref = env::get(github_ref);
-    return param;
+    auto options = user_options{};
+    set_pull_request_debug_env(options);
+    options.use_on_local = env::get(github_ci) == "false";
+    options.repo       = env::get(github_repository);
+    options.source_sha = env::get(github_sha);
+    options.source_ref = env::get(github_ref);
+    return options;
   }
 
 
 } // namespace
 
-int main() {
+
+int main(int argc, char** argv) {
+  // deal with the user input
+  auto desc = po::options_description{"Allowed options"};
+  desc.add_options()
+    ("help", "produce help message")
+    ("version", "show version")
+  ;
+  auto vm =  po::variables_map{};
+  po::store(po::parse_command_line(argc, argv, desc), vm);
+  po::notify(vm);
+
+  if (vm.count("help") != 0U) {
+    std::cout << desc << "\n";
+    return 1;
+  }
+
   auto options = load_user_options();
   set_log_level(options.log_level);
   print_full_options(options);

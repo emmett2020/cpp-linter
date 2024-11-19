@@ -35,6 +35,7 @@ namespace linter {
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
+  constexpr auto github_ci = "CI";
   constexpr auto github_repository = "GITHUB_REPOSITORY"; // The owner and repository name
   constexpr auto github_token      = "GITHUB_TOKEN";
   constexpr auto github_event_name = "GITHUB_EVENT_NAME";

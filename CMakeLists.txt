@@ -20,7 +20,7 @@ IF(ENABLE_COVERAGE)
   set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} --coverage ")
 ENDIF()
 
-find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex)
+find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex program_options)
 
 set(SRC_FILE
   src/main.cpp
