@@ -47,7 +47,7 @@ runs:
         submodules: true
 
     - name: Run entrypoint.sh
-      run: bash entrypoint.sh
+      run: bash entrypoint.sh ${{ inputs.clang-tidy-version }}
       shell: bash
 
 
