@@ -178,16 +178,22 @@ namespace {
 
   void add_supported_option(program_options::options_description &desc) {
     desc.add_options()                                                                           //
-      ("help", "produce help message")                                                           //
-      ("version", "print current version")                                                       //
-      ("log_level", "Set the log level of cpp-linter")                                           //
+      ("help", "produce help message")("version", "print current version")                       //
+      ("log_level", program_options::value<std::string>(), "Set the log level of cpp-linter")    //
       ("repo_full_path",
+       program_options::value<std::string>(),
        "Set the full path of to be checked git repository. This option shouldn't be used on CI") //
-      ("target_ref", "Set the target reference of git repository")                               //
-      ("source_ref", "Set the source reference of git repository")                               //
-      ("source_sha", "Set the source sha1 of git repository")                                    //
-      ("token", "Set github token of git repository")                                            //
-      ("enable_clang_tidy", "Enabel clang-tidy check")                                           //
+      ("target_ref",
+       program_options::value<std::string>(),
+       "Set the target reference of git repository")                                             //
+      ("source_ref",
+       program_options::value<std::string>(),
+       "Set the source reference of git repository")                                             //
+      ("source_sha",
+       program_options::value<std::string>(),
+       "Set the source sha1 of git repository")                                                  //
+      ("token", program_options::value<std::string>(), "Set github token of git repository")     //
+      ("enable_clang_tidy", program_options::value<bool>(), "Enabel clang-tidy check")           //
       ("enable_clang_tidy_fast_exit",
        "Enabel clang-tidy fast exit. This means cpp-linter will immediately stop all clang-tidy "
        "check when found first check error")                                                     //
