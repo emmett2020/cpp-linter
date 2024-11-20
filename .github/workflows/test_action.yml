@@ -3,6 +3,15 @@ on:
   push:
     branches: [master, main]
 
+  workflow_dispatch:
+    inputs:
+      log_level:
+        required: true
+        type: choice
+        options:
+          - TRACE
+          - DEBUG
+          - INFO
 
 jobs:
   build-and-test:
@@ -13,4 +22,6 @@ jobs:
         with:
           submodules: true
       - uses: ./
+        with: 
+          log_level: ${{ inputs.log_level }}
 
