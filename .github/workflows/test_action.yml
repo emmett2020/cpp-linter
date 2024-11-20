@@ -12,6 +12,7 @@ on:
           - TRACE
           - DEBUG
           - INFO
+        default: TRACE
 
 jobs:
   build-and-test:
@@ -22,6 +23,6 @@ jobs:
         with:
           submodules: true
       - uses: ./
-        with: 
+        with:
           log_level: ${{ inputs.log_level }}
 
