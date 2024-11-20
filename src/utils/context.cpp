@@ -7,16 +7,18 @@ namespace linter {
     spdlog::debug("Context: ");
     spdlog::debug("--------------------------------------------------");
     spdlog::debug("Common Options:");
-    spdlog::debug("\tLog level: {}", ctx.log_level);
-    spdlog::debug("\tRepository path: {}", ctx.repo_path);
-    spdlog::debug("\tRepository: {}", ctx.repo);
-    spdlog::debug("\tRepository base ref: {}", ctx.base_ref);
-    spdlog::debug("\tRepository head ref: {}", ctx.head_ref);
-    spdlog::debug("\tRepository base commit: {}", ctx.base_commit);
-    spdlog::debug("\tRepository head commit: {}", ctx.head_commit);
+    spdlog::debug("\tuse on local: {}", ctx.use_on_local);
+    spdlog::debug("\tlog level: {}", ctx.log_level);
+    spdlog::debug("Repository Options:");
+    spdlog::debug("\trepository path: {}", ctx.repo_path);
+    spdlog::debug("\trepository: {}", ctx.repo);
+    spdlog::debug("\trepository base ref: {}", ctx.base_ref);
+    spdlog::debug("\trepository head ref: {}", ctx.head_ref);
+    spdlog::debug("\trepository base commit: {}", ctx.base_commit);
+    spdlog::debug("\trepository head commit: {}", ctx.head_commit);
 
     const auto &tidy_opt = ctx.clang_tidy_option;
-    spdlog::debug("The options of clang-tidy:");
+    spdlog::debug("Options of clang-tidy:");
     spdlog::debug("\tenable clang tidy: {}", tidy_opt.enable_clang_tidy);
     spdlog::debug("\tenable clang tidy fastly exit: {}", tidy_opt.enable_clang_tidy_fastly_exit);
     spdlog::debug("\tallow no checks: {}", tidy_opt.allow_no_checks);
