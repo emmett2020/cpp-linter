@@ -54,7 +54,9 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        /usr/local/bin/cpp-linter --log_level=${{ inputs.log-level }}                           \
-                                  --clang_tidy_database=${{ inputs.clang-tidy-database }}
+        /usr/local/bin/cpp-linter --log-level=${{ inputs.log-level }}                          \
+                                  --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
+                                  --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
+                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}
 
 
