@@ -4,11 +4,7 @@
 #include <cstddef>
 #include <cstdlib>
 #include <fstream>
-#include <iterator>
-#include <optional>
 #include <ranges>
-#include <string_view>
-#include <unordered_map>
 #include <print>
 
 #include <httplib.h>
@@ -19,7 +15,6 @@
 #include "nlohmann/json_fwd.hpp"
 #include "utils/env_manager.h"
 #include "utils/util.h"
-#include "utils/git_utils.h"
 
 namespace linter {
   struct rate_limit_headers {
@@ -79,11 +74,6 @@ namespace linter {
   /// The type of ref that triggered the workflow run. Valid values are branch or tag
   constexpr auto github_ref_type = "GITHUB_REF";
 
-  enum class ref_t : uint8_t {
-    branch,
-    tag,
-  };
-
   /// Reads from the actual Github runner.
   struct github_env {
     std::string repository;
@@ -93,7 +83,7 @@ namespace linter {
     std::string head_ref;      // Only used in pr event
     std::string triggered_ref; // The ref triggered the workflow. Used in all events.
     std::string triggered_sha;
-    ref_t triggered_ref_type{ref_t::branch};
+    std::string triggered_ref_type;
     std::string workspace;
     std::string token;
   };
@@ -241,7 +231,7 @@ namespace linter {
       return env_;
     }
 
-    void read_envrionment_variables() {
+    void read_environment_variables() {
       env_.repository         = env::get(github_repository);
       env_.token              = env::get(github_token);
       env_.event_name         = env::get(github_event_name);
@@ -250,8 +240,21 @@ namespace linter {
       env_.head_ref           = env::get(github_head_ref);
       env_.triggered_ref      = env::get(github_ref);
       env_.triggered_sha      = env::get(github_sha);
-      env_.triggered_ref_type = env::get(github_ref_type) == "branch" ? ref_t::branch : ref_t::tag;
+      env_.triggered_ref_type = env::get(github_ref_type);
       env_.workspace          = env::get(github_workspace);
+    }
+
+    void print_environment_variables() {
+      spdlog::debug("git repository:{}",env_.repository);
+      spdlog::debug("git token:{}",env_.token);
+      spdlog::debug("git event name:{}",env_.event_name);
+      spdlog::debug("git event path:{}",env_.event_path);
+      spdlog::debug("git base ref:{}",env_.base_ref);
+      spdlog::debug("git head ref:{}",env_.head_ref);
+      spdlog::debug("git triggered ref:{}",env_.triggered_ref);
+      spdlog::debug("git triggered sha:{}",env_.triggered_sha);
+      spdlog::debug("git triggered ref_type:{}",env_.triggered_ref_type);
+      spdlog::debug("git workspace:{}",env_.workspace);
     }
 
     [[nodiscard]] auto base_commit() const -> const std::string& {

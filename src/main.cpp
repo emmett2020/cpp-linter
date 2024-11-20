@@ -63,8 +63,8 @@ namespace {
     // Move these to clang_tidy::option
     bool enable_clang_tidy           = true;
     bool enable_clang_tidy_fast_exit = false;
-    std::uint16_t clang_tidy_version;
-    clang_tidy::option clang_tidy_option;
+    std::uint16_t clang_tidy_version = 0;
+    clang_tidy::option clang_tidy_option{};
   };
 
   void print_full_options(const user_options &options) {
@@ -228,8 +228,10 @@ auto main(int argc, char **argv) -> int {
   print_full_options(options);
 
   auto github_client = github_api_client{};
-  github_client.read_envrionment_variables();
+  github_client.read_environment_variables();
+  github_client.print_environment_variables();
   auto repo_path = options.use_on_local ? options.repo_full_path : github_client.repo_full_path();
+  throw_if(repo_path.empty(), "git repository is empty");
 
   git::setup();
   auto *repo = git::repo::open(repo_path);
