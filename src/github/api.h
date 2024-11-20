@@ -184,7 +184,7 @@ namespace linter {
       throw_if(pr_number_ == -1, "doesn't have comment_id yet");
       spdlog::info("Start to update issue comment");
 
-      const auto path = std::format("/repos/{}/issues/comments/{}", ctx_.repo, comment_id_);
+      const auto path    = std::format("/repos/{}/issues/comments/{}", ctx_.repo, comment_id_);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx_.token)}

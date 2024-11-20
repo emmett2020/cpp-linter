@@ -28,4 +28,4 @@ namespace linter {
   }
 
 
-}  // namespace linter
+} // namespace linter

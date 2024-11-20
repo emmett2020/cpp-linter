@@ -8,8 +8,7 @@
 #include <vector>
 
 
-using CompileCommands =
-  std::vector<std::unordered_map<std::string, std::string>>;
+using CompileCommands = std::vector<std::unordered_map<std::string, std::string>>;
 
 constexpr std::string_view clang_notes = "clang-diagnostic-";
 
@@ -20,9 +19,7 @@ constexpr std::string_view diagnostic_link(std::string_view diagnostic) {
     return diagnostic;
   }
 
-  auto link = std::format(
-    "[{}](https://clang.llvm.org/extra/clang-tidy/checks)",
-    diagnostic);
+  auto link = std::format("[{}](https://clang.llvm.org/extra/clang-tidy/checks)", diagnostic);
   if (diagnostic.starts_with("clang-analyzer-")) {
     // auto check_name_parts = diagnostic.split("-");
     // return link + std::format("clang-analyzer/{}.html",
@@ -51,20 +48,14 @@ struct ClangTidyNotification {
   std::vector<std::string> applied_lines;
 
   std::string to_string() {
-    return std::format(
-      "<ClangTidyNotification> {0}:{1}:{2} {3}",
-      filename,
-      row,
-      col,
-      diagnostic);
+    return std::format("<ClangTidyNotification> {0}:{1}:{2} {3}", filename, row, col, diagnostic);
   }
 };
 
 struct ClangTidyAdvice {
   std::vector<ClangTidyNotification> notifications;
 
-  explicit ClangTidyAdvice(
-    const std::vector<ClangTidyNotification> &notifications) {
+  explicit ClangTidyAdvice(const std::vector<ClangTidyNotification> &notifications) {
     //
   }
 

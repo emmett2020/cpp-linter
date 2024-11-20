@@ -24,7 +24,6 @@ namespace {
     return std_out;
   }
 
-
   /// This must be called before any spdlog use.
   void set_log_level(const std::string &log_level_str) {
     auto log_level = spdlog::level::info;
@@ -60,8 +59,8 @@ namespace {
 } // namespace
 
 auto main(int argc, char **argv) -> int {
-  auto desc = make_program_options_desc();
-  auto options = parse_program_options(argc,  argv, desc);
+  auto desc    = make_program_options_desc();
+  auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
@@ -75,20 +74,21 @@ auto main(int argc, char **argv) -> int {
   set_log_level(ctx.log_level);
   print_context(ctx);
 
-  if (! ctx.use_on_local) {
+  if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
     merge_env_into_context(env, ctx);
   }
 
   git::setup();
-  auto *repo = git::repo::open(ctx.repo_path);
+  auto *repo         = git::repo::open(ctx.repo_path);
   auto changed_files = git::diff::changed_files(repo, ctx.base_ref, ctx.head_ref);
   print_changed_files(changed_files);
 
   auto github_client = github_api_client{};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
-    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
+    auto clang_tidy_exe =
+      find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
     spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
     throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
 

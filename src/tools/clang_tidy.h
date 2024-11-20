@@ -53,11 +53,11 @@ namespace linter::clang_tidy {
 
   /// The option to be passed into clang-tidy executable.
   struct option {
-    bool enable_clang_tidy           = true;
+    bool enable_clang_tidy             = true;
     bool enable_clang_tidy_fastly_exit = false;
-    bool allow_no_checks      = false;
-    bool enable_check_profile = false;
-    std::uint16_t clang_tidy_version = 0;
+    bool allow_no_checks               = false;
+    bool enable_check_profile          = false;
+    std::uint16_t clang_tidy_version   = 0;
     std::string checks;
     std::string config;
     std::string config_file;
