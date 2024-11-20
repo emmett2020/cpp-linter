@@ -30,7 +30,7 @@ namespace linter {
     spdlog::debug("\tdatabase: {}", tidy_opt.database);
     spdlog::debug("\theader filter: {}", tidy_opt.header_filter);
     spdlog::debug("\tline filter: {}", tidy_opt.line_filter);
-    spdlog::debug("--------------------------------------------------");
+    spdlog::debug("");
   }
 
 

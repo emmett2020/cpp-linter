@@ -17,16 +17,19 @@ namespace linter {
   }
 
   void print_github_env(const github_env& env) {
-    spdlog::debug("Git repository:{}", env.repository);
-    spdlog::debug("Git token:{}", env.token);
-    spdlog::debug("Git event name:{}", env.event_name);
-    spdlog::debug("Git event path:{}", env.event_path);
-    spdlog::debug("Git base ref:{}", env.base_ref);
-    spdlog::debug("Git head ref:{}", env.head_ref);
-    spdlog::debug("Git triggered ref:{}", env.triggered_ref);
-    spdlog::debug("Git triggered sha:{}", env.triggered_sha);
-    spdlog::debug("Git triggered ref_type:{}", env.triggered_ref_type);
-    spdlog::debug("Git workspace:{}", env.workspace);
+    spdlog::debug("Github Env:");
+    spdlog::debug("--------------------------------------------------");
+    spdlog::debug("\tgit repository:{}", env.repository);
+    spdlog::debug("\tgit token:{}", env.token);
+    spdlog::debug("\tgit event name:{}", env.event_name);
+    spdlog::debug("\tgit event path:{}", env.event_path);
+    spdlog::debug("\tgit base ref:{}", env.base_ref);
+    spdlog::debug("\tgit head ref:{}", env.head_ref);
+    spdlog::debug("\tgit triggered ref:{}", env.triggered_ref);
+    spdlog::debug("\tgit triggered sha:{}", env.triggered_sha);
+    spdlog::debug("\tgit triggered ref_type:{}", env.triggered_ref_type);
+    spdlog::debug("\tgit workspace:{}", env.workspace);
+    spdlog::debug("");
   }
 
   void merge_env_into_context(const github_env& env, context& ctx) {
