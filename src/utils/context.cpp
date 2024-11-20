@@ -15,7 +15,7 @@ namespace linter {
     const auto &tidy_opt = ctx.clang_tidy_option;
     spdlog::debug("The options of clang-tidy:");
     spdlog::debug("enable clang tidy: {}", tidy_opt.enable_clang_tidy);
-    spdlog::debug("enable clang tidy fast exit: {}", tidy_opt.enable_clang_tidy_fastly_exit);
+    spdlog::debug("enable clang tidy fastly exit: {}", tidy_opt.enable_clang_tidy_fastly_exit);
     spdlog::debug("allow no checks: {}", tidy_opt.allow_no_checks);
     spdlog::debug("enable check profile: {}", tidy_opt.enable_check_profile);
     spdlog::debug("clang tidy version: {}", tidy_opt.clang_tidy_version);
