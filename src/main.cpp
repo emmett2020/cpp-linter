@@ -23,7 +23,7 @@ namespace program_options = boost::program_options;
 
 namespace {
   /// Find the full executable path of clang tools with specific version.
-  auto find_clang_tool_exe_path(std::string_view tool, std::string_view version) -> std::string {
+  auto find_clang_tool_exe_path(std::string_view tool, std::uint16_t version) -> std::string {
     auto command                = std::format("{}-{}", tool, version);
     auto [ec, std_out, std_err] = shell::which(command);
     throw_if(
@@ -60,9 +60,10 @@ namespace {
     std::string source_ref;
     std::string token;
 
+    // Move these to clang_tidy::option
     bool enable_clang_tidy           = true;
     bool enable_clang_tidy_fast_exit = false;
-    std::string clang_tidy_version;
+    std::uint16_t clang_tidy_version;
     clang_tidy::option clang_tidy_option;
   };
 
@@ -143,7 +144,7 @@ namespace {
       options.enable_clang_tidy_fast_exit = variables["enable_clang_tidy_fast_exit"].as<bool>();
     }
     if (variables.contains("clang_tidy_version")) {
-      options.clang_tidy_version = variables["clang_tidy_version"].as<std::string>();
+      options.clang_tidy_version = variables["clang_tidy_version"].as<std::uint16_t>();
     }
     if (variables.contains("clang_tidy_allow_no_checks")) {
       options.clang_tidy_option.allow_no_checks =
@@ -197,7 +198,7 @@ namespace {
       ("enable_clang_tidy_fast_exit",
        "Enabel clang-tidy fast exit. This means cpp-linter will immediately stop all clang-tidy "
        "check when found first check error")                                                     //
-      ("clang_tidy_version", "The version of clang-tidy")                                        //
+      ("clang_tidy_version", program_options::value<uint16_t>(), "The version of clang-tidy")                                        //
       ("clang_tidy_allow_no_checks", "Enabel clang-tidy allow_no_check option");
   }
 
