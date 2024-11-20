@@ -1,18 +1,15 @@
-name: 'Hello World'
-description: 'Greet someone'
+name: 'cpp-linter action'
+description: 'A C/C++ linter to improve code quality'
 author: emmettzhang2020@outlook.com
 branding:
   icon: "check-circle"
-  color: "green"
+  color: "red"
 inputs:
   log_level:
-    description: |
-      Set log level for cpp-linter
+    description: Set log level for cpp-linter
     default: ERROR
-
   clang-tidy-version:
-    description: |
-      Choose which clang-tidy version you want to use
+    description: Choose which clang-tidy version you want to use
     required: true
     default: 18
 
@@ -24,31 +21,26 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Set Greeting
-      run: echo "Hello $INPUT_WHO_TO_GREET."
-      shell: bash
-      env:
-        INPUT_WHO_TO_GREET: ${{ inputs.who-to-greet }}
     - name: Install dependencies on Linux
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        echo "current path: `pwd`"
         release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
+        echo "Current path: `pwd`, current version: ${release_version}"
         wget "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
         tar -xvf cpp-linter.tar.gz
-
-        cd cpp-linter-dist
-        ls -lrth
-        ./install.sh
+        cd cpp-linter-dist && ls -lrth && ./install.sh
 
     - name: Checkout Repository
       uses: actions/checkout@v4
       with:
         submodules: true
 
-    - name: Run entrypoint.sh
-      run: bash entrypoint.sh ${{ inputs.clang-tidy-version }}
+    - name: Run cpp-linter On Linux
+      if: runner.os == 'Linux'
       shell: bash
+      run: |
+        /usr/local/bin/cpp-linter --clang_tidy_version=${{ inputs.clang-tidy-version }} \
+                                  --log_level=${{ inputs.log_level }}
 
 
