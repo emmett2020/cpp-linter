@@ -14,7 +14,6 @@ inputs:
     default: 18
   token:
     description: Github token
-    required: true
   enable-clang-tidy:
     description: Enable clang-tidy check
     type: boolean
@@ -57,9 +56,7 @@ runs:
       run: |
         /usr/local/bin/cpp-linter --clang_tidy_version=${{ inputs.clang-tidy-version }}         \
                                   --log_level=${{ inputs.log-level }}                           \
-                                  --token=${{ inputs.token }}                                   \
                                   --enable_clang_tidy=${{ inputs.enable-clang-tidy }}           \
-                                  --clang-tidy-config-file=${{ inputs.clang-tidy-config-file }} \
                                   --clang-tidy-database=${{ inputs.clang-tidy-database }}
 
 
