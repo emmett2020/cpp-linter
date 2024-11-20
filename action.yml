@@ -5,13 +5,27 @@ branding:
   icon: "check-circle"
   color: "red"
 inputs:
-  log_level:
+  log-level:
     description: Set log level for cpp-linter
     default: ERROR
   clang-tidy-version:
     description: Choose which clang-tidy version you want to use
     required: true
     default: 18
+  token:
+    description: Github token
+    required: true
+  enable-clang-tidy:
+    description: Enable clang-tidy check
+    type: boolean
+    default: true
+  clang-tidy-config-file:
+    description: clang tidy config file
+    type: string
+  clang-tidy-database:
+    description: clang tidy command database
+    type: string
+    default: build
 
 outputs:
   random-number:
@@ -41,7 +55,11 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        /usr/local/bin/cpp-linter --clang_tidy_version=${{ inputs.clang-tidy-version }} \
-                                  --log_level=${{ inputs.log_level }}
+        /usr/local/bin/cpp-linter --clang_tidy_version=${{ inputs.clang-tidy-version }}         \
+                                  --log_level=${{ inputs.log-level }}                           \
+                                  --token=${{ inputs.token }}                                   \
+                                  --enable_clang_tidy=${{ inputs.enable-clang-tidy }}           \
+                                  --clang-tidy-config-file=${{ inputs.clang-tidy-config-file }} \
+                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}
 
 

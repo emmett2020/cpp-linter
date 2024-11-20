@@ -1,11 +1,8 @@
 name: Test Action
 on:
-  push:
-    branches: [master, main]
-
   workflow_dispatch:
     inputs:
-      log_level:
+      log-level:
         required: true
         type: choice
         options:
@@ -24,5 +21,6 @@ jobs:
           submodules: true
       - uses: ./
         with:
-          log_level: ${{ inputs.log_level }}
+          log-level: ${{ inputs.log-level }}
+          clang-tidy-version: 18
 
