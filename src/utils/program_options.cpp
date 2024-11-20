@@ -21,10 +21,11 @@ namespace linter {
     constexpr auto log_level                       = "log-level";
     constexpr auto repo_path                       = "repo-path";
     constexpr auto token                           = "token";
-    constexpr auto base_ref                        = "base-ref";
+    constexpr auto base_ref                        = "base-ref";       // only used in pr
     constexpr auto head_ref                        = "head-ref";
-    constexpr auto base_commit                     = "base-commit";
+    constexpr auto base_commit                     = "base-commit";    // pr
     constexpr auto head_commit                     = "head-commit";
+    constexpr auto default_branch                  = "default-branch"; // pull
     constexpr auto event_name                      = "event-name";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
@@ -69,6 +70,9 @@ namespace linter {
     }
     if (variables.contains(head_commit)) {
       ctx.head_commit = variables[head_commit].as<std::string>();
+    }
+    if (variables.contains(default_branch)) {
+      ctx.default_branch = variables[default_branch].as<std::string>();
     }
     if (variables.contains(event_name)) {
       ctx.event_name = variables[event_name].as<std::string>();
@@ -130,6 +134,7 @@ namespace linter {
                                                            "This could be same as base_ref.")
       (base_commit,                     value<string>(),   "Set the base commit of git repository")
       (head_commit,                     value<string>(),   "Set the head commit of git repository")
+      (default_branch,                  value<string>(),   "Set the default branch of git repository")
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."

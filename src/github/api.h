@@ -26,9 +26,13 @@ namespace linter {
 
   constexpr auto our_name                         = "emmett2020"; // For test
   constexpr auto github_api                       = "https://api.github.com";
+  constexpr auto github_event_push                = "push";
   constexpr auto github_event_pull_request        = "pull_request";
   constexpr auto github_event_pull_request_target = "pull_request_target";
-  constexpr auto github_event_push                = "push";
+  constexpr auto github_event_workflow_dispatch   = "workflow_dispatch";
+
+  constexpr auto supported_github_event =
+    {github_event_push, github_event_pull_request, github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
@@ -80,11 +84,11 @@ namespace linter {
     std::string repository;
     std::string event_name;
     std::string event_path;
-    std::string base_ref;      // Only used in pr event
-    std::string head_ref;      // Only used in pr event
-    std::string triggered_ref; // The ref triggered the workflow. Used in all events.
-    std::string triggered_sha;
-    std::string triggered_ref_type;
+    std::string base_ref; // Only used in pr event
+    std::string head_ref; // Only used in pr event
+    std::string github_ref;
+    std::string github_sha;
+    std::string github_ref_type;
     std::string workspace;
     std::string token;
   };

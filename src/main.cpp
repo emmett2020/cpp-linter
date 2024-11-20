@@ -58,6 +58,13 @@ namespace {
     return {trimmed_version.data(), trimmed_version.size()};
   }
 
+  auto get_commits(const github_env &env, const context &ctx, git::repo_ptr repo)
+    -> std::tuple<git::commit_ptr, git::commit_ptr> {
+    if (env.event_name == github_event_push) {
+      auto *default_commit = git::branch::lookup(repo, ctx.default_branch, git::branch_t::remote);
+    }
+  }
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -87,6 +94,7 @@ auto main(int argc, char **argv) -> int {
   auto *repo         = git::repo::open(ctx.repo_path);
   auto changed_files = git::diff::changed_files(repo, ctx.base_ref, ctx.head_ref);
   print_changed_files(changed_files);
+
 
   auto github_client = github_api_client{};
   if (ctx.clang_tidy_option.enable_clang_tidy) {

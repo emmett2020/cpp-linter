@@ -14,6 +14,7 @@ namespace linter {
     std::string head_commit;
     std::string base_ref;
     std::string head_ref;
+    std::string default_branch;
 
     clang_tidy::option clang_tidy_option{};
   };
