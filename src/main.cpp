@@ -6,6 +6,7 @@
 
 #include "tools/clang_tidy.h"
 #include "github/api.h"
+#include "utils/context.h"
 #include "utils/git_utils.h"
 #include "utils/shell.h"
 #include "utils/util.h"
@@ -15,13 +16,14 @@ using namespace std::string_literals;
 
 namespace {
   /// Find the full executable path of clang tools with specific version.
-  auto find_clang_tool_exe_path(std::string_view tool, std::uint16_t version) -> std::string {
+  auto find_clang_tool(std::string_view tool, std::uint16_t version) -> std::string {
     auto command                = std::format("{}-{}", tool, version);
     auto [ec, std_out, std_err] = shell::which(command);
-    throw_if(
-      ec != 0,
-      std::format("execute /usr/bin/which to find {}-{} failed, got: {}", tool, version, std_err));
-    return std_out;
+    throw_unless(ec == 0,
+                 std::format("find {}-{} failed, error message: {}", tool, version, std_err));
+    auto trimmed = trim(std_out);
+    throw_if(trimmed.empty(), "got empty clang tool path");
+    return {trimmed.data(), trimmed.size()};
   }
 
   /// This must be called before any spdlog use.
@@ -79,6 +81,7 @@ auto main(int argc, char **argv) -> int {
     merge_env_into_context(env, ctx);
   }
   print_context(ctx);
+  check_context(ctx);
 
   git::setup();
   auto *repo         = git::repo::open(ctx.repo_path);
@@ -87,13 +90,11 @@ auto main(int argc, char **argv) -> int {
 
   auto github_client = github_api_client{};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
-    auto clang_tidy_exe =
-      find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
-    spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
-    throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
+    auto clang_tidy = find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
+    spdlog::info("The clang-tidy executable path: {}", clang_tidy);
 
     for (const auto &file: changed_files) {
-      auto result = clang_tidy::run(clang_tidy_exe, ctx.clang_tidy_option, ctx.repo_path, file);
+      auto result = clang_tidy::run(clang_tidy, ctx.clang_tidy_option, ctx.repo_path, file);
       if (!result.pass) {
         github_client.get_issue_comment_id();
         github_client.add_or_update_comment(result.origin_stderr);

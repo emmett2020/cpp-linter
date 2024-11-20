@@ -1,4 +1,5 @@
 #include "context.h"
+#include "utils/util.h"
 
 #include <spdlog/spdlog.h>
 
@@ -33,5 +34,8 @@ namespace linter {
     spdlog::debug("");
   }
 
+  void check_context(const context &ctx) {
+    throw_if(ctx.repo_path.empty(), "empty repository path");
+  }
 
 } // namespace linter

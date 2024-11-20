@@ -20,5 +20,6 @@ namespace linter {
 
   void print_context(const context &ctx);
 
+  void check_context(const context &ctx);
 
 } // namespace linter

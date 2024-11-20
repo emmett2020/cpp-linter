@@ -57,7 +57,7 @@ namespace linter::clang_tidy {
     bool enable_clang_tidy_fastly_exit = false;
     bool allow_no_checks               = false;
     bool enable_check_profile          = false;
-    std::uint16_t clang_tidy_version   = 0;
+    std::uint16_t clang_tidy_version   = 18;
     std::string checks;
     std::string config;
     std::string config_file;
