@@ -1,14 +1,9 @@
-#include <algorithm>
 #include <cctype>
-#include <filesystem>
 #include <print>
-#include <ranges>
 #include <string>
 
 #include <spdlog/spdlog.h>
-#include <git2/diff.h>
 
-#include "spdlog/common.h"
 #include "tools/clang_tidy.h"
 #include "github/api.h"
 #include "utils/git_utils.h"
@@ -88,11 +83,10 @@ auto main(int argc, char **argv) -> int {
 
   git::setup();
   auto *repo = git::repo::open(ctx.repo_path);
-  auto changed_files = git::diff::changed_files(repo, ctx.base_commit, ctx.head_commit);
+  auto changed_files = git::diff::changed_files(repo, ctx.base_ref, ctx.head_ref);
   print_changed_files(changed_files);
 
   auto github_client = github_api_client{};
-
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
     spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
@@ -100,9 +94,13 @@ auto main(int argc, char **argv) -> int {
 
     for (const auto &file: changed_files) {
       auto result = clang_tidy::run(clang_tidy_exe, ctx.clang_tidy_option, ctx.repo_path, file);
-      if (!result.pass && ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
-        spdlog::info("fast exit");
-        return -1;
+      if (!result.pass) {
+        github_client.get_issue_comment_id();
+        github_client.add_or_update_comment(result.origin_stderr);
+        if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
+          spdlog::info("fast exit");
+          return -1;
+        }
       }
     }
   }
