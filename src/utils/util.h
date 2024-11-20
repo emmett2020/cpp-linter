@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string_view>
 
+#include "program_options.h"
+
 namespace linter {
   constexpr auto trim_left(std::string_view str) -> std::string_view {
     if (auto idx = str.find_first_not_of(" \n"); idx < str.size()) {

@@ -25,6 +25,7 @@ find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex program_op
 set(SRC_FILE
   src/main.cpp
   src/utils/shell.cpp
+  src/utils/program_options.cpp
   src/utils/env_manager.cpp
   src/utils/git_utils.cpp
   src/tools/clang_tidy.cpp
