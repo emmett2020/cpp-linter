@@ -18,6 +18,7 @@ namespace linter::env {
     if (ret == nullptr) {
       return "";
     }
+    cache_[name] = ret;
     return cache_[name];
   }
 
