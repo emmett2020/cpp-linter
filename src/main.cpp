@@ -66,26 +66,24 @@ namespace {
 
 auto main(int argc, char **argv) -> int {
   auto desc = make_program_options_desc();
-  auto variables = parse_program_options(argc,  argv, desc);
-
-  // These options don't any real work.
-  if (variables.contains("help")) {
+  auto options = parse_program_options(argc,  argv, desc);
+  if (options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
   }
-  if (variables.contains("version")) {
+  if (options.contains("version")) {
     std::print("{}", get_current_version());
     return 0;
   }
 
-  auto options = parse_command_options(variables);
-  set_log_level(options.log_level);
-  print_full_options(options);
+  auto ctx = create_context_by_program_options(options);
+  set_log_level(ctx.log_level);
+  print_context(ctx);
 
   auto github_client = github_api_client{};
   github_client.read_environment_variables();
   github_client.print_environment_variables();
-  auto repo_path = options.use_on_local ? options.repo_full_path : github_client.repo_full_path();
+  auto repo_path = ctx.use_on_local ? ctx.repo : github_client.repo_full_path();
   throw_if(repo_path.empty(), "git repository is empty");
 
   git::setup();
@@ -95,14 +93,14 @@ auto main(int argc, char **argv) -> int {
     git::diff::changed_files(repo, github_client.base_commit(), github_client.head_commit());
   print_changed_files(changed_files);
 
-  if (options.enable_clang_tidy) {
-    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", options.clang_tidy_version);
+  if (ctx.clang_tidy_option.enable_clang_tidy) {
+    auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
     spdlog::info("The clang-tidy executable path: {}", clang_tidy_exe);
     throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
 
     for (const auto &file: changed_files) {
-      auto result = clang_tidy::run(clang_tidy_exe, options.clang_tidy_option, repo_path, file);
-      if (!result.pass && options.enable_clang_tidy_fast_exit) {
+      auto result = clang_tidy::run(clang_tidy_exe, ctx.clang_tidy_option, repo_path, file);
+      if (!result.pass && ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("fast exit");
         return -1;
       }
