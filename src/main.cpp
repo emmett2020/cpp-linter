@@ -80,18 +80,18 @@ auto main(int argc, char **argv) -> int {
   set_log_level(ctx.log_level);
   print_context(ctx);
 
-  auto github_client = github_api_client{};
-  github_client.read_environment_variables();
-  github_client.print_environment_variables();
-  auto repo_path = ctx.use_on_local ? ctx.repo : github_client.repo_full_path();
-  throw_if(repo_path.empty(), "git repository is empty");
+  if (! ctx.use_on_local) {
+    auto env = read_github_env();
+    print_github_env(env);
+    merge_env_into_context(env, ctx);
+  }
 
   git::setup();
-  auto *repo = git::repo::open(repo_path);
-
-  auto changed_files =
-    git::diff::changed_files(repo, github_client.base_commit(), github_client.head_commit());
+  auto *repo = git::repo::open(ctx.repo_path);
+  auto changed_files = git::diff::changed_files(repo, ctx.base_commit, ctx.head_commit);
   print_changed_files(changed_files);
+
+  auto github_client = github_api_client{};
 
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     auto clang_tidy_exe = find_clang_tool_exe_path("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
@@ -99,7 +99,7 @@ auto main(int argc, char **argv) -> int {
     throw_if(clang_tidy_exe.empty(), "find clang tidy executable failed");
 
     for (const auto &file: changed_files) {
-      auto result = clang_tidy::run(clang_tidy_exe, ctx.clang_tidy_option, repo_path, file);
+      auto result = clang_tidy::run(clang_tidy_exe, ctx.clang_tidy_option, ctx.repo_path, file);
       if (!result.pass && ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("fast exit");
         return -1;

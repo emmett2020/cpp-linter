@@ -15,6 +15,7 @@
 #include "nlohmann/json_fwd.hpp"
 #include "utils/env_manager.h"
 #include "utils/util.h"
+#include "utils/context.h"
 
 namespace linter {
   struct rate_limit_headers {
@@ -88,14 +89,13 @@ namespace linter {
     std::string token;
   };
 
+  auto read_github_env() -> github_env;
+  void print_github_env(const github_env& env);
+  void merge_env_into_context(const github_env& env, context& ctx);
+
   class github_api_client {
   public:
-    github_api_client() {
-      infer_configs();
-      if (env_.event_name == github_event_pull_request) {
-        parse_pr_number();
-      }
-    }
+    github_api_client() = default;
 
     static void check_http_response(const httplib::Result& response) {
       auto code          = response->status / 100;
@@ -122,12 +122,12 @@ namespace linter {
     // TODO: Maybe do it in another thread to speed up or do it in same thread to eliminate call times?
     void get_issue_comment_id() {
       spdlog::info("Start to get issue comment id for pull request: {}.", pr_number_);
-      assert(env_.event_name == github_event_pull_request);
+      assert(ctx_.event_name == github_event_pull_request);
 
-      auto path    = std::format("/repos/{}/issues/{}/comments", env_.repository, pr_number_);
+      auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, pr_number_);
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
-        {"Authorization", std::format("token {}", env_.token)}
+        {"Authorization", std::format("token {}", ctx_.token)}
       };
       spdlog::trace("path: {}", path);
 
@@ -161,10 +161,10 @@ namespace linter {
     void add_comment(const std::string& body) {
       spdlog::info("Start to add issue comment for pr {}", pr_number_);
 
-      const auto path    = std::format("/repos/{}/issues/{}/comments", env_.repository, pr_number_);
+      const auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, pr_number_);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
-        {"Authorization", std::format("token {}", env_.token)}
+        {"Authorization", std::format("token {}", ctx_.token)}
       };
       spdlog::trace("Path: {}, Body: {}", path, body);
 
@@ -184,10 +184,10 @@ namespace linter {
       throw_if(pr_number_ == -1, "doesn't have comment_id yet");
       spdlog::info("Start to update issue comment");
 
-      const auto path = std::format("/repos/{}/issues/comments/{}", env_.repository, comment_id_);
+      const auto path = std::format("/repos/{}/issues/comments/{}", ctx_.repo, comment_id_);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
-        {"Authorization", std::format("token {}", env_.token)}
+        {"Authorization", std::format("token {}", ctx_.token)}
       };
       spdlog::trace("Path: {}, Body: {}", path, body);
 
@@ -205,105 +205,22 @@ namespace linter {
       }
     }
 
-    auto get_changed_files() -> std::vector<std::string> {
-      auto path = std::format("/repos/{}", env_.repository);
-      if (env_.event_name == github_event_pull_request) {
-        path += std::format("/pulls/{}", pr_number_);
-      } else {
-        throw_unless(env_.event_name == github_event_push, "unsupported event");
-        path += std::format("/commits/{}", env_.triggered_sha);
-      }
-      spdlog::info("Fetching changed files from: {}{}", github_api, path);
-      auto client  = httplib::Client{github_api};
-      auto headers = httplib::Headers{
-        {"Accept", "application/vnd.github.use_diff"},
-        {"Authorization", std::format("token {}", env_.token)}
-      };
-
-      auto response = client.Get(path, headers);
-      throw_if(response->status != 200,
-               std::format("Get changed files failed. Status code: {}", response->status));
-      spdlog::debug(response->body);
-      return {}; // parse
-    }
-
-    [[nodiscard]] auto env() const -> const github_env& {
-      return env_;
-    }
-
-    void read_environment_variables() {
-      env_.repository         = env::get(github_repository);
-      env_.token              = env::get(github_token);
-      env_.event_name         = env::get(github_event_name);
-      env_.event_path         = env::get(github_event_path);
-      env_.base_ref           = env::get(github_base_ref);
-      env_.head_ref           = env::get(github_head_ref);
-      env_.triggered_ref      = env::get(github_ref);
-      env_.triggered_sha      = env::get(github_sha);
-      env_.triggered_ref_type = env::get(github_ref_type);
-      env_.workspace          = env::get(github_workspace);
-    }
-
-    void print_environment_variables() {
-      spdlog::debug("git repository:{}",env_.repository);
-      spdlog::debug("git token:{}",env_.token);
-      spdlog::debug("git event name:{}",env_.event_name);
-      spdlog::debug("git event path:{}",env_.event_path);
-      spdlog::debug("git base ref:{}",env_.base_ref);
-      spdlog::debug("git head ref:{}",env_.head_ref);
-      spdlog::debug("git triggered ref:{}",env_.triggered_ref);
-      spdlog::debug("git triggered sha:{}",env_.triggered_sha);
-      spdlog::debug("git triggered ref_type:{}",env_.triggered_ref_type);
-      spdlog::debug("git workspace:{}",env_.workspace);
-    }
-
-    [[nodiscard]] auto base_commit() const -> const std::string& {
-      if (env_.event_name == github_event_push) {
-        throw_if(true, "unsupported");
-      }
-      if (this->env_.event_name == github_event_pull_request) {
-        return this->env_.triggered_sha;
-      }
-
-      throw_if(true, "unsupported");
-      std::unreachable();
-    }
-
-    [[nodiscard]] auto head_commit() const -> const std::string& {
-      if (env_.event_name == github_event_push) {
-        throw_if(true, "unsupported");
-      }
-      if (this->env_.event_name == github_event_pull_request) {
-        return this->env_.triggered_sha;
-      }
-
-      throw_if(true, "unsupported");
-      std::unreachable();
-    }
-
-    [[nodiscard]] auto repo_full_path() const -> const std::string& {
-      return env_.workspace;
+    [[nodiscard]] auto context() const -> const context& {
+      return ctx_;
     }
 
   private:
+    // TODO: Should this move into context?
     /// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
     void parse_pr_number() {
-      assert(!env_.head_ref.empty());
-      auto parts = std::views::split(env_.head_ref, '/')
+      assert(!ctx_.head_ref.empty());
+      auto parts = std::views::split(ctx_.head_ref, '/')
                  | std::ranges::to<std::vector<std::string>>();
-      throw_if(parts.size() != 4, std::format("source ref format error: {}", env_.head_ref));
+      throw_if(parts.size() != 4, std::format("source ref format error: {}", ctx_.head_ref));
       pr_number_ = std::stoi(parts[2]);
     }
 
-    void infer_configs() {
-      if (!env_.event_path.empty()) {
-        auto file = std::ifstream(env_.event_name);
-        auto data = nlohmann::json::parse(file);
-        data.at("number").get_to(pr_number_);
-      }
-    }
-
-    github_env env_;
+    struct context ctx_;
     bool enable_debug_        = false;
     std::size_t pr_number_    = -1;
     std::uint32_t comment_id_ = -1;

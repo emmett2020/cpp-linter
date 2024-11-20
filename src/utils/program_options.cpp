@@ -2,9 +2,22 @@
 
 #include "utils/env_manager.h"
 #include "github/api.h"
+#include "utils/util.h"
+#include <ranges>
 
 namespace linter {
 namespace program_options = boost::program_options;
+
+namespace {
+  auto get_repo(const std::string& repo_path) -> std::string {
+    auto parts = repo_path
+               | std::views::split('/')
+               | std::ranges::to<std::vector<std::string>>();
+    throw_if(parts.empty(), "repo path is empty");
+    throw_if(parts.size() < 2, std::format("repo path:{} format error", repo_path));
+    return parts[parts.size() - 2] + "/" + parts.back();
+  }
+}  // namespace
 
 auto create_context_by_program_options(const program_options::variables_map &variables)
     -> context {
@@ -19,6 +32,7 @@ auto create_context_by_program_options(const program_options::variables_map &var
 
   if (variables.contains("repo_path")) {
     ctx.repo_path = variables["repo_path"].as<std::string>();
+    ctx.repo = get_repo(ctx.repo_path);
   }
   if (variables.contains("token")) {
     ctx.token = variables["toekn"].as<std::string>();
@@ -34,6 +48,9 @@ auto create_context_by_program_options(const program_options::variables_map &var
   }
   if (variables.contains("head_commit")) {
     ctx.head_commit = variables["head_commit"].as<std::string>();
+  }
+  if (variables.contains("event_name")) {
+    ctx.event_name = variables["event_name"].as<std::string>();
   }
   if (variables.contains("enable_clang_tidy")) {
     ctx.clang_tidy_option.enable_clang_tidy = variables["enable_clang_tidy"].as<bool>();
@@ -99,6 +116,7 @@ auto make_program_options_desc() -> program_options::options_description {
                                                              "This could be same as base_ref.")
       ("base_commit",                     value<string>(),   "Set the base commit of git repository")
       ("head_commit",                     value<string>(),   "Set the head commit of git repository")
+      ("event_name",                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       ("enable_clang_tidy",               value<bool>(),     "Enabel clang-tidy check")
       ("enable_clang_tidy_fastly_exit",   value<bool>(),     "Enabel clang-tidy fastly exit."
                                                              "This means cpp-linter will stop all clang-tidy"
