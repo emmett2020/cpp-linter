@@ -57,6 +57,6 @@ runs:
         /usr/local/bin/cpp-linter --clang_tidy_version=${{ inputs.clang-tidy-version }}         \
                                   --log_level=${{ inputs.log-level }}                           \
                                   --enable_clang_tidy=${{ inputs.enable-clang-tidy }}           \
-                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}
+                                  --clang_tidy_database=${{ inputs.clang-tidy-database }}
 
 
