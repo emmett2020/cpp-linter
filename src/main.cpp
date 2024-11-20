@@ -72,13 +72,13 @@ auto main(int argc, char **argv) -> int {
 
   auto ctx = create_context_by_program_options(options);
   set_log_level(ctx.log_level);
-  print_context(ctx);
 
   if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
     merge_env_into_context(env, ctx);
   }
+  print_context(ctx);
 
   git::setup();
   auto *repo         = git::repo::open(ctx.repo_path);
