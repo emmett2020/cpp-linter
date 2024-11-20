@@ -43,7 +43,7 @@ namespace linter {
     -> context {
     auto ctx = context{};
     spdlog::info("Github Actions: {}", env::get(github_actions));
-    ctx.use_on_local = env::get(github_actions) == "true";
+    ctx.use_on_local = env::get(github_actions) != "true";
 
     if (variables.contains(log_level)) {
       ctx.log_level = variables[log_level].as<std::string>();
