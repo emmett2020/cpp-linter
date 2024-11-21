@@ -130,7 +130,7 @@ namespace linter::git {
     return "unknown";
   }
 
-  auto convert_to_signature(signature_cptr sig_ptr) -> signature {
+  auto convert_to_signature(signature_raw_cptr sig_ptr) -> signature {
     auto sig  = signature{};
     sig.name  = sig_ptr->name;
     sig.email = sig_ptr->email;
@@ -178,15 +178,15 @@ namespace linter::git {
       return {repo, ::git_repository_free};
     }
 
-    auto config(repo_raw_ptr repo) -> config_ptr {
-      auto *config = config_ptr{nullptr};
+    auto config(repo_raw_ptr repo) -> config_raw_ptr {
+      auto *config = config_raw_ptr{nullptr};
       auto ret     = ::git_repository_config(&config, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return config;
     }
 
-    auto index(repo_raw_ptr repo) -> index_ptr {
-      auto *index = index_ptr{nullptr};
+    auto index(repo_raw_ptr repo) -> index_raw_ptr {
+      auto *index = index_raw_ptr{nullptr};
       auto ret    = ::git_repository_index(&index, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return index;
@@ -195,14 +195,16 @@ namespace linter::git {
   } // namespace repo
 
   namespace config {
-    void free(config_ptr config_ptr) {
+    void free(config_raw_ptr config_ptr) {
       ::git_config_free(config_ptr);
     }
   } // namespace config
 
   namespace branch {
-    auto create(repo_raw_ptr repo, const std::string &branch_name, commit_cptr target, bool force)
-      -> reference_raw_ptr {
+    auto create(repo_raw_ptr repo,
+                const std::string &branch_name,
+                commit_raw_cptr target,
+                bool force) -> reference_raw_ptr {
       auto *ptr = reference_raw_ptr{nullptr};
       auto ret =
         ::git_branch_create(&ptr, repo, branch_name.c_str(), target, static_cast<int>(force));
@@ -248,86 +250,87 @@ namespace linter::git {
   } // namespace branch
 
   namespace commit {
-    auto tree(commit_cptr commit) -> tree_ptr {
-      auto *ptr = tree_ptr{nullptr};
+    auto tree(commit_raw_cptr commit) -> tree_raw_ptr {
+      auto *ptr = tree_raw_ptr{nullptr};
       auto ret  = ::git_commit_tree(&ptr, commit);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return ptr;
     }
 
-    auto tree_id(commit_cptr commit) -> oid_cptr {
+    auto tree_id(commit_raw_cptr commit) -> oid_raw_cptr {
       const auto *ret = ::git_commit_tree_id(commit);
       return ret;
     }
 
-    auto lookup(repo_raw_ptr repo, oid_cptr id) -> commit_ptr {
-      auto *commit = commit_ptr{nullptr};
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_raw_ptr {
+      auto *commit = commit_raw_ptr{nullptr};
       auto ret     = ::git_commit_lookup(&commit, repo, id);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return commit;
     }
 
-    auto author(commit_cptr commit) -> signature {
+    auto author(commit_raw_cptr commit) -> signature {
       const auto *sig_ptr = ::git_commit_author(commit);
       throw_if(sig_ptr == nullptr, "The returned git_signature pointer is null");
       auto sig = convert_to_signature(sig_ptr);
       return sig;
     }
 
-    auto committer(commit_cptr commit) -> signature {
+    auto committer(commit_raw_cptr commit) -> signature {
       const auto *sig_ptr = ::git_commit_committer(commit);
       throw_if(sig_ptr == nullptr, "The returned git_signature pointer is null");
       auto sig = convert_to_signature(sig_ptr);
       return sig;
     }
 
-    auto time(commit_cptr commit) -> int64_t {
+    auto time(commit_raw_cptr commit) -> int64_t {
       auto time = ::git_commit_time(commit);
       return time;
     }
 
-    auto message(commit_cptr commit) -> std::string {
+    auto message(commit_raw_cptr commit) -> std::string {
       const auto *ret = ::git_commit_message(commit);
       throw_if(ret == nullptr, [] noexcept { return ::git_error_last()->message; });
       return ret;
     }
 
-    auto nth_gen_ancestor(commit_cptr commit, std::uint32_t n) -> commit_ptr {
-      auto *out = commit_ptr{nullptr};
+    auto nth_gen_ancestor(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr {
+      auto *out = commit_raw_ptr{nullptr};
       auto ret  = ::git_commit_nth_gen_ancestor(&out, commit, n);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return out;
     }
 
-    auto parent(commit_cptr commit, std::uint32_t n) -> commit_ptr {
-      auto *out = commit_ptr{nullptr};
+    auto parent(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr {
+      auto *out = commit_raw_ptr{nullptr};
       auto ret  = ::git_commit_parent(&out, commit, n);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return out;
     }
 
-    auto parent_id(commit_cptr commit, std::uint32_t n) -> oid_cptr {
+    auto parent_id(commit_raw_cptr commit, std::uint32_t n) -> oid_raw_cptr {
       const auto *ret = ::git_commit_parent_id(commit, n);
       return ret;
     }
 
-    auto parent_count(commit_cptr commit) -> std::uint32_t {
+    auto parent_count(commit_raw_cptr commit) -> std::uint32_t {
       return git_commit_parentcount(commit);
     }
 
-    void free(commit_ptr commit) {
-      git::object::free(reinterpret_cast<object_ptr>(commit));
+    void free(commit_raw_ptr commit) {
+      git::object::free(reinterpret_cast<object_raw_ptr>(commit));
     }
 
   } // namespace commit
 
   namespace diff {
-    void free(diff_ptr diff) {
+    void free(diff_raw_ptr diff) {
       ::git_diff_free(diff);
     }
 
-    auto index_to_workdir(repo_raw_ptr repo, index_ptr index, diff_options_cptr opts) -> diff_ptr {
-      auto *ptr = diff_ptr{nullptr};
+    auto index_to_workdir(repo_raw_ptr repo, index_raw_ptr index, diff_options_raw_cptr opts)
+      -> diff_raw_ptr {
+      auto *ptr = diff_raw_ptr{nullptr};
       auto ret  = ::git_diff_index_to_workdir(&ptr, repo, index, opts);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return ptr;
@@ -335,30 +338,30 @@ namespace linter::git {
 
     auto tree_to_tree(
       repo_raw_ptr repo,
-      tree_ptr old_tree,
-      tree_ptr new_tree,
-      diff_options_cptr opts) -> diff_ptr {
-      auto *ptr = diff_ptr{nullptr};
+      tree_raw_ptr old_tree,
+      tree_raw_ptr new_tree,
+      diff_options_raw_cptr opts) -> diff_raw_ptr {
+      auto *ptr = diff_raw_ptr{nullptr};
       auto ret  = ::git_diff_tree_to_tree(&ptr, repo, old_tree, new_tree, opts);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return ptr;
     }
 
-    void init_option(diff_options_ptr opts) {
+    void init_option(diff_options_raw_ptr opts) {
       auto ret = ::git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
 
-    auto num_deltas(diff_ptr diff) -> std::size_t {
+    auto num_deltas(diff_raw_ptr diff) -> std::size_t {
       return ::git_diff_num_deltas(diff);
     }
 
-    auto get_delta(diff_cptr diff, size_t idx) -> diff_delta_cptr {
+    auto get_delta(diff_raw_cptr diff, size_t idx) -> diff_delta_raw_cptr {
       return ::git_diff_get_delta(diff, idx);
     }
 
     auto for_each(
-      diff_ptr diff,
+      diff_raw_ptr diff,
       diff_file_cb file_cb,
       diff_binary_cb binary_cb,
       diff_hunk_cb hunk_cb,
@@ -367,11 +370,11 @@ namespace linter::git {
       return ::git_diff_foreach(diff, file_cb, binary_cb, hunk_cb, line_cb, payload);
     }
 
-    auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail> {
+    auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail> {
       auto line_cb =
-        [](diff_delta_cptr cur_delta,
-           diff_hunk_cptr cur_hunk,
-           diff_line_cptr cur_line,
+        [](diff_delta_raw_cptr cur_delta,
+           diff_hunk_raw_cptr cur_hunk,
+           diff_line_raw_cptr cur_line,
            void *payload) -> int {
         assert(cur_delta && cur_hunk && cur_line && payload);
         auto &deltas = *static_cast<std::vector<diff_delta_detail> *>(payload);
@@ -448,8 +451,8 @@ namespace linter::git {
       auto *diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
       commit::free(commit1);
       commit::free(commit2);
-      object::free(reinterpret_cast<git::object_ptr>(tree1));
-      object::free(reinterpret_cast<git::object_ptr>(tree2));
+      object::free(reinterpret_cast<git::object_raw_ptr>(tree1));
+      object::free(reinterpret_cast<git::object_raw_ptr>(tree2));
       auto ret = deltas(diff);
       diff::free(diff);
       return ret;
@@ -488,7 +491,7 @@ namespace linter::git {
       return buffer;
     }
 
-    auto to_str(oid_cptr oid_ptr) -> std::string {
+    auto to_str(oid_raw_cptr oid_ptr) -> std::string {
       auto buffer = std::string{};
       // +1 is for null terminated.
       buffer.resize(GIT_OID_MAX_HEXSIZE + 1);
@@ -560,8 +563,8 @@ namespace linter::git {
   } // namespace ref
 
   namespace revparse {
-    auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr {
-      auto *obj = object_ptr{nullptr};
+    auto single(repo_raw_ptr repo, const std::string &spec) -> object_raw_ptr {
+      auto *obj = object_raw_ptr{nullptr};
       auto ret  = ::git_revparse_single(&obj, repo, spec.c_str());
       throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
       return obj;
@@ -577,23 +580,23 @@ namespace linter::git {
   }; // namespace revparse
 
   namespace object {
-    void free(object_ptr obj) {
+    void free(object_raw_ptr obj) {
       ::git_object_free(obj);
     }
 
-    auto type(object_cptr obj) -> object_t {
+    auto type(object_raw_cptr obj) -> object_t {
       auto tp = ::git_object_type(obj);
       return convert_to_object_t(tp);
     }
 
-    auto id(object_cptr obj) -> oid_cptr {
+    auto id(object_raw_cptr obj) -> oid_raw_cptr {
       const auto *ret = ::git_object_id(obj);
       throw_if(ret == nullptr, [] noexcept { return ::git_error_last()->message; });
       return ret;
     }
 
-    auto lookup(repo_raw_ptr repo, oid_cptr oid, object_t type) -> object_ptr {
-      auto *obj = object_ptr{nullptr};
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr {
+      auto *obj = object_raw_ptr{nullptr};
       auto ret  = git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return obj;
@@ -602,7 +605,7 @@ namespace linter::git {
   } // namespace object
 
   namespace sig {
-    void free(signature_ptr sig) {
+    void free(signature_raw_ptr sig) {
       git_signature_free(sig);
     }
 

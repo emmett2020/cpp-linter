@@ -14,7 +14,8 @@
 
 /// TODO: Maybe a standlone repository with libgit2 as submodule
 /// TODO: Could we use unique_ptr and automaticly free the allocated pointer?
-/// TODO: specify a version, now we're confused.
+
+/// This is based on v1.8.4.
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -44,40 +45,40 @@ namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
   using diff_binary_cb = git_diff_binary_cb;
 
-  using repo_ptr          = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
-  using repo_raw_ptr      = git_repository *;
-  using config_ptr        = git_config *;
-  using reference_raw_ptr = git_reference *;
-  using commit_ptr        = git_commit *;
-  using diff_ptr          = git_diff *;
-  using diff_options_ptr  = git_diff_options *;
-  using tree_ptr          = git_tree *;
-  using index_ptr         = git_index *;
-  using blob_ptr          = git_blob *;
-  using tag_ptr           = git_tag *;
-  using diff_delta_ptr    = git_diff_delta *;
-  using diff_hunk_ptr     = git_diff_hunk *;
-  using diff_line_ptr     = git_diff_line *;
-  using object_ptr        = git_object *;
-  using oid_ptr           = git_oid *;
-  using signature_ptr     = git_signature *;
+  using repo_ptr             = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
+  using repo_raw_ptr         = git_repository *;
+  using config_raw_ptr       = git_config *;
+  using reference_raw_ptr    = git_reference *;
+  using commit_raw_ptr       = git_commit *;
+  using diff_raw_ptr         = git_diff *;
+  using diff_options_raw_ptr = git_diff_options *;
+  using tree_raw_ptr         = git_tree *;
+  using index_raw_ptr        = git_index *;
+  using blob_raw_ptr         = git_blob *;
+  using tag_raw_ptr          = git_tag *;
+  using diff_delta_raw_ptr   = git_diff_delta *;
+  using diff_hunk_raw_ptr    = git_diff_hunk *;
+  using diff_line_raw_ptr    = git_diff_line *;
+  using object_raw_ptr       = git_object *;
+  using oid_raw_ptr          = git_oid *;
+  using signature_raw_ptr    = git_signature *;
 
-  using repo_cptr          = const git_repository *;
-  using config_cptr        = const git_config *;
-  using reference_raw_cptr = const git_reference *;
-  using commit_cptr        = const git_commit *;
-  using diff_cptr          = const git_diff *;
-  using diff_options_cptr  = const git_diff_options *;
-  using tree_cptr          = const git_tree *;
-  using index_cptr         = const git_index *;
-  using blob_cptr          = const blob_ptr *;
-  using tag_cptr           = const git_tag *;
-  using diff_delta_cptr    = const git_diff_delta *;
-  using diff_hunk_cptr     = const git_diff_hunk *;
-  using diff_line_cptr     = const git_diff_line *;
-  using object_cptr        = const git_object *;
-  using oid_cptr           = const git_oid *;
-  using signature_cptr     = const git_signature *;
+  using repo_raw_cptr         = const git_repository *;
+  using config_raw_cptr       = const git_config *;
+  using reference_raw_cptr    = const git_reference *;
+  using commit_raw_cptr       = const git_commit *;
+  using diff_raw_cptr         = const git_diff *;
+  using diff_options_raw_cptr = const git_diff_options *;
+  using tree_raw_cptr         = const git_tree *;
+  using index_raw_cptr        = const git_index *;
+  using blob_raw_cptr         = const blob_raw_ptr *;
+  using tag_raw_cptr          = const git_tag *;
+  using diff_delta_raw_cptr   = const git_diff_delta *;
+  using diff_hunk_raw_cptr    = const git_diff_hunk *;
+  using diff_line_raw_cptr    = const git_diff_line *;
+  using object_raw_cptr       = const git_object *;
+  using oid_raw_cptr          = const git_oid *;
+  using signature_raw_cptr    = const git_signature *;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
@@ -268,7 +269,7 @@ namespace linter::git {
     return GIT_OBJ_ANY;
   }
 
-  auto convert_to_signature(signature_cptr sig) -> signature;
+  auto convert_to_signature(signature_raw_cptr sig) -> signature;
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
   auto delta_status_t_str(delta_status_t status) -> std::string;
@@ -325,26 +326,28 @@ namespace linter::git {
     /// @brief Get the configuration file for this repository.
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
-    auto config(repo_raw_ptr repo) -> config_ptr;
+    auto config(repo_raw_ptr repo) -> config_raw_ptr;
 
     /// @brief Get the Index file for this repository.
     /// @link
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
-    auto index(repo_raw_ptr repo) -> index_ptr;
+    auto index(repo_raw_ptr repo) -> index_raw_ptr;
   } // namespace repo
 
   namespace config {
     /// @brief Free the configuration and its associated memory and files
     /// @link https://libgit2.org/libgit2/#HEAD/group/config/git_config_free
-    void free(config_ptr config_ptr);
+    void free(config_raw_ptr config_ptr);
 
   } // namespace config
 
   namespace branch {
     /// @brief Create a new branch pointing at a target commit
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
-    auto create(repo_raw_ptr repo, const std::string &branch_name, commit_cptr target, bool force)
-      -> reference_raw_ptr;
+    auto create(repo_raw_ptr repo,
+                const std::string &branch_name,
+                commit_raw_cptr target,
+                bool force) -> reference_raw_ptr;
 
     /// @brief Delete an existing branch reference.
     /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
@@ -369,93 +372,94 @@ namespace linter::git {
   namespace commit {
     /// @brief Get the tree pointed to by a commit.
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
-    auto tree(commit_cptr commit) -> tree_ptr;
+    auto tree(commit_raw_cptr commit) -> tree_raw_ptr;
 
     /// @brief Get the id of the tree pointed to by a commit. This differs from
     /// git_commit_tree in that no attempts are made to fetch an object from the
     /// ODB.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_tree_id
-    auto tree_id(commit_cptr commit) -> oid_cptr;
+    auto tree_id(commit_raw_cptr commit) -> oid_raw_cptr;
 
     /// @brief Lookup a commit object from a repository.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_lookup
-    auto lookup(repo_raw_ptr repo, oid_cptr id) -> commit_ptr;
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_raw_ptr;
 
     /// @brief Get the author of a commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_author
-    auto author(commit_cptr commit) -> signature;
+    auto author(commit_raw_cptr commit) -> signature;
 
     /// @brief Get the committer of a commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_committer
-    auto committer(commit_cptr commit) -> signature;
+    auto committer(commit_raw_cptr commit) -> signature;
 
     /// @brief Get the commit time (i.e. committer time) of a commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_time
-    auto time(commit_cptr commit) -> int64_t;
+    auto time(commit_raw_cptr commit) -> int64_t;
 
     /// @brief Get the full message of a commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_message
-    auto message(commit_cptr commit) -> std::string;
+    auto message(commit_raw_cptr commit) -> std::string;
 
     /// @brief Get the commit object that is the <n
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_nth_gen_ancestor
-    auto nth_gen_ancestor(commit_cptr commit, std::uint32_t n) -> commit_ptr;
+    auto nth_gen_ancestor(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr;
 
     /// @brief Get the specified parent of the commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parent
-    auto parent(commit_cptr commit, std::uint32_t n) -> commit_ptr;
+    auto parent(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr;
 
     /// @brief Get the oid of a specified parent for a commit. This is
     /// different from git_commit_parent, which will attempt to load the parent
     /// commit from the ODB.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parent_id
-    auto parent_id(commit_cptr commit, std::uint32_t n) -> oid_cptr;
+    auto parent_id(commit_raw_cptr commit, std::uint32_t n) -> oid_raw_cptr;
 
     /// @brief Get the number of parents of this commit
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_parentcount
-    auto parent_count(commit_cptr commit) -> std::uint32_t;
+    auto parent_count(commit_raw_cptr commit) -> std::uint32_t;
 
-    void free(commit_ptr commit);
+    void free(commit_raw_ptr commit);
 
   } // namespace commit
 
   namespace diff {
     /// @brief Deallocate a diff.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_free
-    void free(diff_ptr diff);
+    void free(diff_raw_ptr diff);
 
     /// @brief: Create a diff between the repository index and the workdir
     /// directory.
     /// @link:
     /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
-    auto index_to_workdir(repo_raw_ptr repo, index_ptr index, diff_options_cptr opts) -> diff_ptr;
+    auto index_to_workdir(repo_raw_ptr repo, index_raw_ptr index, diff_options_raw_cptr opts)
+      -> diff_raw_ptr;
 
     /// @brief: Create a diff with the difference between two tree objects.
     /// @link: https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_tree_to_tree
     auto tree_to_tree(
       repo_raw_ptr repo,
-      tree_ptr old_tree,
-      tree_ptr new_tree,
-      diff_options_cptr opts) -> diff_ptr;
+      tree_raw_ptr old_tree,
+      tree_raw_ptr new_tree,
+      diff_options_raw_cptr opts) -> diff_raw_ptr;
 
     /// @brief Initialize diff options structure
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
-    void init_option(diff_options_ptr opts);
+    void init_option(diff_options_raw_ptr opts);
 
     /// @brief Query how many diff records are there in a diff.
     /// @link  https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_num_deltas
-    auto num_deltas(diff_ptr diff) -> std::size_t;
+    auto num_deltas(diff_raw_ptr diff) -> std::size_t;
 
     /// @brief Return the diff delta for an entry in the diff list.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_get_delta
-    auto get_delta(diff_cptr diff, size_t idx) -> diff_delta_cptr;
+    auto get_delta(diff_raw_cptr diff, size_t idx) -> diff_delta_raw_cptr;
 
     /// @brief Loop over all deltas in a diff issuing callbacks.
     /// @link https://libgit2.org/libgit2/#HEAD/group/diff/git_diff_foreach
     auto for_each(
-      diff_ptr diff,
+      diff_raw_ptr diff,
       diff_file_cb file_cb,
       diff_binary_cb binary_cb,
       diff_hunk_cb hunk_cb,
@@ -463,7 +467,7 @@ namespace linter::git {
       void *payload) -> int;
 
     /// @brief A simple implmentation which uses for_each to get diff delta details.
-    auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail>;
+    auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail>;
 
     /// @brief A simple implmentation which compares ref1 with ref2's differences.
     auto deltas(repo_raw_ptr repo, const std::string &ref1, const std::string &ref2)
@@ -481,7 +485,7 @@ namespace linter::git {
     /// @brief Format a git_oid into a buffer as a hex format c-string.
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_tostr
     auto to_str(const git_oid &oid) -> std::string;
-    auto to_str(oid_cptr oid_ptr) -> std::string;
+    auto to_str(oid_raw_cptr oid_ptr) -> std::string;
 
     /// @brief Compare two oid structures for equality
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_equal
@@ -545,7 +549,7 @@ namespace linter::git {
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/revparse/git_revparse_single
     /// https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions
-    auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr;
+    auto single(repo_raw_ptr repo, const std::string &spec) -> object_raw_ptr;
 
     /// @brief Find a complete sha based on given short sha
     auto complete_sha(repo_raw_ptr repo, const std::string &short_sha) -> std::string;
@@ -555,40 +559,40 @@ namespace linter::git {
   namespace object {
     /// @brief Close an open object
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_free
-    void free(object_ptr obj);
+    void free(object_raw_ptr obj);
 
     /// @brief Get the object type of an object
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_type
-    auto type(object_cptr obj) -> object_t;
+    auto type(object_raw_cptr obj) -> object_t;
 
     /// @brief Get the id (SHA1) of a repository object
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_id
-    auto id(object_cptr obj) -> oid_cptr;
+    auto id(object_raw_cptr obj) -> oid_raw_cptr;
 
     /// @brief Lookup a reference to one of the objects in a repository.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_lookup
-    auto lookup(repo_raw_ptr repo, oid_cptr oid, object_t type) -> object_ptr;
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr;
 
   } // namespace object
 
   template <typename T>
-  auto convert(object_ptr obj) -> T {
+  auto convert(object_raw_ptr obj) -> T {
     auto type = object::type(obj);
-    if constexpr (std::same_as<std::decay_t<T>, commit_ptr>) {
+    if constexpr (std::same_as<std::decay_t<T>, commit_raw_ptr>) {
       throw_if(type != object_t::commit, "The given object isn't git_commit*");
-      return reinterpret_cast<commit_ptr>(obj);
+      return reinterpret_cast<commit_raw_ptr>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, tree_ptr>) {
+    if constexpr (std::same_as<std::decay_t<T>, tree_raw_ptr>) {
       throw_if(type != object_t::tree, "The given object isn't git_tree*");
-      return reinterpret_cast<tree_ptr>(obj);
+      return reinterpret_cast<tree_raw_ptr>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, blob_ptr>) {
+    if constexpr (std::same_as<std::decay_t<T>, blob_raw_ptr>) {
       throw_if(type != object_t::blob, "The given object isn't git_blob*");
-      return reinterpret_cast<blob_ptr>(obj);
+      return reinterpret_cast<blob_raw_ptr>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, tag_ptr>) {
+    if constexpr (std::same_as<std::decay_t<T>, tag_raw_ptr>) {
       throw_if(type != object_t::tag, "The given object isn't git_blob*");
-      return reinterpret_cast<tag_ptr>(obj);
+      return reinterpret_cast<tag_raw_ptr>(obj);
     }
   }
 
@@ -596,8 +600,22 @@ namespace linter::git {
     /// @brief Free an existing signature.
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/signature/git_signature_free
-    void free(signature_ptr sig);
+    void free(signature_raw_ptr sig);
 
   } // namespace sig
+
+  namespace index {
+    /// This method will scan the index and write a representation of
+    /// its current state back to disk; it recursively creates tree objects for
+    /// each of the subtrees stored in the index, but only returns the OID of the
+    /// root tree. This is the OID that can be used e.g. to create a commit.
+    /// The index instance cannot be bare, and needs to be associated to an existing repository.
+    /// The index must not contain any file in conflict.
+
+    ///  Write an existing index object from memory back to disk using an atomic file lock.
+    auto write();
+
+
+  } // namespace index
 
 } // namespace linter::git

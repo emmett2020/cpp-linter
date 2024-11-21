@@ -30,6 +30,21 @@ TEST_CASE("basics", "[git2][repo]") {
   REQUIRE(git::repo::path(repo.get()) == temp_repo_dir_with_git);
 }
 
+TEST_CASE("basics", "[git2][index]") {
+  auto repo = git::repo::init(temp_repo_dir, false);
+  REQUIRE(git::repo::is_empty(repo.get()));
+  auto temp_repo_dir_with_git = temp_repo_dir / ".git/";
+  REQUIRE(git::repo::path(repo.get()) == temp_repo_dir_with_git);
+}
+
+// TEST_CASE("basics", "[git2][revparse]") {
+//   auto repo = git::repo::open(temp_repo_dir);
+//   SECTION("single") {
+//     auto *ret = git::revparse::single(repo.get(), "master");
+//   }
+//   // git::branch::create(repo.get(), "main", );
+// }
+
 TEST_CASE("basics", "[git2][branch]") {
   auto repo = git::repo::open(temp_repo_dir);
   SECTION("lookup") {
