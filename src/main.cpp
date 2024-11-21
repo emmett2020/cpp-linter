@@ -9,6 +9,7 @@
 #include "github/api.h"
 #include "utils/context.h"
 #include "utils/git_utils.h"
+#include "utils/program_options.h"
 #include "utils/shell.h"
 #include "utils/util.h"
 
@@ -82,6 +83,7 @@ auto main(int argc, char **argv) -> int {
     std::print("{}", get_current_version());
     return 0;
   }
+  check_program_options(options);
 
   auto ctx = create_context_by_program_options(options);
   set_log_level(ctx.log_level);

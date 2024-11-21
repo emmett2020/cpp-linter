@@ -160,5 +160,8 @@ namespace linter {
   void check_program_options(const boost::program_options::variables_map& variables) {
     // TODO: check repo format
     // TODO: check repo_path exists
+    if (variables.contains(base_ref) && variables.contains(base_commit)) {
+      spdlog::info("Set both base_ref and base_commit , base_ref will be ignored");
+    }
   }
 } // namespace linter
