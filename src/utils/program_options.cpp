@@ -9,17 +9,11 @@ namespace linter {
   namespace program_options = boost::program_options;
 
   namespace {
-    auto get_repo(const std::string &repo_path) -> std::string {
-      auto parts = repo_path | std::views::split('/') | std::ranges::to<std::vector<std::string>>();
-      throw_if(parts.empty(), "repo path is empty");
-      throw_if(parts.size() < 2, std::format("repo path:{} format error", repo_path));
-      return parts[parts.size() - 2] + "/" + parts.back();
-    }
-
     constexpr auto help                            = "help";
     constexpr auto version                         = "version";
     constexpr auto log_level                       = "log-level";
     constexpr auto repo_path                       = "repo-path";
+    constexpr auto repo                            = "repo";
     constexpr auto token                           = "token";
     constexpr auto base_ref                        = "base-ref";       // only used in pr
     constexpr auto head_ref                        = "head-ref";
@@ -53,7 +47,9 @@ namespace linter {
 
     if (variables.contains(repo_path)) {
       ctx.repo_path = variables[repo_path].as<std::string>();
-      ctx.repo      = get_repo(ctx.repo_path);
+    }
+    if (variables.contains(repo)) {
+      ctx.repo = variables[repo].as<std::string>();
     }
     if (variables.contains(token)) {
       ctx.token = variables[token].as<std::string>();
@@ -124,6 +120,7 @@ namespace linter {
       (version, "print current version")
       (log_level,                       value<string>(),   "Set the log level of cpp-linter")
       (repo_path,                       value<string>(),   "Set the full path of git repository")
+      (repo,                            value<string>(),   "Set the owner/repo of git repository")
       (token,                           value<string>(),   "Set github token of git repository")
       (base_ref,                        value<string>(),   "Set the base/target reference of git repository")
       (head_ref,                        value<string>(),   "Set the head/cur reference of git repository."
