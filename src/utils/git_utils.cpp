@@ -562,13 +562,11 @@ namespace linter::git {
       return obj;
     }
 
-
     auto complete_sha(repo_ptr repo, const std::string &short_sha) -> std::string {
        auto *obj = single(repo, short_sha);
        auto type = object::type(obj);
-       throw_unless(type == object_t::commit, "can't parse the given sha to commit");
-       git::object::id(obj);
-
+       throw_unless(type == object_t::commit, "the given sha is not commit");
+       return oid::to_str(object::id(obj));
     }
 
   }; // namespace revparse
