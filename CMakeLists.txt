@@ -43,4 +43,6 @@ target_link_libraries(cpp-linter ${Boost_LIBRARIES}
                                  nlohmann_json
                                  git2)
 
+
+include(${linter_root}/cmake/FetchCatch2.cmake)
 add_subdirectory(tests)
