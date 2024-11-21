@@ -112,7 +112,7 @@ auto main(int argc, char **argv) -> int {
   check_context(ctx);
 
   git::setup();
-  auto *repo = git::repo::open(ctx.repo_path);
+  // auto *repo = git::repo::open(ctx.repo_path);
   // auto [base_commit, head_commit] = get_commits(ctx, repo);
 
   // auto changed_files = git::diff::changed_files(repo, base_commit,
@@ -137,6 +137,6 @@ auto main(int argc, char **argv) -> int {
   //   }
   // }
 
-  git::repo::free(repo);
+  // git::repo::free(repo);
   git::shutdown();
 }

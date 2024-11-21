@@ -1,30 +1,48 @@
 #include <cctype>
 #include <filesystem>
-#include <git2/diff.h>
 #include <print>
 
 #include <catch2/catch_all.hpp>
 #include <spdlog/spdlog.h>
 
-#include "catch2/catch_test_macros.hpp"
 #include "utils/git_utils.h"
 
-using namespace linter; // NOLINT
+using namespace linter;
 using namespace std::string_literals;
 
-TEST_CASE("repo", "[git2][basic]") {
-  auto temp_dir = std::filesystem::temp_directory_path();
-  auto temp_repo_dir = temp_dir / "test_git";
+const auto temp_dir = std::filesystem::temp_directory_path();
+const auto temp_repo_dir = temp_dir / "test_git";
+
+auto RefreshRepoDir() {
   if (std::filesystem::exists(temp_repo_dir)) {
+    std::print("remove old repo directory");
     std::filesystem::remove_all(temp_repo_dir);
   }
   std::filesystem::create_directory(temp_repo_dir);
+}
 
+TEST_CASE("basics", "[git2][repo]") {
+  auto repo = git::repo::init(temp_repo_dir, false);
+  REQUIRE(git::repo::is_empty(repo.get()));
+  auto temp_repo_dir_with_git = temp_repo_dir / ".git/";
+  REQUIRE(git::repo::path(repo.get()) == temp_repo_dir_with_git);
+}
+
+TEST_CASE("basics", "[git2][branch]") {
+  auto repo = git::repo::open(temp_repo_dir);
+  SECTION("lookup") {
+    // Empty repository still has a master branch.
+    auto *branch =
+        git::branch::lookup(repo.get(), "master", git::branch_t::local);
+  }
+  // git::branch::create(repo.get(), "main", );
+}
+
+int main(int argc, char *argv[]) {
   git::setup();
-  auto repo = git::repo::init(temp_repo_dir.string(), false);
-  REQUIRE(git::repo::is_empty(repo.get())); // NOLINT
-
-  SECTION("open a new repo") {}
-
-  // std::filesystem::remove(temp_repo_dir);
+  RefreshRepoDir();
+  int result = Catch::Session().run(argc, argv);
+  std::filesystem::remove_all(temp_repo_dir);
+  git::shutdown();
+  return result;
 }

@@ -182,11 +182,11 @@ auto is_same_file(const diff_file_detail &file1,
 }
 
 namespace repo {
-auto open(const std::string &repo_path) -> repo_raw_ptr {
+auto open(const std::string &repo_path) -> repo_ptr {
   auto *repo = repo_raw_ptr{nullptr};
   auto ret = ::git_repository_open(&repo, repo_path.c_str());
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-  return repo;
+  return {repo, ::git_repository_free};
 }
 
 void free(repo_raw_ptr repo) { ::git_repository_free(repo); }
@@ -235,34 +235,34 @@ void free(config_ptr config_ptr) { ::git_config_free(config_ptr); }
 
 namespace branch {
 auto create(repo_raw_ptr repo, const std::string &branch_name,
-            commit_cptr target, bool force) -> reference_ptr {
-  auto *ptr = reference_ptr{nullptr};
+            commit_cptr target, bool force) -> reference_raw_ptr {
+  auto *ptr = reference_raw_ptr{nullptr};
   auto ret = ::git_branch_create(&ptr, repo, branch_name.c_str(), target,
                                  static_cast<int>(force));
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
   return ptr;
 }
 
-void del(reference_ptr branch) {
+void del(reference_raw_ptr branch) {
   auto ret = ::git_branch_delete(branch);
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
 }
 
-auto name(reference_ptr ref) -> std::string_view {
+auto name(reference_raw_ptr ref) -> std::string_view {
   const char *name = nullptr;
   auto ret = ::git_branch_name(&name, ref);
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
   return name;
 }
 
-bool is_head(reference_cptr branch) {
+bool is_head(reference_raw_cptr branch) {
   auto ret = ::git_branch_is_head(branch);
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
   return ret == 1;
 }
 
 auto lookup(repo_raw_ptr repo, const std::string &name,
-            branch_t branch_type) -> reference_ptr {
+            branch_t branch_type) -> reference_raw_ptr {
   auto convert_to = [&]() {
     switch (branch_type) {
     case branch_t::local:
@@ -275,7 +275,7 @@ auto lookup(repo_raw_ptr repo, const std::string &name,
     return GIT_BRANCH_ALL;
   };
 
-  auto *res = reference_ptr{nullptr};
+  auto *res = reference_raw_ptr{nullptr};
   auto ret = ::git_branch_lookup(&res, repo, name.c_str(), convert_to());
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
   return res;
@@ -539,7 +539,7 @@ auto from_str(const std::string &str) -> git_oid {
 } // namespace oid
 
 namespace ref {
-auto type(reference_cptr ref) -> ref_t {
+auto type(reference_raw_cptr ref) -> ref_t {
   auto ret = ::git_reference_type(ref);
   switch (ret) {
   case git_ref_t::GIT_REFERENCE_INVALID:
@@ -554,28 +554,28 @@ auto type(reference_cptr ref) -> ref_t {
   return ref_t::invalid;
 }
 
-auto is_branch(reference_ptr ref) -> bool {
+auto is_branch(reference_raw_ptr ref) -> bool {
   return ::git_reference_is_branch(ref) == 1;
 }
 
-auto is_remote(reference_ptr ref) -> bool {
+auto is_remote(reference_raw_ptr ref) -> bool {
   return ::git_reference_is_remote(ref) == 1;
 }
 
-auto is_tag(reference_ptr ref) -> bool {
+auto is_tag(reference_raw_ptr ref) -> bool {
   return ::git_reference_is_tag(ref) == 1;
 }
 
-void free(reference_ptr ref) { ::git_reference_free(ref); }
+void free(reference_raw_ptr ref) { ::git_reference_free(ref); }
 
-auto name(reference_cptr ref) -> std::string {
+auto name(reference_raw_cptr ref) -> std::string {
   const auto *ret = ::git_reference_name(ref);
   throw_if(ret == nullptr, [] noexcept { return git_error_last()->message; });
   return ret;
 }
 
-auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_ptr {
-  auto *ref = reference_ptr{nullptr};
+auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_raw_ptr {
+  auto *ref = reference_raw_ptr{nullptr};
   auto ret = ::git_reference_lookup(&ref, repo, name.c_str());
   throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
   return ref;

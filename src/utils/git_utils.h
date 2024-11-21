@@ -48,7 +48,7 @@ using repo_ptr =
     std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
 using repo_raw_ptr = git_repository *;
 using config_ptr = git_config *;
-using reference_ptr = git_reference *;
+using reference_raw_ptr = git_reference *;
 using commit_ptr = git_commit *;
 using diff_ptr = git_diff *;
 using diff_options_ptr = git_diff_options *;
@@ -65,7 +65,7 @@ using signature_ptr = git_signature *;
 
 using repo_cptr = const git_repository *;
 using config_cptr = const git_config *;
-using reference_cptr = const git_reference *;
+using reference_raw_cptr = const git_reference *;
 using commit_cptr = const git_commit *;
 using diff_cptr = const git_diff *;
 using diff_options_cptr = const git_diff_options *;
@@ -339,18 +339,21 @@ auto init(const std::string &repo_path, bool is_bare) -> repo_ptr;
 
 /// @brief Open a git repository.
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
-auto open(const std::string &repo_path) -> repo_raw_ptr;
+auto open(const std::string &repo_path) -> repo_ptr;
 
-/// @brief Free a previously allocated repository
+/// @brief Free a previously allocated repository. If you use repo_ptr instead
+/// of repo_raw_ptr, you didn't need to explicitly call this function.
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
 void free(repo_raw_ptr repo);
 
-/// @brief Determines the status of a git repository
+/// @brief Determines the status of a git repository - ie, whether an operation
+/// (merge, cherry-pick, etc) is in progress.
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
 auto state(repo_raw_ptr repo) -> int;
 
-/// @brief Get the path of this repository
+/// @brief Get the path of this repository. This is the path of the .git folder
+/// for normal repositories, or of the repository itself for bare repositories.
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
 auto path(repo_raw_ptr repo) -> std::string;
 
@@ -381,25 +384,25 @@ namespace branch {
 /// @brief Create a new branch pointing at a target commit
 /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
 auto create(repo_raw_ptr repo, const std::string &branch_name,
-            commit_cptr target, bool force) -> reference_ptr;
+            commit_cptr target, bool force) -> reference_raw_ptr;
 
 /// @brief Delete an existing branch reference.
 /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
-void del(reference_ptr branch);
+void del(reference_raw_ptr branch);
 
 /// @brief Get the branch name
 /// @return Pointer to the abbreviated reference name. Owned by ref, do not
 /// free. https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_name
-auto name(reference_ptr ref) -> std::string_view;
+auto name(reference_raw_ptr ref) -> std::string_view;
 
 /// @brief Determine if HEAD points to the given branch
 /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
-bool is_head(reference_cptr branch);
+bool is_head(reference_raw_cptr branch);
 
 /// @brief Lookup a branch by its name in a repository.
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/branch/git_branch_lookup
 auto lookup(repo_raw_ptr repo, const std::string &name,
-            branch_t branch_type) -> reference_ptr;
+            branch_t branch_type) -> reference_raw_ptr;
 
 } // namespace branch
 
@@ -525,40 +528,40 @@ namespace ref {
 /// @brief Get the type of a reference.
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_type
-auto type(reference_cptr ref) -> ref_t;
+auto type(reference_raw_cptr ref) -> ref_t;
 
 /// @brief Check if a reference is a local branch. That's to say, the
 /// reference lives in the refs/heads namespace.
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_branch
-auto is_branch(reference_ptr ref) -> bool;
+auto is_branch(reference_raw_ptr ref) -> bool;
 
 /// @brief Check if a reference is a remote tracking branch
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_remote
-auto is_remote(reference_ptr ref) -> bool;
+auto is_remote(reference_raw_ptr ref) -> bool;
 
 /// @brief Check if a reference is a tag
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_tag
-auto is_tag(reference_ptr ref) -> bool;
+auto is_tag(reference_raw_ptr ref) -> bool;
 
 /// @brief Free the given reference.
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
-void free(reference_ptr ref);
+void free(reference_raw_ptr ref);
 
 /// @brief Get the full name of a reference. E.g. refs/heads/main
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name
-auto name(reference_cptr ref) -> std::string;
+auto name(reference_raw_cptr ref) -> std::string;
 
 /// @brief: Lookup a reference by name in a repository.
 /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master,
 /// refs/tags/v0.1.0, ...)
 /// @link:
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_lookup
-auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_ptr;
+auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_raw_ptr;
 
 /// @brief: Lookup a reference by name and resolve immediately to OID.
 /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master,
