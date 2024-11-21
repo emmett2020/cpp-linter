@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <git2/oid.h>
 #include <string>
 
 #include <git2/branch.h>
@@ -482,6 +483,13 @@ namespace linter::git {
 
     auto equal(git_oid o1, git_oid o2) -> bool {
       return ::git_oid_equal(&o1, &o2) == 1;
+    }
+
+    auto from_str(const std::string& str) -> git_oid {
+      auto oid = git_oid{};
+      auto ret  = ::git_oid_fromstr(&oid, str.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return oid;
     }
 
   } // namespace oid

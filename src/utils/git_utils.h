@@ -13,6 +13,7 @@
 
 /// TODO: Maybe a standlone repository with libgit2 as submodule
 /// TODO: Could we use unique_ptr and automaticly free the allocated pointer?
+/// TODO: specify a version, now we're confused.
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -473,6 +474,9 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#HEAD/group/oid/git_oid_equal
     auto equal(git_oid o1, git_oid o2) -> bool;
 
+    /// @brief Parse a hex formatted object id into a git_oid.
+    /// @link https://libgit2.org/libgit2/#v1.5.0/group/oid
+    auto from_str(const std::string& str) -> git_oid;
   } // namespace oid
 
   namespace ref {
