@@ -67,7 +67,7 @@ namespace linter::git {
   auto file_flag_t_str(std::uint32_t flags) -> std::string {
     auto res    = std::string{};
     auto concat = [&](std::uint32_t exactor, std::string_view msg) {
-      if (flags & exactor) {
+      if ((flags & exactor) != 0U) {
         if (res.empty()) {
           res.append(msg);
         } else {
@@ -524,8 +524,18 @@ namespace linter::git {
       return ::git_reference_is_remote(ref) == 1;
     }
 
+    auto is_tag(reference_ptr ref) -> bool {
+      return ::git_reference_is_tag(ref) == 1;
+    }
+
     void free(reference_ptr ref) {
       ::git_reference_free(ref);
+    }
+
+    auto name(reference_cptr ref) -> std::string {
+      const auto *ret = ::git_reference_name(ref);
+      throw_if(ret == nullptr, [] noexcept { return git_error_last()->message; });
+      return ret;
     }
 
     auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr {

@@ -489,14 +489,21 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_branch
     auto is_branch(reference_ptr ref) -> bool;
 
-
     /// @brief Check if a reference is a remote tracking branch
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_remote
     auto is_remote(reference_ptr ref) -> bool;
 
+    /// @brief Check if a reference is a tag
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_tag
+    auto is_tag(reference_ptr ref) -> bool;
+
     /// @brief Free the given reference.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
     void free(reference_ptr ref);
+
+    /// @brief Get the full name of a reference. E.g. refs/heads/main
+    /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name
+    auto name(reference_cptr ref) -> std::string;
 
     /// @brief: Lookup a reference by name in a repository.
     /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master, refs/tags/v0.1.0, ...)
@@ -504,6 +511,7 @@ namespace linter::git {
     auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr;
 
     /// @brief: Lookup a reference by name and resolve immediately to OID.
+    /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master, refs/tags/v0.1.0, ...)
     /// @link: https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name_to_id
     auto name_to_oid(repo_ptr repo, const std::string &name) -> git_oid;
 
