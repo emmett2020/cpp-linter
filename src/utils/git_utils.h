@@ -484,7 +484,8 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_type
     auto type(reference_cptr ref) -> ref_t;
 
-    /// @brief Check if a reference is a local branch.
+    /// @brief Check if a reference is a local branch. That's to say, the
+    /// reference lives in the refs/heads namespace.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_branch
     auto is_branch(reference_ptr ref) -> bool;
 

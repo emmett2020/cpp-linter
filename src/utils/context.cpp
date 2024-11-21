@@ -38,8 +38,8 @@ namespace linter {
   void check_context(const context &ctx) {
     throw_if(ctx.repo_path.empty(), "empty repository path");
     throw_if(ctx.event_name.empty(), "empty event name");
-    throw_if(ctx.base_ref.empty(), "the base-ref is empty");
-    throw_if(ctx.head_ref.empty(), "the head-ref is empty");
+    throw_if(ctx.base_ref.empty() && ctx.base_commit.empty(), "both base-ref and base-commit are empty");
+    throw_if(ctx.head_ref.empty() && ctx.head_commit.empty(), "both head-ref and head-commit are empty");
   }
 
 } // namespace linter
