@@ -155,4 +155,10 @@ namespace linter {
     program_options::notify(variables);
     return variables;
   }
+
+
+  void check_program_options(const boost::program_options::variables_map& variables) {
+    // TODO: check repo format
+    // TODO: check repo_path exists
+  }
 } // namespace linter

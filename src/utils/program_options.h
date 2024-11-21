@@ -20,4 +20,6 @@ namespace linter {
 
   auto create_context_by_program_options(const boost::program_options::variables_map& variables)
     -> context;
+
+  void check_program_options(const boost::program_options::variables_map& variables);
 } // namespace linter
