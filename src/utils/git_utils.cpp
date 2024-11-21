@@ -178,18 +178,18 @@ namespace linter::git {
       return {repo, ::git_repository_free};
     }
 
-    auto config(repo_raw_ptr repo) -> config_raw_ptr {
+    auto config(repo_raw_ptr repo) -> config_ptr {
       auto *config = config_raw_ptr{nullptr};
       auto ret     = ::git_repository_config(&config, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return config;
+      return {config, ::git_config_free};
     }
 
-    auto index(repo_raw_ptr repo) -> index_raw_ptr {
+    auto index(repo_raw_ptr repo) -> index_ptr {
       auto *index = index_raw_ptr{nullptr};
       auto ret    = ::git_repository_index(&index, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return index;
+      return {index, ::git_index_free};
     }
 
   } // namespace repo
@@ -197,6 +197,54 @@ namespace linter::git {
   namespace config {
     void free(config_raw_ptr config_ptr) {
       ::git_config_free(config_ptr);
+    }
+
+    auto get_string(config_raw_cptr config_ptr, const std::string &key) -> std::string {
+      const char *value = nullptr;
+      auto ret          = ::git_config_get_string(&value, config_ptr, key.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return value;
+    }
+
+    auto get_bool(config_raw_cptr config_ptr, const std::string &key) -> bool {
+      auto value = 0;
+      auto ret   = ::git_config_get_bool(&value, config_ptr, key.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return value == 1;
+    }
+
+    auto get_int32(config_raw_cptr config_ptr, const std::string &key) -> int32_t {
+      auto value = 0;
+      auto ret   = ::git_config_get_int32(&value, config_ptr, key.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return value;
+    }
+
+    auto get_int64(config_raw_cptr config_ptr, const std::string &key) -> int64_t {
+      auto value = int64_t{0};
+      auto ret   = ::git_config_get_int64(&value, config_ptr, key.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return value;
+    }
+
+    void set_string(config_raw_ptr config_ptr, const std::string &key, const std::string &value) {
+      auto ret = ::git_config_set_string(config_ptr, key.c_str(), value.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+    }
+
+    void set_bool(config_raw_ptr config_ptr, const std::string &key, bool value) {
+      auto ret = ::git_config_set_bool(config_ptr, key.c_str(), static_cast<int>(value));
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+    }
+
+    void set_int32(config_raw_ptr config_ptr, const std::string &key, int32_t value) {
+      auto ret = ::git_config_set_int32(config_ptr, key.c_str(), value);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+    }
+
+    void set_int64(config_raw_ptr config_ptr, const std::string &key, int64_t value) {
+      auto ret = ::git_config_set_int64(config_ptr, key.c_str(), value);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
   } // namespace config
 
@@ -597,7 +645,7 @@ namespace linter::git {
 
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr {
       auto *obj = object_raw_ptr{nullptr};
-      auto ret  = git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
+      auto ret  = ::git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return obj;
     }
@@ -609,6 +657,23 @@ namespace linter::git {
       git_signature_free(sig);
     }
 
+    auto create_default(repo_raw_ptr repo) -> signature_ptr {
+      auto *sig = signature_raw_ptr{nullptr};
+      auto ret  = ::git_signature_default(&sig, repo);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {sig, ::git_signature_free};
+    }
+
   } // namespace sig
+
+  namespace index {
+
+    auto write_tree(index_raw_ptr index) -> git_oid {
+      auto oid = git_oid{};
+      auto ret = ::git_index_write_tree(&oid, index);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return oid;
+    }
+  } // namespace index
 
 } // namespace linter::git

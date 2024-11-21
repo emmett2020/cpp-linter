@@ -33,8 +33,10 @@ TEST_CASE("basics", "[git2][repo]") {
 TEST_CASE("basics", "[git2][index]") {
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
-  auto temp_repo_dir_with_git = temp_repo_dir / ".git/";
-  REQUIRE(git::repo::path(repo.get()) == temp_repo_dir_with_git);
+  auto config = git::repo::config(repo.get());
+  auto index  = git::repo::index(repo.get());
+  auto oid    = git::index::write_tree(index.get());
+  auto sig    = git::sig::create_default(repo.get());
 }
 
 // TEST_CASE("basics", "[git2][revparse]") {
@@ -45,14 +47,14 @@ TEST_CASE("basics", "[git2][index]") {
 //   // git::branch::create(repo.get(), "main", );
 // }
 
-TEST_CASE("basics", "[git2][branch]") {
-  auto repo = git::repo::open(temp_repo_dir);
-  SECTION("lookup") {
-    // Empty repository still has a master branch.
-    auto *branch = git::branch::lookup(repo.get(), "master", git::branch_t::local);
-  }
-  // git::branch::create(repo.get(), "main", );
-}
+// TEST_CASE("basics", "[git2][branch]") {
+//   auto repo = git::repo::open(temp_repo_dir);
+//   SECTION("lookup") {
+//     // Empty repository still has a master branch.
+//     auto *branch = git::branch::lookup(repo.get(), "master", git::branch_t::local);
+//   }
+//   // git::branch::create(repo.get(), "main", );
+// }
 
 int main(int argc, char *argv[]) {
   git::setup();

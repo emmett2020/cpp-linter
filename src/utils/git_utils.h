@@ -15,7 +15,7 @@
 /// TODO: Maybe a standlone repository with libgit2 as submodule
 /// TODO: Could we use unique_ptr and automaticly free the allocated pointer?
 
-/// This is based on v1.8.4.
+/// This is based on v1.8.4
 
 namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
@@ -45,7 +45,14 @@ namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
   using diff_binary_cb = git_diff_binary_cb;
 
-  using repo_ptr             = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
+  /// https://libgit2.org/libgit2/#v1.8.3/type/git_index_entry
+  using index_entry = git_index_entry;
+
+  using repo_ptr      = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
+  using index_ptr     = std::unique_ptr<git_index, decltype(::git_index_free) *>;
+  using signature_ptr = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
+  using config_ptr    = std::unique_ptr<git_config, decltype(::git_config_free) *>;
+
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
   using reference_raw_ptr    = git_reference *;
@@ -323,21 +330,65 @@ namespace linter::git {
     /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
     auto is_empty(repo_raw_ptr repo) -> bool;
 
-    /// @brief Get the configuration file for this repository.
-    /// @link
-    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
-    auto config(repo_raw_ptr repo) -> config_raw_ptr;
+    /// Get the configuration file for this repository.
+    /// If a configuration file has not been set, the default config set for
+    /// the repository will be returned, including global and system configurations
+    /// (if they are available).
+    auto config(repo_raw_ptr repo) -> config_ptr;
 
-    /// @brief Get the Index file for this repository.
-    /// @link
-    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
-    auto index(repo_raw_ptr repo) -> index_raw_ptr;
+    /// Get the Index file for this repository. If a custom index has not been
+    /// set, the default index for the repository will be returned (the one located
+    /// in .git/index).
+    auto index(repo_raw_ptr repo) -> index_ptr;
   } // namespace repo
 
   namespace config {
-    /// @brief Free the configuration and its associated memory and files
-    /// @link https://libgit2.org/libgit2/#HEAD/group/config/git_config_free
+    /// Free the configuration and its associated memory and files
     void free(config_raw_ptr config_ptr);
+
+    /// Get the value of a string config variable.
+    /// This function can only be used on snapshot config objects. The string
+    /// is owned by the config and should not be freed by the user. The pointer
+    /// will be valid until the config is freed. All config files will be looked
+    /// into, in the order of their defined level. A higher level means a higher
+    /// priority. The first occurrence of the variable will be returned here.
+    auto get_string(config_raw_cptr config_ptr, const std::string &key) -> std::string;
+
+    /// Get the value of a boolean config variable.
+    /// This function uses the usual C convention of 0 being false and anything
+    /// else true. All config files will be looked into, in the order of their
+    /// defined level. A higher level means a higher priority. The first occurrence
+    /// of the variable will be returned here.
+    auto get_bool(config_raw_cptr config_ptr, const std::string &key) -> bool;
+
+    /// Get the value of an integer config variable.
+    /// All config files will be looked into, in the order of their defined
+    /// level. A higher level means a higher priority. The first occurrence of the
+    /// variable will be returned here.
+    auto get_int32(config_raw_cptr config_ptr, const std::string &key) -> int32_t;
+
+    /// Get the value of a long integer config variable.
+    /// All config files will be looked into, in the order of their defined
+    /// level. A higher level means a higher priority. The first occurrence of the
+    /// variable will be returned here.
+    auto get_int64(config_raw_cptr config_ptr, const std::string &key) -> int64_t;
+
+
+    /// Set the value of a string config variable in the config file with the
+    /// highest level (usually the local one).
+    void set_string(config_raw_ptr config_ptr, const std::string &key, const std::string &value);
+
+    /// Set the value of a boolean config variable in the config file with the
+    /// highest level (usually the local one).
+    void set_bool(config_raw_ptr config_ptr, const std::string &key, bool value);
+
+    /// Set the value of an integer config variable in the config file with the
+    /// highest level (usually the local one).
+    void set_int32(config_raw_ptr config_ptr, const std::string &key, int32_t value);
+
+    /// Set the value of a long integer config variable in the config file with
+    /// the highest level (usually the local one).
+    void set_int64(config_raw_ptr config_ptr, const std::string &key, int64_t value);
 
   } // namespace config
 
@@ -602,18 +653,25 @@ namespace linter::git {
     /// https://libgit2.org/libgit2/#v0.20.0/group/signature/git_signature_free
     void free(signature_raw_ptr sig);
 
+    /// This looks up the user.name and user.email from the configuration and
+    /// uses the current time as the timestamp, and creates a new signature based
+    /// on that information. Either the user.name or user.email must be set.
+    auto create_default(repo_raw_ptr repo) -> signature_ptr;
+
   } // namespace sig
 
   namespace index {
-    /// This method will scan the index and write a representation of
-    /// its current state back to disk; it recursively creates tree objects for
-    /// each of the subtrees stored in the index, but only returns the OID of the
-    /// root tree. This is the OID that can be used e.g. to create a commit.
-    /// The index instance cannot be bare, and needs to be associated to an existing repository.
-    /// The index must not contain any file in conflict.
-
     ///  Write an existing index object from memory back to disk using an atomic file lock.
     auto write();
+
+    /// Write the index as a tree.
+    /// This method will scan the index and write a representation of its
+    /// current state back to disk; it recursively creates tree objects for each of
+    /// the subtrees stored in the index, but only returns the OID of the root
+    /// tree. This is the OID that can be used e.g. to create a commit. The index
+    /// instance cannot be bare, and needs to be associated to an existing
+    /// repository. The index must not contain any file in conflict.
+    auto write_tree(index_raw_ptr index) -> git_oid;
 
 
   } // namespace index
