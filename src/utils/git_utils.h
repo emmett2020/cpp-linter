@@ -475,7 +475,7 @@ namespace linter::git {
     auto equal(git_oid o1, git_oid o2) -> bool;
 
     /// @brief Parse a hex formatted object id into a git_oid.
-    /// @link https://libgit2.org/libgit2/#v1.5.0/group/oid
+    /// https://libgit2.org/libgit2/#v0.20.0/group/oid/git_oid_fromstr
     auto from_str(const std::string& str) -> git_oid;
   } // namespace oid
 
