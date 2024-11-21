@@ -91,6 +91,7 @@ auto main(int argc, char **argv) -> int {
   if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
+    check_github_env();
     fill_context_by_env(env, ctx);
   }
   print_context(ctx);

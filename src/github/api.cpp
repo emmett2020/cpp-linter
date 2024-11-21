@@ -20,6 +20,10 @@ auto read_github_env() -> github_env {
   return env;
 }
 
+
+void check_github_env() {
+}
+
 void print_github_env(const github_env &env) {
   spdlog::debug("Github Env:");
   spdlog::debug("--------------------------------------------------");
