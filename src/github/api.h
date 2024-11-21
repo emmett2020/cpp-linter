@@ -33,8 +33,8 @@ namespace linter {
 
   constexpr auto all_github_events =
     {github_event_push, github_event_pull_request, github_event_pull_request_target};
-  constexpr auto github_events_automatic_infer_base_ref =
-    {github_event_pull_request, github_event_pull_request_target};
+  constexpr auto github_events_automatic_infer_base_ref = {github_event_pull_request,
+                                                           github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables

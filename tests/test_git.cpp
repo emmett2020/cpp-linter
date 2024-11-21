@@ -10,7 +10,7 @@
 using namespace linter;
 using namespace std::string_literals;
 
-const auto temp_dir = std::filesystem::temp_directory_path();
+const auto temp_dir      = std::filesystem::temp_directory_path();
 const auto temp_repo_dir = temp_dir / "test_git";
 
 auto RefreshRepoDir() {
@@ -32,8 +32,7 @@ TEST_CASE("basics", "[git2][branch]") {
   auto repo = git::repo::open(temp_repo_dir);
   SECTION("lookup") {
     // Empty repository still has a master branch.
-    auto *branch =
-        git::branch::lookup(repo.get(), "master", git::branch_t::local);
+    auto *branch = git::branch::lookup(repo.get(), "master", git::branch_t::local);
   }
   // git::branch::create(repo.get(), "main", );
 }

@@ -15,9 +15,9 @@ namespace linter {
     constexpr auto repo_path                       = "repo-path";
     constexpr auto repo                            = "repo";
     constexpr auto token                           = "token";
-    constexpr auto base_ref                        = "base-ref";       // only used in pr
+    constexpr auto base_ref                        = "base-ref";    // only used in pr
     constexpr auto head_ref                        = "head-ref";
-    constexpr auto base_commit                     = "base-commit";    // pr
+    constexpr auto base_commit                     = "base-commit"; // pr
     constexpr auto head_commit                     = "head-commit";
     constexpr auto event_name                      = "event-name";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
@@ -156,8 +156,7 @@ namespace linter {
     return variables;
   }
 
-
-  void check_program_options(const boost::program_options::variables_map& variables) {
+  void check_program_options(const boost::program_options::variables_map &variables) {
     // TODO: check repo format
     // TODO: check repo_path exists
     if (variables.contains(base_ref) && variables.contains(base_commit)) {
