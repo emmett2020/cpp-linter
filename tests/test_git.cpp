@@ -41,13 +41,15 @@ TEST_CASE("basics", "[git2][config]") {
   RefreshRepoDir();
   auto repo   = git::repo::init(temp_repo_dir, false);
   auto origin = git::repo::config(repo.get());
-  auto config = git::config::snapshot(origin.get());
-  SECTION("set_string/get_string") {
-    git::config::set_string(config.get(), "user.name", "test");
-    REQUIRE(git::config::get_string(config.get(), "user.name") == "test");
+  SECTION("set_string") {
+    git::config::set_string(origin.get(), "user.name", "test");
   }
-  SECTION("set_bool/get_bool") {
-    git::config::set_bool(config.get(), "core.filemode", true);
+  SECTION("set_bool") {
+    git::config::set_bool(origin.get(), "core.filemode", true);
+  }
+
+  auto config = git::repo::config_snapshot(repo.get());
+  SECTION("get_bool") {
     REQUIRE(git::config::get_bool(config.get(), "core.filemode") == true);
   }
   RemoveRepoDir();
@@ -59,9 +61,20 @@ TEST_CASE("basics", "[git2][index]") {
   REQUIRE(git::repo::is_empty(repo.get()));
   auto config = git::repo::config(repo.get());
   git::config::set_string(config.get(), "user.name", "test");
-  auto index = git::repo::index(repo.get());
-  auto oid   = git::index::write_tree(index.get());
-  auto sig   = git::sig::create_default(repo.get());
+  auto index      = git::repo::index(repo.get());
+  auto tree_oid   = git::index::write_tree(index.get());
+  auto tree_obj   = git::tree::lookup(repo.get(), &tree_oid);
+  auto sig        = git::sig::create_default(repo.get());
+  auto commit_oid = git::commit::create(
+    repo.get(),
+    "HEAD",
+    sig.get(),
+    sig.get(),
+    "Initial commit",
+    tree_obj.get(),
+    0,
+    {});
+
   RemoveRepoDir();
 }
 

@@ -313,6 +313,31 @@ namespace linter::git {
   } // namespace branch
 
   namespace commit {
+    auto create(
+      repo_raw_ptr repo,
+      const std::string &updated_ref,
+      signature_raw_cptr author,
+      signature_raw_cptr committer,
+      const std::string &message,
+      tree_raw_cptr tree,
+      std::size_t parent_count,
+      std::span<commit_raw_cptr> parents) -> git_oid {
+      auto id  = git_oid{};
+      auto ret = ::git_commit_create(
+        &id,
+        repo,
+        updated_ref.c_str(),
+        author,
+        committer,
+        "UTF-8",
+        message.c_str(),
+        tree,
+        parent_count,
+        parents.data());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return id;
+    }
+
     auto tree(commit_raw_cptr commit) -> tree_raw_ptr {
       auto *ptr = tree_raw_ptr{nullptr};
       auto ret  = ::git_commit_tree(&ptr, commit);
@@ -690,5 +715,17 @@ namespace linter::git {
       return oid;
     }
   } // namespace index
+
+  namespace tree {
+    /// Lookup a tree object from the repository.
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> tree_ptr {
+      auto *tree = tree_raw_ptr{nullptr};
+      auto ret   = ::git_tree_lookup(&tree, repo, oid);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {tree, git_tree_free};
+    }
+
+  } // namespace tree
+
 
 } // namespace linter::git

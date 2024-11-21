@@ -52,6 +52,7 @@ namespace linter::git {
   using index_ptr     = std::unique_ptr<git_index, decltype(::git_index_free) *>;
   using signature_ptr = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
   using config_ptr    = std::unique_ptr<git_config, decltype(::git_config_free) *>;
+  using tree_ptr      = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
 
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
@@ -436,6 +437,43 @@ namespace linter::git {
   } // namespace branch
 
   namespace commit {
+    /// Create a commit object from the given buffer and signature
+    /// Given the unsigned commit object's contents, its signature and the
+    /// header field in which to store the signature, attach the signature to the
+    /// commit and write it into the given repository.
+    /// TODO:
+    auto create_with_signature(repo_raw_ptr repo, const std::string &commit_content) -> git_oid;
+
+
+    /// Create new commit in the repository from a list of git_object pointers.
+    /// @param repo Repository where to store the commit
+    /// @param update_ref If not NULL, name of the reference that will be
+    /// updated to point to this commit. If the reference is not direct, it will be
+    /// resolved to a direct reference. Use "HEAD" to update the HEAD of the
+    /// current branch and make it point to this commit. If the reference doesn't
+    /// exist yet, it will be created. If it does exist, the first parent must be
+    /// the tip of this branch.
+    /// @param author Signature with author and author time of commit
+    /// @param committer Signature with committer and * commit time of commit
+    /// @param message Full message for this commit
+    /// @param tree An instance of a `git_tree` object that will be used as the
+    /// tree for the commit. This tree object must also be owned by the given
+    /// `repo`.
+    /// @param parent_count Number of parents for this commit
+    /// @param parents Array of `parent_count` pointers to `git_commit` objects
+    /// that will be used as the parents for this commit. This array may be NULL if
+    /// `parent_count` is 0 (root commit). All the given commits must be owned by
+    /// the `repo`.
+    auto create(
+      repo_raw_ptr repo,
+      const std::string &updated_ref,
+      signature_raw_cptr author,
+      signature_raw_cptr committer,
+      const std::string &message,
+      tree_raw_cptr tree,
+      std::size_t parent_count,
+      std::span<commit_raw_cptr> parents) -> git_oid;
+
     /// @brief Get the tree pointed to by a commit.
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
     auto tree(commit_raw_cptr commit) -> tree_raw_ptr;
@@ -690,5 +728,11 @@ namespace linter::git {
 
 
   } // namespace index
+
+  namespace tree {
+    /// Lookup a tree object from the repository.
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> tree_ptr;
+
+  } // namespace tree
 
 } // namespace linter::git
