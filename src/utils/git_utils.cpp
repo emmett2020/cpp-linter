@@ -462,6 +462,16 @@ namespace linter::git {
       return res;
     }
 
+    // auto changed_files(repo_ptr repo, const std::string &commit_id1, const std::string &commid_id2)
+    //   -> std::vector<std::string> {
+    //   auto details = deltas(repo, target_ref, source_ref);
+    //   auto res     = std::vector<std::string>{};
+    //   for (const auto &delta: details) {
+    //     res.emplace_back(delta.new_file.relative_path);
+    //   }
+    //   return res;
+    // }
+
   } // namespace diff
 
   namespace oid {
