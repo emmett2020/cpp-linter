@@ -1,4 +1,5 @@
 #include <cctype>
+#include <git2/oid.h>
 #include <print>
 #include <string>
 
@@ -58,11 +59,14 @@ namespace {
     return {trimmed_version.data(), trimmed_version.size()};
   }
 
-  auto get_commits(const github_env &env, const context &ctx, git::repo_ptr repo)
-    -> std::tuple<git::commit_ptr, git::commit_ptr> {
-    if (env.event_name == github_event_push) {
-      auto *default_commit = git::branch::lookup(repo, ctx.default_branch, git::branch_t::remote);
+  auto get_base_commit(const context &ctx, git::repo_ptr repo)
+    -> git::commit_ptr {
+    if (ctx.base_commit.empty()) {
+    
+      return;
     }
+    git::commit::lookup(repo, oid_cptr id)
+    
   }
 
 } // namespace
@@ -85,7 +89,7 @@ auto main(int argc, char **argv) -> int {
   if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
-    merge_env_into_context(env, ctx);
+    fill_context_by_env(env, ctx);
   }
   print_context(ctx);
   check_context(ctx);

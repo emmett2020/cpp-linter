@@ -3,6 +3,9 @@
 #include "tools/clang_tidy.h"
 
 namespace linter {
+
+  /// The base_ref is the default branch all most events
+  /// execept for some events which is the real base reference.
   struct context {
     bool use_on_local = false;
     std::string log_level;
@@ -14,7 +17,6 @@ namespace linter {
     std::string head_commit;
     std::string base_ref;
     std::string head_ref;
-    std::string default_branch;
 
     clang_tidy::option clang_tidy_option{};
   };

@@ -1,4 +1,5 @@
 #include "context.h"
+#include "github/api.h"
 #include "utils/util.h"
 
 #include <spdlog/spdlog.h>
@@ -36,6 +37,9 @@ namespace linter {
 
   void check_context(const context &ctx) {
     throw_if(ctx.repo_path.empty(), "empty repository path");
+    throw_if(ctx.event_name.empty(), "empty event name");
+    throw_if(ctx.base_ref.empty(), "the base_ref is empty");
+    throw_if(ctx.head_ref.empty(), "the head_ref is empty");
   }
 
 } // namespace linter

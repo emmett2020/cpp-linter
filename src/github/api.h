@@ -31,8 +31,10 @@ namespace linter {
   constexpr auto github_event_pull_request_target = "pull_request_target";
   constexpr auto github_event_workflow_dispatch   = "workflow_dispatch";
 
-  constexpr auto supported_github_event =
+  constexpr auto all_github_events =
     {github_event_push, github_event_pull_request, github_event_pull_request_target};
+  constexpr auto github_events_automatic_infer_base_ref =
+    {github_event_pull_request, github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
@@ -84,8 +86,8 @@ namespace linter {
     std::string repository;
     std::string event_name;
     std::string event_path;
-    std::string base_ref; // Only used in pr event
-    std::string head_ref; // Only used in pr event
+    std::string base_ref;
+    std::string head_ref;
     std::string github_ref;
     std::string github_sha;
     std::string github_ref_type;
@@ -95,7 +97,7 @@ namespace linter {
 
   auto read_github_env() -> github_env;
   void print_github_env(const github_env& env);
-  void merge_env_into_context(const github_env& env, context& ctx);
+  void fill_context_by_env(const github_env& env, context& ctx);
 
   class github_api_client {
   public:
