@@ -1,5 +1,6 @@
 set(SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../src)
 set(UTILS_DIR ${SRC_DIR}/utils)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../src)
 link_libraries(spdlog git2 Catch2::Catch2WithMain)
 
