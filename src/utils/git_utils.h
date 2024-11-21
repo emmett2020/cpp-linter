@@ -53,6 +53,8 @@ namespace linter::git {
   using signature_ptr = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
   using config_ptr    = std::unique_ptr<git_config, decltype(::git_config_free) *>;
   using tree_ptr      = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
+  using ref_ptr       = std::unique_ptr<git_reference, decltype(::git_reference_free) *>;
+  using commit_ptr    = std::unique_ptr<git_commit, decltype(::git_commit_free) *>;
 
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
@@ -409,12 +411,21 @@ namespace linter::git {
   } // namespace config
 
   namespace branch {
-    /// @brief Create a new branch pointing at a target commit
-    /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
+    /// Create a new branch pointing at a target commit.
+    /// A new direct reference will be created pointing to this target commit.
+    /// If force is true and a reference already exists with the given name, it'll
+    /// be replaced.
+    /// @param repo the repository to create the branch in.
+    /// @param 	branch_name Name for the branch; this name is validated for
+    /// consistency. It should also not conflict with an already existing branch
+    /// name.
+    /// @param target Commit to which this branch should point. This object
+    /// must belong to the given `repo`.
+    /// @param force Overwrite existing branch.
     auto create(repo_raw_ptr repo,
                 const std::string &branch_name,
                 commit_raw_cptr target,
-                bool force) -> reference_raw_ptr;
+                bool force) -> ref_ptr;
 
     /// @brief Delete an existing branch reference.
     /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
@@ -429,10 +440,8 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
     bool is_head(reference_raw_cptr branch);
 
-    /// @brief Lookup a branch by its name in a repository.
-    /// @link https://libgit2.org/libgit2/#v0.20.0/group/branch/git_branch_lookup
-    auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type)
-      -> reference_raw_ptr;
+    /// Lookup a branch by its name in a repository.
+    auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type) -> ref_ptr;
 
   } // namespace branch
 
@@ -485,8 +494,7 @@ namespace linter::git {
     auto tree_id(commit_raw_cptr commit) -> oid_raw_cptr;
 
     /// @brief Lookup a commit object from a repository.
-    /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_lookup
-    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_raw_ptr;
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_ptr;
 
     /// @brief Get the author of a commit.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_author

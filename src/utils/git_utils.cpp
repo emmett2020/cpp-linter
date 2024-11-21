@@ -5,6 +5,7 @@
 #include <cstring>
 #include <git2/config.h>
 #include <git2/oid.h>
+#include <git2/refs.h>
 #include <string>
 
 #include <git2/branch.h>
@@ -267,12 +268,12 @@ namespace linter::git {
     auto create(repo_raw_ptr repo,
                 const std::string &branch_name,
                 commit_raw_cptr target,
-                bool force) -> reference_raw_ptr {
+                bool force) -> ref_ptr {
       auto *ptr = reference_raw_ptr{nullptr};
       auto ret =
         ::git_branch_create(&ptr, repo, branch_name.c_str(), target, static_cast<int>(force));
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return ptr;
+      return {ptr, ::git_reference_free};
     }
 
     void del(reference_raw_ptr branch) {
@@ -293,8 +294,7 @@ namespace linter::git {
       return ret == 1;
     }
 
-    auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type)
-      -> reference_raw_ptr {
+    auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type) -> ref_ptr {
       auto convert_to = [&]() {
         switch (branch_type) {
         case branch_t::local : return git_branch_t::GIT_BRANCH_LOCAL;
@@ -307,7 +307,7 @@ namespace linter::git {
       auto *res = reference_raw_ptr{nullptr};
       auto ret  = ::git_branch_lookup(&res, repo, name.c_str(), convert_to());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return res;
+      return {res, ::git_reference_free};
     }
 
   } // namespace branch
@@ -350,11 +350,11 @@ namespace linter::git {
       return ret;
     }
 
-    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_raw_ptr {
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr id) -> commit_ptr {
       auto *commit = commit_raw_ptr{nullptr};
       auto ret     = ::git_commit_lookup(&commit, repo, id);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return commit;
+      return {commit, ::git_commit_free};
     }
 
     auto author(commit_raw_cptr commit) -> signature {
@@ -527,35 +527,35 @@ namespace linter::git {
       return deltas;
     }
 
-    auto deltas(repo_raw_ptr repo, const std::string &ref1, const std::string &ref2)
-      -> std::vector<git::diff_delta_detail> {
-      auto oid1     = ref::name_to_oid(repo, ref1);
-      auto oid2     = ref::name_to_oid(repo, ref2);
-      auto *commit1 = commit::lookup(repo, &oid1);
-      auto *commit2 = commit::lookup(repo, &oid2);
-      auto *tree1   = commit::tree(commit1);
-      auto *tree2   = commit::tree(commit2);
-
-      auto *diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
-      commit::free(commit1);
-      commit::free(commit2);
-      object::free(reinterpret_cast<git::object_raw_ptr>(tree1));
-      object::free(reinterpret_cast<git::object_raw_ptr>(tree2));
-      auto ret = deltas(diff);
-      diff::free(diff);
-      return ret;
-    }
-
-    auto changed_files(repo_raw_ptr repo,
-                       const std::string &target_ref,
-                       const std::string &source_ref) -> std::vector<std::string> {
-      auto details = deltas(repo, target_ref, source_ref);
-      auto res     = std::vector<std::string>{};
-      for (const auto &delta: details) {
-        res.emplace_back(delta.new_file.relative_path);
-      }
-      return res;
-    }
+    // auto deltas(repo_raw_ptr repo, const std::string &ref1, const std::string &ref2)
+    //   -> std::vector<git::diff_delta_detail> {
+    //   auto oid1     = ref::name_to_oid(repo, ref1);
+    //   auto oid2     = ref::name_to_oid(repo, ref2);
+    //   auto *commit1 = commit::lookup(repo, &oid1);
+    //   auto *commit2 = commit::lookup(repo, &oid2);
+    //   auto *tree1   = commit::tree(commit1);
+    //   auto *tree2   = commit::tree(commit2);
+    //
+    //   auto *diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
+    //   commit::free(commit1);
+    //   commit::free(commit2);
+    //   object::free(reinterpret_cast<git::object_raw_ptr>(tree1));
+    //   object::free(reinterpret_cast<git::object_raw_ptr>(tree2));
+    //   auto ret = deltas(diff);
+    //   diff::free(diff);
+    //   return ret;
+    // }
+    //
+    // auto changed_files(repo_raw_ptr repo,
+    //                    const std::string &target_ref,
+    //                    const std::string &source_ref) -> std::vector<std::string> {
+    //   auto details = deltas(repo, target_ref, source_ref);
+    //   auto res     = std::vector<std::string>{};
+    //   for (const auto &delta: details) {
+    //     res.emplace_back(delta.new_file.relative_path);
+    //   }
+    //   return res;
+    // }
 
     // auto changed_files(repo_ptr repo, const std::string &commit_id1, const
     // std::string &commid_id2)

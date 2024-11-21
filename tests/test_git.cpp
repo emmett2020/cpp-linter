@@ -74,7 +74,8 @@ TEST_CASE("basics", "[git2][index]") {
     tree_obj.get(),
     0,
     {});
-
+  auto commit_id = git::commit::lookup(repo.get(), &commit_oid);
+  auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(), true);
   RemoveRepoDir();
 }
 
