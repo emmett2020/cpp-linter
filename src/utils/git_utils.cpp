@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <git2/config.h>
 #include <git2/oid.h>
 #include <string>
 
@@ -185,6 +186,13 @@ namespace linter::git {
       return {config, ::git_config_free};
     }
 
+    auto config_snapshot(repo_raw_ptr repo) -> config_ptr {
+      auto *config = config_raw_ptr{nullptr};
+      auto ret     = ::git_repository_config_snapshot(&config, repo);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {config, ::git_config_free};
+    }
+
     auto index(repo_raw_ptr repo) -> index_ptr {
       auto *index = index_raw_ptr{nullptr};
       auto ret    = ::git_repository_index(&index, repo);
@@ -245,6 +253,13 @@ namespace linter::git {
     void set_int64(config_raw_ptr config_ptr, const std::string &key, int64_t value) {
       auto ret = ::git_config_set_int64(config_ptr, key.c_str(), value);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+    }
+
+    auto snapshot(config_raw_ptr config) -> config_ptr {
+      auto *out = config_raw_ptr{nullptr};
+      auto ret  = ::git_config_snapshot(&out, config);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {out, ::git_config_free};
     }
   } // namespace config
 

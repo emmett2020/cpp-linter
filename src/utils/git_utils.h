@@ -336,6 +336,12 @@ namespace linter::git {
     /// (if they are available).
     auto config(repo_raw_ptr repo) -> config_ptr;
 
+    /// Get a snapshot of the repository's configuration.
+    /// Convenience function to take a snapshot from the repository's
+    /// configuration. The contents of this snapshot will not change, even if the
+    /// underlying config files are modified.
+    auto config_snapshot(repo_raw_ptr repo) -> config_ptr;
+
     /// Get the Index file for this repository. If a custom index has not been
     /// set, the default index for the repository will be returned (the one located
     /// in .git/index).
@@ -389,6 +395,15 @@ namespace linter::git {
     /// Set the value of a long integer config variable in the config file with
     /// the highest level (usually the local one).
     void set_int64(config_raw_ptr config_ptr, const std::string &key, int64_t value);
+
+    /// Create a snapshot of the configuration
+    /// Create a snapshot of the current state of a configuration, which allows
+    /// you to look into a consistent view of the configuration for looking up
+    /// complex values (e.g. a remote, submodule). The string returned when
+    /// querying such a config object is valid until it is freed.
+    /// All the modification will be wrote back into configuration file when
+    /// you use git_config while snapshot won't.
+    auto snapshot(config_raw_ptr config) -> config_ptr;
 
   } // namespace config
 
