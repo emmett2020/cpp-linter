@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <git2/repository.h>
 #include <string>
 #include <vector>
 
@@ -43,7 +44,9 @@ using diff_line_cb = git_diff_line_cb;
 /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
 using diff_binary_cb = git_diff_binary_cb;
 
-using repo_ptr = git_repository *;
+using repo_ptr =
+    std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
+using repo_raw_ptr = git_repository *;
 using config_ptr = git_config *;
 using reference_ptr = git_reference *;
 using commit_ptr = git_commit *;
@@ -336,35 +339,35 @@ auto init(const std::string &repo_path, bool is_bare) -> repo_ptr;
 
 /// @brief Open a git repository.
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_open
-auto open(const std::string &repo_path) -> repo_ptr;
+auto open(const std::string &repo_path) -> repo_raw_ptr;
 
 /// @brief Free a previously allocated repository
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_free
-void free(repo_ptr repo);
+void free(repo_raw_ptr repo);
 
 /// @brief Determines the status of a git repository
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
-auto state(repo_ptr repo) -> int;
+auto state(repo_raw_ptr repo) -> int;
 
 /// @brief Get the path of this repository
 /// @link https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_path
-auto path(repo_ptr repo) -> std::string;
+auto path(repo_raw_ptr repo) -> std::string;
 
 /// @brief Check if a repository is empty
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_is_empty
-auto is_empty(repo_ptr repo) -> bool;
+auto is_empty(repo_raw_ptr repo) -> bool;
 
 /// @brief Get the configuration file for this repository.
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_config
-auto config(repo_ptr repo) -> config_ptr;
+auto config(repo_raw_ptr repo) -> config_ptr;
 
 /// @brief Get the Index file for this repository.
 /// @link
 /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_index
-auto index(repo_ptr repo) -> index_ptr;
+auto index(repo_raw_ptr repo) -> index_ptr;
 } // namespace repo
 
 namespace config {
@@ -377,8 +380,8 @@ void free(config_ptr config_ptr);
 namespace branch {
 /// @brief Create a new branch pointing at a target commit
 /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_create
-auto create(repo_ptr repo, const std::string &branch_name, commit_cptr target,
-            bool force) -> reference_ptr;
+auto create(repo_raw_ptr repo, const std::string &branch_name,
+            commit_cptr target, bool force) -> reference_ptr;
 
 /// @brief Delete an existing branch reference.
 /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
@@ -395,7 +398,7 @@ bool is_head(reference_cptr branch);
 
 /// @brief Lookup a branch by its name in a repository.
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/branch/git_branch_lookup
-auto lookup(repo_ptr repo, const std::string &name,
+auto lookup(repo_raw_ptr repo, const std::string &name,
             branch_t branch_type) -> reference_ptr;
 
 } // namespace branch
@@ -413,7 +416,7 @@ auto tree_id(commit_cptr commit) -> oid_cptr;
 
 /// @brief Lookup a commit object from a repository.
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_lookup
-auto lookup(repo_ptr repo, oid_cptr id) -> commit_ptr;
+auto lookup(repo_raw_ptr repo, oid_cptr id) -> commit_ptr;
 
 /// @brief Get the author of a commit.
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/commit/git_commit_author
@@ -464,12 +467,12 @@ void free(diff_ptr diff);
 /// directory.
 /// @link:
 /// https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_index_to_workdir
-auto index_to_workdir(repo_ptr repo, index_ptr index,
+auto index_to_workdir(repo_raw_ptr repo, index_ptr index,
                       diff_options_cptr opts) -> diff_ptr;
 
 /// @brief: Create a diff with the difference between two tree objects.
 /// @link: https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_tree_to_tree
-auto tree_to_tree(repo_ptr repo, tree_ptr old_tree, tree_ptr new_tree,
+auto tree_to_tree(repo_raw_ptr repo, tree_ptr old_tree, tree_ptr new_tree,
                   diff_options_cptr opts) -> diff_ptr;
 
 /// @brief Initialize diff options structure
@@ -493,12 +496,12 @@ auto for_each(diff_ptr diff, diff_file_cb file_cb, diff_binary_cb binary_cb,
 auto deltas(diff_ptr diff) -> std::vector<diff_delta_detail>;
 
 /// @brief A simple implmentation which compares ref1 with ref2's differences.
-auto deltas(repo_ptr repo, const std::string &ref1,
+auto deltas(repo_raw_ptr repo, const std::string &ref1,
             const std::string &ref2) -> std::vector<git::diff_delta_detail>;
 
 /// @brief Get changed files between two refs.
 /// @return The modified and new added file names in source reference.
-auto changed_files(repo_ptr repo, const std::string &target_ref,
+auto changed_files(repo_raw_ptr repo, const std::string &target_ref,
                    const std::string &source_ref) -> std::vector<std::string>;
 
 } // namespace diff
@@ -555,14 +558,14 @@ auto name(reference_cptr ref) -> std::string;
 /// refs/tags/v0.1.0, ...)
 /// @link:
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_lookup
-auto lookup(repo_ptr repo, const std::string &name) -> reference_ptr;
+auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_ptr;
 
 /// @brief: Lookup a reference by name and resolve immediately to OID.
 /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master,
 /// refs/tags/v0.1.0, ...)
 /// @link:
 /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name_to_id
-auto name_to_oid(repo_ptr repo, const std::string &name) -> git_oid;
+auto name_to_oid(repo_raw_ptr repo, const std::string &name) -> git_oid;
 
 } // namespace ref
 
@@ -571,10 +574,11 @@ namespace revparse {
 /// @link
 /// https://libgit2.org/libgit2/#v0.20.0/group/revparse/git_revparse_single
 /// https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions
-auto single(repo_ptr repo, const std::string &spec) -> object_ptr;
+auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr;
 
 /// @brief Find a complete sha based on given short sha
-auto complete_sha(repo_ptr repo, const std::string &short_sha) -> std::string;
+auto complete_sha(repo_raw_ptr repo,
+                  const std::string &short_sha) -> std::string;
 
 }; // namespace revparse
 
@@ -593,7 +597,7 @@ auto id(object_cptr obj) -> oid_cptr;
 
 /// @brief Lookup a reference to one of the objects in a repository.
 /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_lookup
-auto lookup(repo_ptr repo, oid_cptr oid, object_t type) -> object_ptr;
+auto lookup(repo_raw_ptr repo, oid_cptr oid, object_t type) -> object_ptr;
 
 } // namespace object
 
