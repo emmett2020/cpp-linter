@@ -13,13 +13,15 @@ using namespace std::string_literals;
 const auto temp_dir      = std::filesystem::temp_directory_path();
 const auto temp_repo_dir = temp_dir / "test_git";
 
-auto RefreshRepoDir() {
-  if (std::filesystem::exists(temp_repo_dir)) {
-    std::print("remove old repo directory");
-    std::filesystem::remove_all(temp_repo_dir);
+namespace {
+  auto RefreshRepoDir() {
+    if (std::filesystem::exists(temp_repo_dir)) {
+      std::print("remove old repo directory");
+      std::filesystem::remove_all(temp_repo_dir);
+    }
+    std::filesystem::create_directory(temp_repo_dir);
   }
-  std::filesystem::create_directory(temp_repo_dir);
-}
+} // namespace
 
 TEST_CASE("basics", "[git2][repo]") {
   auto repo = git::repo::init(temp_repo_dir, false);

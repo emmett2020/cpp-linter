@@ -24,6 +24,7 @@ Checks: '
   -google-build-using-namespace,
 
   -misc-non-private-member-variables-in-classes,
+  -misc-use-anonymous-namespace,
 
   -bugprone-easily-swappable-parameters,
 '
