@@ -764,6 +764,11 @@ namespace linter::git {
       return {list, ::git_status_list_free};
     }
 
+    auto entry_count(status_list_raw_ptr status_list) -> std::size_t {
+      auto ret   = ::git_status_list_entrycount(status_list);
+      return ret;
+    }
+
   } // namespace status
 
 } // namespace linter::git

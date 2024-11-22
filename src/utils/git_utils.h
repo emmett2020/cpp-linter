@@ -800,6 +800,11 @@ namespace linter::git {
     /// no pathspec so that all files can be considered.
     auto gather(repo_raw_ptr repo, const status_options& options) -> status_list_ptr;
 
+    /// Gets the count of status entries in this list. If there are no changes
+    /// in status (at least according the options given when the status list was
+    /// created), this can return 0.
+    auto entry_count(status_list_raw_ptr status_list) -> std::size_t;
+
   } // namespace status
 } // namespace linter::git
 

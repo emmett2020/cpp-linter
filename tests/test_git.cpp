@@ -56,6 +56,19 @@ TEST_CASE("basics", "[git2][config]") {
   RemoveRepoDir();
 }
 
+
+TEST_CASE("compare with head", "[git2][status]") {
+  RefreshRepoDir();
+  auto repo = git::repo::init(temp_repo_dir, false);
+  REQUIRE(git::repo::is_empty(repo.get()));
+
+  // default is HEAD
+  auto options = git::status_options{};
+  options.version = GIT_STATUS_OPTIONS_VERSION;
+  auto status_list = git::status::gather(repo.get(), options);
+  REQUIRE(git::status::entry_count(status_list.get()) == 0);
+}
+
 TEST_CASE("basics", "[git2][index]") {
   RefreshRepoDir();
   auto repo = git::repo::init(temp_repo_dir, false);
@@ -76,8 +89,12 @@ TEST_CASE("basics", "[git2][index]") {
     git::index::add_by_path(index.get(), "temp_file.cpp");
     git::index::write(index.get());
     std::cout << git::repo_state_str(state);
+    auto options = git::status_options{};
+    options.version = GIT_STATUS_OPTIONS_VERSION;
+    auto status_list = git::status::gather(repo.get(), options);
+    REQUIRE(git::status::entry_count(status_list.get()) == 1);
   }
-  // RemoveRepoDir();
+  RemoveRepoDir();
 }
 
 // TEST_CASE("basics", "[git2][index]") {
