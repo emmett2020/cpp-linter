@@ -13,9 +13,11 @@
 
 using namespace linter;
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 const auto temp_dir = std::filesystem::temp_directory_path();
 const auto temp_repo_dir = temp_dir / "test_git";
+const auto default_branch = "master"sv;
 
 namespace {
 auto RefreshRepoDir() {
@@ -27,6 +29,19 @@ auto RefreshRepoDir() {
 }
 
 auto RemoveRepoDir() { std::filesystem::remove_all(temp_repo_dir); }
+
+auto CreateTempFile(const std::string& file_name,
+                    const std::string& content) {
+  auto new_file_path = temp_repo_dir / file_name;
+  if (std::filesystem::exists(new_file_path)) {
+    std::filesystem::remove(new_file_path);
+  }
+  auto file = std::fstream(new_file_path, std::ios::out);
+  REQUIRE(file.is_open());
+  file << content;
+  file.close();
+}
+
 } // namespace
 
 TEST_CASE("basics", "[git2][repo]") {
@@ -63,14 +78,17 @@ TEST_CASE("compare with head", "[git2][status]") {
   REQUIRE(git::repo::is_empty(repo.get()));
 
   // default is HEAD
-  auto options = git::status_options{};
-  options.version = GIT_STATUS_OPTIONS_VERSION;
+  auto options = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 0);
+  RemoveRepoDir();
 }
 
-TEST_CASE("basics", "[git2][index]") {
+TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][sig]") {
   RefreshRepoDir();
+  CreateTempFile("file1.cpp", "hello world");
+  CreateTempFile("file2.cpp", "hello world");
+
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
   auto config = git::repo::config(repo.get());
@@ -78,22 +96,32 @@ TEST_CASE("basics", "[git2][index]") {
   git::config::set_string(config.get(), "user.email", "cpp-linter@email.com");
 
   auto index = git::repo::index(repo.get());
-  auto state = git::repo::state(repo.get());
-  std::cout << git::repo_state_str(state);
-  SECTION("add a file to index") {
-    auto file_path = temp_repo_dir / "temp_file.cpp";
-    auto file = std::fstream(file_path, std::ios::out);
-    REQUIRE(file.is_open());
-    file << "hello world";
-    file.close();
-    git::index::add_by_path(index.get(), "temp_file.cpp");
-    git::index::write(index.get());
-    std::cout << git::repo_state_str(state);
-    auto options = git::status_options{};
-    options.version = GIT_STATUS_OPTIONS_VERSION;
-    auto status_list = git::status::gather(repo.get(), options);
-    REQUIRE(git::status::entry_count(status_list.get()) == 1);
-  }
+  git::index::add_by_path(index.get(), "file1.cpp");
+  git::index::add_by_path(index.get(), "file2.cpp");
+  auto index_tree_oid = git::index::write_tree(index.get());
+
+  auto options = git::status::default_options();
+  auto status_list = git::status::gather(repo.get(), options);
+  REQUIRE(git::status::entry_count(status_list.get()) == 2);
+
+  const auto* entry0 = git::status::get_by_index(status_list.get(), 0);
+  const auto* entry1 = git::status::get_by_index(status_list.get(), 1);
+  REQUIRE(entry0->status == git::status_t::GIT_STATUS_INDEX_NEW);
+  REQUIRE(entry1->status == git::status_t::GIT_STATUS_INDEX_NEW);
+
+  // we did't have any branches yet.
+  auto index_tree_obj = git::tree::lookup(repo.get(), &index_tree_oid);
+  auto sig        = git::sig::create_default(repo.get());
+  auto commit_oid = git::commit::create(
+    repo.get(),
+    "HEAD",
+    sig.get(),
+    sig.get(),
+    "Initial commit",
+    index_tree_obj.get(),
+    0,
+    {});
+  REQUIRE(git::branch::current_name(repo.get()) == default_branch);
   RemoveRepoDir();
 }
 
@@ -145,5 +173,6 @@ int main(int argc, char *argv[]) {
   git::setup();
   int result = Catch::Session().run(argc, argv);
   git::shutdown();
+  RemoveRepoDir();
   return result;
 }

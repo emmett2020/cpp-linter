@@ -221,6 +221,13 @@ namespace linter::git {
       return {index, ::git_index_free};
     }
 
+    auto head(repo_raw_ptr repo) -> ref_ptr {
+      auto *ref = reference_raw_ptr{nullptr};
+      auto ret    = ::git_repository_head(&ref, repo);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {ref, ::git_reference_free};
+    }
+
   } // namespace repo
 
   namespace config {
@@ -328,6 +335,18 @@ namespace linter::git {
       auto ret  = ::git_branch_lookup(&res, repo, name.c_str(), convert_to());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {res, ::git_reference_free};
+    }
+
+    auto current_name(repo_raw_ptr repo) -> std::string {
+      auto head_ref = repo::head(repo);
+      auto ref_type = ref::type(head_ref.get());
+      throw_if(ref_type == ref_t::invalid, "get current branch failed since invalid ref type");
+
+      if (ref_type == ref_t::symbolic) {
+        auto direct_ref = ref::resolve(head_ref.get());
+        return ref::shorthand(direct_ref.get());
+      }
+      return ref::shorthand(head_ref.get());
     }
 
   } // namespace branch
@@ -668,6 +687,19 @@ namespace linter::git {
       return oid;
     }
 
+    auto shorthand(reference_raw_cptr ref) -> std::string {
+      const auto *ret = ::git_reference_shorthand(ref);
+      throw_if(ret == nullptr, "get shorthand error since unexpcetd null pointer");
+      return ret;
+    }
+
+    auto resolve(reference_raw_cptr symbolic_ref) -> ref_ptr {
+      auto *ref = reference_raw_ptr{nullptr};
+      auto ret = ::git_reference_resolve(&ref, symbolic_ref);
+      throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
+      return {ref, ::git_reference_free};
+    }
+
   } // namespace ref
 
   namespace revparse {
@@ -766,6 +798,19 @@ namespace linter::git {
 
     auto entry_count(status_list_raw_ptr status_list) -> std::size_t {
       auto ret   = ::git_status_list_entrycount(status_list);
+      return ret;
+    }
+
+    auto default_options() -> status_options {
+      auto options = status_options{};
+      auto ret   = ::git_status_options_init(&options, GIT_STATUS_OPTIONS_VERSION);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return options;
+    }
+
+    auto get_by_index(status_list_raw_ptr status_list, std::size_t idx) -> status_entry_raw_cptr {
+      const auto *ret   = ::git_status_byindex(status_list, idx);
+      throw_if(ret == nullptr,"get status list error since the given idx is out of range");
       return ret;
     }
 

@@ -50,6 +50,7 @@ namespace linter::git {
   /// In-memory representation of a file entry in the index.
   using index_entry = git_index_entry;
   using status_options = git_status_options;
+  using status_entry = git_status_entry;
 
   using repo_ptr      = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
   using index_ptr     = std::unique_ptr<git_index, decltype(::git_index_free) *>;
@@ -78,6 +79,7 @@ namespace linter::git {
   using oid_raw_ptr          = git_oid *;
   using signature_raw_ptr    = git_signature *;
   using status_list_raw_ptr  = git_status_list*;
+  using status_entry_raw_ptr = git_status_entry*;
 
   using repo_raw_cptr         = const git_repository *;
   using config_raw_cptr       = const git_config *;
@@ -96,6 +98,9 @@ namespace linter::git {
   using oid_raw_cptr          = const git_oid *;
   using signature_raw_cptr    = const git_signature *;
   using status_list_raw_cptr  = const git_status_list*;
+  using status_entry_raw_cptr = const  git_status_entry*;
+
+  using status_t = ::git_status_t;
 
   /// https://libgit2.org/libgit2/#HEAD/type/git_delta_t
   enum class delta_status_t : uint8_t {
@@ -389,6 +394,9 @@ namespace linter::git {
     /// set, the default index for the repository will be returned (the one located
     /// in .git/index).
     auto index(repo_raw_ptr repo) -> index_ptr;
+
+    /// Retrieve and resolve the reference pointed at by HEAD.
+    auto head(repo_raw_ptr repo) -> ref_ptr;
   } // namespace repo
 
   namespace config {
@@ -483,6 +491,8 @@ namespace linter::git {
     /// Lookup a branch by its name in a repository.
     auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type) -> ref_ptr;
 
+    /// Get the current branch name indicated by HEAD reference.
+    auto current_name(repo_raw_ptr repo) -> std::string;
   } // namespace branch
 
   namespace commit {
@@ -694,6 +704,16 @@ namespace linter::git {
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name_to_id
     auto name_to_oid(repo_raw_ptr repo, const std::string &name) -> git_oid;
 
+    /// Get the reference's short name. This will transform the reference name
+    /// into a name "human-readable" version. If no shortname is appropriate, it
+    /// will return the full name.
+    auto shorthand(reference_raw_cptr ref) -> std::string;
+
+    /// Resolve a symbolic reference to a direct reference.
+    /// If a direct reference is passed as an argument, a copy of that
+    /// reference is returned.
+    auto resolve(reference_raw_cptr symbolic_ref) -> ref_ptr;
+
   } // namespace ref
 
   namespace revparse {
@@ -772,7 +792,7 @@ namespace linter::git {
     /// tree. This is the OID that can be used e.g. to create a commit. The index
     /// instance cannot be bare, and needs to be associated to an existing
     /// repository. The index must not contain any file in conflict.
-    auto write_tree(index_raw_ptr index) -> git_oid;
+    [[nodiscard]] auto write_tree(index_raw_ptr index) -> git_oid;
 
     /// Add or update an index entry from a file on disk
     /// The file path must be relative to the repository's working folder and
@@ -804,6 +824,13 @@ namespace linter::git {
     /// in status (at least according the options given when the status list was
     /// created), this can return 0.
     auto entry_count(status_list_raw_ptr status_list) -> std::size_t;
+
+    /// Get the default options.
+    auto default_options() -> status_options;
+
+    /// Get a pointer to one of the entries in the status list.
+    /// No need to free this pointer
+    auto get_by_index(status_list_raw_ptr status_list, std::size_t idx) -> status_entry_raw_cptr;
 
   } // namespace status
 } // namespace linter::git
