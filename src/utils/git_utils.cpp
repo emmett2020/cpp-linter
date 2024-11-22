@@ -756,5 +756,14 @@ namespace linter::git {
 
   } // namespace tree
 
+  namespace status {
+    auto gather(repo_raw_ptr repo, const status_options& options) -> status_list_ptr {
+      auto *list = status_list_raw_ptr{nullptr} ;
+      auto ret   = ::git_status_list_new(&list, repo, &options);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+      return {list, ::git_status_list_free};
+    }
+
+  } // namespace status
 
 } // namespace linter::git
