@@ -8,7 +8,6 @@
 #include <catch2/catch_all.hpp>
 #include <spdlog/spdlog.h>
 
-#include "catch2/catch_test_macros.hpp"
 #include "utils/git_utils.h"
 
 using namespace linter;
@@ -17,7 +16,7 @@ using namespace std::string_view_literals;
 
 const auto temp_dir       = std::filesystem::temp_directory_path();
 const auto temp_repo_dir  = temp_dir / "test_git";
-const auto default_branch = "master"sv;
+const auto default_branch = "master"s;
 
 namespace {
   auto RefreshRepoDir() {
@@ -29,7 +28,9 @@ namespace {
   }
 
   auto RemoveRepoDir() {
-    std::filesystem::remove_all(temp_repo_dir);
+    if (std::filesystem::exists(temp_repo_dir)) {
+      std::filesystem::remove_all(temp_repo_dir);
+    }
   }
 
   auto CreateTempFile(const std::string& file_name, const std::string& content) {
@@ -142,7 +143,7 @@ TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][s
   RemoveRepoDir();
 }
 
-TEST_CASE("Commit two new added files by utility", "[git2][index][utility]") {
+TEST_CASE("Add three files to index by utility", "[git2][index][utility]") {
   RefreshRepoDir();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   CreateTempFilesWithSameContent(files, "hello world");
@@ -160,49 +161,19 @@ TEST_CASE("Commit two new added files by utility", "[git2][index][utility]") {
   RemoveRepoDir();
 }
 
-// TEST_CASE("basics", "[git2][index]") {
-//   RefreshRepoDir();
-//   auto repo = git::repo::init(temp_repo_dir, false);
-//   REQUIRE(git::repo::is_empty(repo.get()));
-//   auto config = git::repo::config(repo.get());
-//   git::config::set_string(config.get(), "user.name", "cpp-linter");
-//   git::config::set_string(config.get(), "user.email",
-//   "cpp-linter@email.com"); auto index      = git::repo::index(repo.get());
-//   auto tree_oid   = git::index::write_tree(index.get());
-//   auto tree_obj   = git::tree::lookup(repo.get(), &tree_oid);
-//   auto sig        = git::sig::create_default(repo.get());
-//   auto commit_oid = git::commit::create(
-//     repo.get(),
-//     "HEAD",
-//     sig.get(),
-//     sig.get(),
-//     "Initial commit",
-//     tree_obj.get(),
-//     0,
-//     {});
-//   auto commit_id = git::commit::lookup(repo.get(), &commit_oid);
-//   auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(),
-//   true); auto revsion = git::revparse::single(repo.get(), "test");
-//   RemoveRepoDir();
-// }
+TEST_CASE("basics", "[git2][revparse]") {
+  RefreshRepoDir();
+  const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
+  CreateTempFilesWithSameContent(files, "hello world");
+  auto repo                    = InitBasicRepo();
+  auto [index_oid, index_tree] = git::index::add_to_staging(repo.get(), files);
+  auto [commit_oid, _]         = git::commit::create_head(repo.get(), "Init", index_tree.get());
 
-// TEST_CASE("basics", "[git2][revparse]") {
-//   auto repo = git::repo::open(temp_repo_dir);
-//   SECTION("single") {
-//     auto *ret = git::revparse::single(repo.get(), "master");
-//   }
-//   // git::branch::create(repo.get(), "main", );
-// }
-
-// TEST_CASE("basics", "[git2][branch]") {
-//   auto repo = git::repo::open(temp_repo_dir);
-//   SECTION("lookup") {
-//     // Empty repository still has a master branch.
-//     auto *branch = git::branch::lookup(repo.get(), "master",
-//     git::branch_t::local);
-//   }
-//   // git::branch::create(repo.get(), "main", );
-// }
+  SECTION("parse head to get commit") {
+    auto ret = git::revparse::single(repo.get(), default_branch);
+    REQUIRE_FALSE(git::object::id_str(ret.get()).empty());
+  }
+}
 
 int main(int argc, char* argv[]) {
   git::setup();

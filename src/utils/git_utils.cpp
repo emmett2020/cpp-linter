@@ -375,6 +375,14 @@ namespace linter::git {
       return id;
     }
 
+    auto create_head(repo_raw_ptr repo, const std::string &message, tree_raw_cptr index_tree)
+      -> std::tuple<git_oid, commit_ptr> {
+      auto sig    = git::sig::create_default(repo);
+      auto oid    = create(repo, "HEAD", sig.get(), sig.get(), message, index_tree, 0, {});
+      auto commit = git::commit::lookup(repo, &oid);
+      return {oid, std::move(commit)};
+    }
+
     auto tree(commit_raw_cptr commit) -> tree_raw_ptr {
       auto *ptr = tree_raw_ptr{nullptr};
       auto ret  = ::git_commit_tree(&ptr, commit);
@@ -733,6 +741,10 @@ namespace linter::git {
       return ret;
     }
 
+    auto id_str(object_raw_cptr obj) -> std::string {
+      return oid::to_str(id(obj));
+    }
+
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr {
       auto *obj = object_raw_ptr{nullptr};
       auto ret  = ::git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
@@ -774,12 +786,15 @@ namespace linter::git {
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
 
-    void add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files) {
+    auto add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files)
+      -> std::tuple<git_oid, tree_ptr> {
       auto index = repo::index(repo);
       for (const auto &file: files) {
         git::index::add_by_path(index.get(), file);
       }
-      index::write(index.get());
+      auto oid = index::write_tree(index.get());
+      auto obj = tree::lookup(repo, &oid);
+      return {oid, std::move(obj)};
     }
   } // namespace index
 

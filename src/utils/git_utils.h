@@ -502,7 +502,6 @@ namespace linter::git {
     /// TODO:
     auto create_with_signature(repo_raw_ptr repo, const std::string &commit_content) -> git_oid;
 
-
     /// Create new commit in the repository from a list of git_object pointers.
     /// @param repo Repository where to store the commit
     /// @param update_ref If not NULL, name of the reference that will be
@@ -531,6 +530,10 @@ namespace linter::git {
       tree_raw_cptr tree,
       std::size_t parent_count,
       std::span<commit_raw_cptr> parents) -> git_oid;
+
+    /// Create a new commit and set it to HEAD with default signature.
+    auto create_head(repo_raw_ptr repo, const std::string &message, tree_raw_cptr index_tree)
+      -> std::tuple<git_oid, commit_ptr>;
 
     /// @brief Get the tree pointed to by a commit.
     /// https://libgit2.org/libgit2/#HEAD/group/commit/git_commit_tree
@@ -740,6 +743,9 @@ namespace linter::git {
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_id
     auto id(object_raw_cptr obj) -> oid_raw_cptr;
 
+    /// Get the id (SHA1) string of given repository object.
+    auto id_str(object_raw_cptr obj) -> std::string;
+
     /// @brief Lookup a reference to one of the objects in a repository.
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/object/git_object_lookup
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr;
@@ -803,7 +809,8 @@ namespace linter::git {
 
     /// A utility to forcely and fastly add all files to staging area.
     /// This function will automatically call write tree to enable this changes.
-    void add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files);
+    auto add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files)
+      -> std::tuple<git_oid, tree_ptr>;
 
   } // namespace index
 
