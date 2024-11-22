@@ -773,6 +773,14 @@ namespace linter::git {
       auto ret = ::git_index_add_bypath(index, path.c_str());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
+
+    void add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files) {
+      auto index = repo::index(repo);
+      for (const auto &file: files) {
+        git::index::add_by_path(index.get(), file);
+      }
+      index::write(index.get());
+    }
   } // namespace index
 
   namespace tree {

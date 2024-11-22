@@ -801,8 +801,9 @@ namespace linter::git {
     /// If this file currently is the result of a merge conflict, this file will no longer be marked as conflicting. The data about the conflict will be moved to the "resolve undo" (REUC) section
     void add_by_path(index_raw_ptr index, const std::string &path);
 
-    ///
-    void add(const std::string &path);
+    /// A utility to forcely and fastly add all files to staging area.
+    /// This function will automatically call write tree to enable this changes.
+    void add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files);
 
   } // namespace index
 
@@ -831,7 +832,6 @@ namespace linter::git {
     /// Get a pointer to one of the entries in the status list.
     /// No need to free this pointer
     auto get_by_index(status_list_raw_ptr status_list, std::size_t idx) -> status_entry_raw_cptr;
-
   } // namespace status
 } // namespace linter::git
 
