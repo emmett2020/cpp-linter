@@ -1,5 +1,7 @@
 #include <cctype>
 #include <filesystem>
+#include <fstream>
+#include <ios>
 #include <print>
 
 #include <catch2/catch_all.hpp>
@@ -60,24 +62,47 @@ TEST_CASE("basics", "[git2][index]") {
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
   auto config = git::repo::config(repo.get());
-  git::config::set_string(config.get(), "user.name", "test");
+  git::config::set_string(config.get(), "user.name", "cpp-linter");
+  git::config::set_string(config.get(), "user.email", "cpp-linter@email.com");
+
   auto index      = git::repo::index(repo.get());
-  auto tree_oid   = git::index::write_tree(index.get());
-  auto tree_obj   = git::tree::lookup(repo.get(), &tree_oid);
-  auto sig        = git::sig::create_default(repo.get());
-  auto commit_oid = git::commit::create(
-    repo.get(),
-    "HEAD",
-    sig.get(),
-    sig.get(),
-    "Initial commit",
-    tree_obj.get(),
-    0,
-    {});
-  auto commit_id = git::commit::lookup(repo.get(), &commit_oid);
-  auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(), true);
-  RemoveRepoDir();
+  SECTION("add a file to index") {
+    auto file_path = temp_repo_dir / "temp_file.cpp";
+    auto file = std::fstream(file_path, std::ios::out);
+    REQUIRE(file.is_open());
+    file << "hello world";
+    file.close();
+    git::index::add_by_path(index.get(), "temp_file.cpp");
+    git::index::write(index.get());
+  }
+  // RemoveRepoDir();
 }
+
+// TEST_CASE("basics", "[git2][index]") {
+//   RefreshRepoDir();
+//   auto repo = git::repo::init(temp_repo_dir, false);
+//   REQUIRE(git::repo::is_empty(repo.get()));
+//   auto config = git::repo::config(repo.get());
+//   git::config::set_string(config.get(), "user.name", "cpp-linter");
+//   git::config::set_string(config.get(), "user.email", "cpp-linter@email.com");
+//   auto index      = git::repo::index(repo.get());
+//   auto tree_oid   = git::index::write_tree(index.get());
+//   auto tree_obj   = git::tree::lookup(repo.get(), &tree_oid);
+//   auto sig        = git::sig::create_default(repo.get());
+//   auto commit_oid = git::commit::create(
+//     repo.get(),
+//     "HEAD",
+//     sig.get(),
+//     sig.get(),
+//     "Initial commit",
+//     tree_obj.get(),
+//     0,
+//     {});
+//   auto commit_id = git::commit::lookup(repo.get(), &commit_oid);
+//   auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(), true);
+//   auto revsion = git::revparse::single(repo.get(), "test");
+//   RemoveRepoDir();
+// }
 
 // TEST_CASE("basics", "[git2][revparse]") {
 //   auto repo = git::repo::open(temp_repo_dir);

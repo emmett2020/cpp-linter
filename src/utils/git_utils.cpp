@@ -651,18 +651,18 @@ namespace linter::git {
   } // namespace ref
 
   namespace revparse {
-    auto single(repo_raw_ptr repo, const std::string &spec) -> object_raw_ptr {
+    auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr {
       auto *obj = object_raw_ptr{nullptr};
       auto ret  = ::git_revparse_single(&obj, repo, spec.c_str());
       throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
-      return obj;
+      return {obj, ::git_object_free};
     }
 
     auto complete_sha(repo_raw_ptr repo, const std::string &short_sha) -> std::string {
-      auto *obj = single(repo, short_sha);
-      auto type = object::type(obj);
+      auto obj = single(repo, short_sha);
+      auto type = object::type(obj.get());
       throw_unless(type == object_t::commit, "the given sha is not commit");
-      return oid::to_str(object::id(obj));
+      return oid::to_str(object::id(obj.get()));
     }
 
   }; // namespace revparse
@@ -707,12 +707,21 @@ namespace linter::git {
   } // namespace sig
 
   namespace index {
+    void write(index_raw_ptr index) {
+      auto ret = ::git_index_write(index);
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
+    }
 
     auto write_tree(index_raw_ptr index) -> git_oid {
       auto oid = git_oid{};
       auto ret = ::git_index_write_tree(&oid, index);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return oid;
+    }
+
+    void add_by_path(index_raw_ptr index, const std::string& path) {
+      auto ret = ::git_index_add_bypath(index, path.c_str());
+      throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
   } // namespace index
 

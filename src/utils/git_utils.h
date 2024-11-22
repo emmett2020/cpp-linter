@@ -45,7 +45,7 @@ namespace linter::git {
   /// https://libgit2.org/libgit2/#HEAD/group/callback/git_diff_binary_cb
   using diff_binary_cb = git_diff_binary_cb;
 
-  /// https://libgit2.org/libgit2/#v1.8.3/type/git_index_entry
+  /// In-memory representation of a file entry in the index.
   using index_entry = git_index_entry;
 
   using repo_ptr      = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
@@ -55,6 +55,7 @@ namespace linter::git {
   using tree_ptr      = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
   using ref_ptr       = std::unique_ptr<git_reference, decltype(::git_reference_free) *>;
   using commit_ptr    = std::unique_ptr<git_commit, decltype(::git_commit_free) *>;
+  using object_ptr    = std::unique_ptr<git_object, decltype(::git_object_free) *>;
 
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
@@ -661,7 +662,7 @@ namespace linter::git {
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/revparse/git_revparse_single
     /// https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions
-    auto single(repo_raw_ptr repo, const std::string &spec) -> object_raw_ptr;
+    auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr;
 
     /// @brief Find a complete sha based on given short sha
     auto complete_sha(repo_raw_ptr repo, const std::string &short_sha) -> std::string;
@@ -723,7 +724,7 @@ namespace linter::git {
 
   namespace index {
     ///  Write an existing index object from memory back to disk using an atomic file lock.
-    auto write();
+    void write(index_raw_ptr index);
 
     /// Write the index as a tree.
     /// This method will scan the index and write a representation of its
@@ -734,6 +735,14 @@ namespace linter::git {
     /// repository. The index must not contain any file in conflict.
     auto write_tree(index_raw_ptr index) -> git_oid;
 
+    /// Add or update an index entry from a file on disk
+    /// The file path must be relative to the repository's working folder and
+    /// must be readable.
+    /// This method will fail in bare index instances.
+    /// This forces the file to be added to the index, not looking at gitignore rules. Those rules can be evaluated through the git_status APIs (in status.h) before calling this.
+    /// If this file currently is the result of a merge conflict, this file will no longer be marked as conflicting. The data about the conflict will be moved to the "resolve undo" (REUC) section
+    void add_by_path(index_raw_ptr index, const std::string& path);
+
 
   } // namespace index
 
@@ -742,5 +751,5 @@ namespace linter::git {
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> tree_ptr;
 
   } // namespace tree
-
 } // namespace linter::git
+
