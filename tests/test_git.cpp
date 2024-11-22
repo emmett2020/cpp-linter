@@ -2,6 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <ios>
+#include <iostream>
 #include <print>
 
 #include <catch2/catch_all.hpp>
@@ -65,6 +66,7 @@ TEST_CASE("basics", "[git2][index]") {
 
   auto index = git::repo::index(repo.get());
   auto state = git::repo::state(repo.get());
+  std::cout << git::repo_state_str(state);
   SECTION("add a file to index") {
     auto file_path = temp_repo_dir / "temp_file.cpp";
     auto file = std::fstream(file_path, std::ios::out);
@@ -73,6 +75,7 @@ TEST_CASE("basics", "[git2][index]") {
     file.close();
     git::index::add_by_path(index.get(), "temp_file.cpp");
     git::index::write(index.get());
+    std::cout << git::repo_state_str(state);
   }
   // RemoveRepoDir();
 }

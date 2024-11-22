@@ -296,7 +296,7 @@ namespace linter::git {
     return GIT_OBJ_ANY;
   }
 
-  constexpr auto convert_to_repo_state(git_repository_state_t state) -> repo_state_t {
+  constexpr auto convert_to_repo_state(int state) -> repo_state_t {
     switch (state) {
       case GIT_REPOSITORY_STATE_NONE: return repo_state_t::none;
       case GIT_REPOSITORY_STATE_MERGE: return repo_state_t::merge;
@@ -356,7 +356,7 @@ namespace linter::git {
 
     /// @brief Determines the status of a git repository - ie, whether an operation
     /// (merge, cherry-pick, etc) is in progress.
-    auto state(repo_raw_ptr repo) -> int;
+    auto state(repo_raw_ptr repo) -> repo_state_t;
 
     /// @brief Get the path of this repository. This is the path of the .git folder
     /// for normal repositories, or of the repository itself for bare repositories.

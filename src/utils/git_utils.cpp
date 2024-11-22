@@ -176,8 +176,8 @@ namespace linter::git {
       ::git_repository_free(repo);
     }
 
-    auto state(repo_raw_ptr repo) -> int {
-      return ::git_repository_state(repo);
+    auto state(repo_raw_ptr repo) -> repo_state_t {
+      return convert_to_repo_state(::git_repository_state(repo));
     }
 
     auto path(repo_raw_ptr repo) -> std::string {
