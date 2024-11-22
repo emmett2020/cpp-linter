@@ -132,6 +132,26 @@ namespace linter::git {
     return "unknown";
   }
 
+
+  auto repo_state_str(repo_state_t state) -> std::string {
+    switch (state) {
+      case repo_state_t::none: return "none";
+      case repo_state_t::merge: return "merge";
+      case repo_state_t::revert: return "revert";
+      case repo_state_t::revert_sequence: return "revert_sequence";
+      case repo_state_t::cherrypick: return "cherrypick";
+      case repo_state_t::cherrypick_sequence: return "cherrypick_sequence";
+      case repo_state_t::bisect: return "bisect";
+      case repo_state_t::rebase: return "rebase";
+      case repo_state_t::rebase_interactive: return "rebase_interactive";
+      case repo_state_t::rebase_merge: return "rebase_merge";
+      case repo_state_t::apply_mailbox: return "apply_mailbox";
+      case repo_state_t::apply_mailbox_or_rebase: return "apply_mailbox_or_rebase";
+      }
+      return "unknown";
+  }
+
+
   auto convert_to_signature(signature_raw_cptr sig_ptr) -> signature {
     auto sig  = signature{};
     sig.name  = sig_ptr->name;

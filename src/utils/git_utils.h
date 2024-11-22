@@ -4,6 +4,7 @@
 #include <cstring>
 #include <git2/repository.h>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <git2.h>
@@ -161,6 +162,21 @@ namespace linter::git {
     tag,
   };
 
+  enum class repo_state_t {
+    none,
+    merge,
+    revert,
+    revert_sequence,
+    cherrypick,
+    cherrypick_sequence,
+    bisect,
+    rebase,
+    rebase_interactive,
+    rebase_merge,
+    apply_mailbox,
+    apply_mailbox_or_rebase
+  };
+
   struct diff_line_detail {
     diff_line_t origin;
     std::int64_t old_lineno;
@@ -280,6 +296,24 @@ namespace linter::git {
     return GIT_OBJ_ANY;
   }
 
+  constexpr auto convert_to_repo_state(git_repository_state_t state) -> repo_state_t {
+    switch (state) {
+      case GIT_REPOSITORY_STATE_NONE: return repo_state_t::none;
+      case GIT_REPOSITORY_STATE_MERGE: return repo_state_t::merge;
+      case GIT_REPOSITORY_STATE_REVERT: return repo_state_t::revert;
+      case GIT_REPOSITORY_STATE_REVERT_SEQUENCE: return repo_state_t::revert_sequence;
+      case GIT_REPOSITORY_STATE_CHERRYPICK: return repo_state_t::cherrypick;
+      case GIT_REPOSITORY_STATE_CHERRYPICK_SEQUENCE: return repo_state_t::cherrypick_sequence;
+      case GIT_REPOSITORY_STATE_BISECT: return repo_state_t::bisect;
+      case GIT_REPOSITORY_STATE_REBASE: return repo_state_t::rebase;
+      case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE: return repo_state_t::rebase_interactive;
+      case GIT_REPOSITORY_STATE_REBASE_MERGE: return repo_state_t::rebase_merge;
+      case GIT_REPOSITORY_STATE_APPLY_MAILBOX: return repo_state_t::apply_mailbox;
+      case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE: return repo_state_t::apply_mailbox_or_rebase;
+    }
+    std::unreachable();
+  }
+
   auto convert_to_signature(signature_raw_cptr sig) -> signature;
 
   auto is_same_file(const diff_file_detail &file1, const diff_file_detail &file2) -> bool;
@@ -290,6 +324,8 @@ namespace linter::git {
   auto ref_t_str(ref_t tp) -> std::string;
   auto branch_t_str(branch_t tp) -> std::string;
   auto object_t_str(object_t tp) -> std::string;
+  auto repo_state_str(repo_state_t state) -> std::string;
+
 
   /// @brief Init the global state.
   /// @link https://libgit2.org/libgit2/#HEAD/group/libgit2/git_libgit2_init
@@ -320,8 +356,6 @@ namespace linter::git {
 
     /// @brief Determines the status of a git repository - ie, whether an operation
     /// (merge, cherry-pick, etc) is in progress.
-    /// @link
-    /// https://libgit2.org/libgit2/#HEAD/group/repository/git_repository_state
     auto state(repo_raw_ptr repo) -> int;
 
     /// @brief Get the path of this repository. This is the path of the .git folder

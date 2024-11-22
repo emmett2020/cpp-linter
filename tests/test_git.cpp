@@ -13,21 +13,19 @@
 using namespace linter;
 using namespace std::string_literals;
 
-const auto temp_dir      = std::filesystem::temp_directory_path();
+const auto temp_dir = std::filesystem::temp_directory_path();
 const auto temp_repo_dir = temp_dir / "test_git";
 
 namespace {
-  auto RefreshRepoDir() {
-    if (std::filesystem::exists(temp_repo_dir)) {
-      std::print("remove old repo directory");
-      std::filesystem::remove_all(temp_repo_dir);
-    }
-    std::filesystem::create_directory(temp_repo_dir);
-  }
-
-  auto RemoveRepoDir() {
+auto RefreshRepoDir() {
+  if (std::filesystem::exists(temp_repo_dir)) {
+    std::print("remove old repo directory");
     std::filesystem::remove_all(temp_repo_dir);
   }
+  std::filesystem::create_directory(temp_repo_dir);
+}
+
+auto RemoveRepoDir() { std::filesystem::remove_all(temp_repo_dir); }
 } // namespace
 
 TEST_CASE("basics", "[git2][repo]") {
@@ -41,7 +39,7 @@ TEST_CASE("basics", "[git2][repo]") {
 
 TEST_CASE("basics", "[git2][config]") {
   RefreshRepoDir();
-  auto repo   = git::repo::init(temp_repo_dir, false);
+  auto repo = git::repo::init(temp_repo_dir, false);
   auto origin = git::repo::config(repo.get());
   SECTION("set_string") {
     git::config::set_string(origin.get(), "user.name", "test");
@@ -65,7 +63,8 @@ TEST_CASE("basics", "[git2][index]") {
   git::config::set_string(config.get(), "user.name", "cpp-linter");
   git::config::set_string(config.get(), "user.email", "cpp-linter@email.com");
 
-  auto index      = git::repo::index(repo.get());
+  auto index = git::repo::index(repo.get());
+  auto state = git::repo::state(repo.get());
   SECTION("add a file to index") {
     auto file_path = temp_repo_dir / "temp_file.cpp";
     auto file = std::fstream(file_path, std::ios::out);
@@ -84,8 +83,8 @@ TEST_CASE("basics", "[git2][index]") {
 //   REQUIRE(git::repo::is_empty(repo.get()));
 //   auto config = git::repo::config(repo.get());
 //   git::config::set_string(config.get(), "user.name", "cpp-linter");
-//   git::config::set_string(config.get(), "user.email", "cpp-linter@email.com");
-//   auto index      = git::repo::index(repo.get());
+//   git::config::set_string(config.get(), "user.email",
+//   "cpp-linter@email.com"); auto index      = git::repo::index(repo.get());
 //   auto tree_oid   = git::index::write_tree(index.get());
 //   auto tree_obj   = git::tree::lookup(repo.get(), &tree_oid);
 //   auto sig        = git::sig::create_default(repo.get());
@@ -99,8 +98,8 @@ TEST_CASE("basics", "[git2][index]") {
 //     0,
 //     {});
 //   auto commit_id = git::commit::lookup(repo.get(), &commit_oid);
-//   auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(), true);
-//   auto revsion = git::revparse::single(repo.get(), "test");
+//   auto ref_id    = git::branch::create(repo.get(), "test", commit_id.get(),
+//   true); auto revsion = git::revparse::single(repo.get(), "test");
 //   RemoveRepoDir();
 // }
 
@@ -116,7 +115,8 @@ TEST_CASE("basics", "[git2][index]") {
 //   auto repo = git::repo::open(temp_repo_dir);
 //   SECTION("lookup") {
 //     // Empty repository still has a master branch.
-//     auto *branch = git::branch::lookup(repo.get(), "master", git::branch_t::local);
+//     auto *branch = git::branch::lookup(repo.get(), "master",
+//     git::branch_t::local);
 //   }
 //   // git::branch::create(repo.get(), "main", );
 // }
