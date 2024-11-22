@@ -149,12 +149,12 @@ TEST_CASE("Add three files to index by utility", "[git2][index][utility]") {
   CreateTempFilesWithSameContent(files, "hello world");
   auto repo = InitBasicRepo();
 
-  git::index::add_to_staging(repo.get(), files);
+  git::index::add_files(repo.get(), files);
   auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 2);
   CreateTempFile("file3.cpp", "hello world");
-  git::index::add_to_staging(repo.get(), {"file3.cpp"});
+  git::index::add_files(repo.get(), {"file3.cpp"});
 
   status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 3);
@@ -166,7 +166,7 @@ TEST_CASE("basics", "[git2][revparse]") {
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   CreateTempFilesWithSameContent(files, "hello world");
   auto repo                    = InitBasicRepo();
-  auto [index_oid, index_tree] = git::index::add_to_staging(repo.get(), files);
+  auto [index_oid, index_tree] = git::index::add_files(repo.get(), files);
   auto [commit_oid, _]         = git::commit::create_head(repo.get(), "Init", index_tree.get());
 
   SECTION("parse head to get commit") {

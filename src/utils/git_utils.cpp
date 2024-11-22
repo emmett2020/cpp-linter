@@ -220,7 +220,7 @@ namespace linter::git {
     }
 
     auto head(repo_raw_ptr repo) -> ref_ptr {
-      auto *ref = reference_raw_ptr{nullptr};
+      auto *ref = ref_raw_ptr{nullptr};
       auto ret  = ::git_repository_head(&ref, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {ref, ::git_reference_free};
@@ -294,26 +294,26 @@ namespace linter::git {
                 const std::string &branch_name,
                 commit_raw_cptr target,
                 bool force) -> ref_ptr {
-      auto *ptr = reference_raw_ptr{nullptr};
+      auto *ptr = ref_raw_ptr{nullptr};
       auto ret =
         ::git_branch_create(&ptr, repo, branch_name.c_str(), target, static_cast<int>(force));
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {ptr, ::git_reference_free};
     }
 
-    void del(reference_raw_ptr branch) {
+    void del(ref_raw_ptr branch) {
       auto ret = ::git_branch_delete(branch);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
 
-    auto name(reference_raw_ptr ref) -> std::string_view {
+    auto name(ref_raw_ptr ref) -> std::string_view {
       const char *name = nullptr;
       auto ret         = ::git_branch_name(&name, ref);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return name;
     }
 
-    bool is_head(reference_raw_cptr branch) {
+    bool is_head(ref_raw_cptr branch) {
       auto ret = ::git_branch_is_head(branch);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return ret == 1;
@@ -329,7 +329,7 @@ namespace linter::git {
         return GIT_BRANCH_ALL;
       };
 
-      auto *res = reference_raw_ptr{nullptr};
+      auto *res = ref_raw_ptr{nullptr};
       auto ret  = ::git_branch_lookup(&res, repo, name.c_str(), convert_to());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {res, ::git_reference_free};
@@ -646,7 +646,7 @@ namespace linter::git {
   } // namespace oid
 
   namespace ref {
-    auto type(reference_raw_cptr ref) -> ref_t {
+    auto type(ref_raw_cptr ref) -> ref_t {
       auto ret = ::git_reference_type(ref);
       switch (ret) {
       case git_ref_t::GIT_REFERENCE_INVALID : return ref_t::invalid;
@@ -657,30 +657,30 @@ namespace linter::git {
       return ref_t::invalid;
     }
 
-    auto is_branch(reference_raw_ptr ref) -> bool {
+    auto is_branch(ref_raw_ptr ref) -> bool {
       return ::git_reference_is_branch(ref) == 1;
     }
 
-    auto is_remote(reference_raw_ptr ref) -> bool {
+    auto is_remote(ref_raw_ptr ref) -> bool {
       return ::git_reference_is_remote(ref) == 1;
     }
 
-    auto is_tag(reference_raw_ptr ref) -> bool {
+    auto is_tag(ref_raw_ptr ref) -> bool {
       return ::git_reference_is_tag(ref) == 1;
     }
 
-    void free(reference_raw_ptr ref) {
+    void free(ref_raw_ptr ref) {
       ::git_reference_free(ref);
     }
 
-    auto name(reference_raw_cptr ref) -> std::string {
+    auto name(ref_raw_cptr ref) -> std::string {
       const auto *ret = ::git_reference_name(ref);
       throw_if(ret == nullptr, [] noexcept { return git_error_last()->message; });
       return ret;
     }
 
-    auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_raw_ptr {
-      auto *ref = reference_raw_ptr{nullptr};
+    auto lookup(repo_raw_ptr repo, const std::string &name) -> ref_raw_ptr {
+      auto *ref = ref_raw_ptr{nullptr};
       auto ret  = ::git_reference_lookup(&ref, repo, name.c_str());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return ref;
@@ -693,14 +693,14 @@ namespace linter::git {
       return oid;
     }
 
-    auto shorthand(reference_raw_cptr ref) -> std::string {
+    auto shorthand(ref_raw_cptr ref) -> std::string {
       const auto *ret = ::git_reference_shorthand(ref);
       throw_if(ret == nullptr, "get shorthand error since unexpcetd null pointer");
       return ret;
     }
 
-    auto resolve(reference_raw_cptr symbolic_ref) -> ref_ptr {
-      auto *ref = reference_raw_ptr{nullptr};
+    auto resolve(ref_raw_cptr symbolic_ref) -> ref_ptr {
+      auto *ref = ref_raw_ptr{nullptr};
       auto ret  = ::git_reference_resolve(&ref, symbolic_ref);
       throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
       return {ref, ::git_reference_free};
@@ -786,7 +786,7 @@ namespace linter::git {
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
 
-    auto add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files)
+    auto add_files(repo_raw_ptr repo, const std::vector<std::string> &files)
       -> std::tuple<git_oid, tree_ptr> {
       auto index = repo::index(repo);
       for (const auto &file: files) {

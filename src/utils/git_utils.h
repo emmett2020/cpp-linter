@@ -53,18 +53,21 @@ namespace linter::git {
   using status_entry   = git_status_entry;
 
   using repo_ptr        = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
-  using index_ptr       = std::unique_ptr<git_index, decltype(::git_index_free) *>;
-  using signature_ptr   = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
   using config_ptr      = std::unique_ptr<git_config, decltype(::git_config_free) *>;
-  using tree_ptr        = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
   using ref_ptr         = std::unique_ptr<git_reference, decltype(::git_reference_free) *>;
   using commit_ptr      = std::unique_ptr<git_commit, decltype(::git_commit_free) *>;
+  using diff_ptr        = std::unique_ptr<git_diff, decltype(::git_diff_free) *>;
+  using tree_ptr        = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
+  using index_ptr       = std::unique_ptr<git_index, decltype(::git_index_free) *>;
+  using blob_ptr        = std::unique_ptr<git_blob, decltype(::git_blob_free) *>;
+  using tag_ptr         = std::unique_ptr<git_tag, decltype(::git_tag_free) *>;
   using object_ptr      = std::unique_ptr<git_object, decltype(::git_object_free) *>;
+  using signature_ptr   = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
   using status_list_ptr = std::unique_ptr<git_status_list, decltype(::git_status_list_free) *>;
 
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
-  using reference_raw_ptr    = git_reference *;
+  using ref_raw_ptr          = git_reference *;
   using commit_raw_ptr       = git_commit *;
   using diff_raw_ptr         = git_diff *;
   using diff_options_raw_ptr = git_diff_options *;
@@ -83,7 +86,7 @@ namespace linter::git {
 
   using repo_raw_cptr         = const git_repository *;
   using config_raw_cptr       = const git_config *;
-  using reference_raw_cptr    = const git_reference *;
+  using ref_raw_cptr          = const git_reference *;
   using commit_raw_cptr       = const git_commit *;
   using diff_raw_cptr         = const git_diff *;
   using diff_options_raw_cptr = const git_diff_options *;
@@ -172,7 +175,7 @@ namespace linter::git {
     tag,
   };
 
-  enum class repo_state_t {
+  enum class repo_state_t : uint8_t {
     none,
     merge,
     revert,
@@ -320,6 +323,7 @@ namespace linter::git {
     case GIT_REPOSITORY_STATE_REBASE_MERGE           : return repo_state_t::rebase_merge;
     case GIT_REPOSITORY_STATE_APPLY_MAILBOX          : return repo_state_t::apply_mailbox;
     case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE: return repo_state_t::apply_mailbox_or_rebase;
+    default                                          : std::unreachable();
     }
     std::unreachable();
   }
@@ -476,16 +480,16 @@ namespace linter::git {
 
     /// @brief Delete an existing branch reference.
     /// https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_delete
-    void del(reference_raw_ptr branch);
+    void del(ref_raw_ptr branch);
 
     /// @brief Get the branch name
     /// @return Pointer to the abbreviated reference name. Owned by ref, do not
     /// free. https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_name
-    auto name(reference_raw_ptr ref) -> std::string_view;
+    auto name(ref_raw_ptr ref) -> std::string_view;
 
     /// @brief Determine if HEAD points to the given branch
     /// @link https://libgit2.org/libgit2/#HEAD/group/branch/git_branch_is_head
-    bool is_head(reference_raw_cptr branch);
+    bool is_head(ref_raw_cptr branch);
 
     /// Lookup a branch by its name in a repository.
     auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type) -> ref_ptr;
@@ -664,40 +668,40 @@ namespace linter::git {
     /// @brief Get the type of a reference.
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_type
-    auto type(reference_raw_cptr ref) -> ref_t;
+    auto type(ref_raw_cptr ref) -> ref_t;
 
     /// @brief Check if a reference is a local branch. That's to say, the
     /// reference lives in the refs/heads namespace.
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_branch
-    auto is_branch(reference_raw_ptr ref) -> bool;
+    auto is_branch(ref_raw_ptr ref) -> bool;
 
     /// @brief Check if a reference is a remote tracking branch
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_remote
-    auto is_remote(reference_raw_ptr ref) -> bool;
+    auto is_remote(ref_raw_ptr ref) -> bool;
 
     /// @brief Check if a reference is a tag
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_is_tag
-    auto is_tag(reference_raw_ptr ref) -> bool;
+    auto is_tag(ref_raw_ptr ref) -> bool;
 
     /// @brief Free the given reference.
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_free
-    void free(reference_raw_ptr ref);
+    void free(ref_raw_ptr ref);
 
     /// @brief Get the full name of a reference. E.g. refs/heads/main
     /// @link
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_name
-    auto name(reference_raw_cptr ref) -> std::string;
+    auto name(ref_raw_cptr ref) -> std::string;
 
     /// @brief: Lookup a reference by name in a repository.
     /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master,
     /// refs/tags/v0.1.0, ...)
     /// @link:
     /// https://libgit2.org/libgit2/#v0.20.0/group/reference/git_reference_lookup
-    auto lookup(repo_raw_ptr repo, const std::string &name) -> reference_raw_ptr;
+    auto lookup(repo_raw_ptr repo, const std::string &name) -> ref_raw_ptr;
 
     /// @brief: Lookup a reference by name and resolve immediately to OID.
     /// @param name: the long name for the reference (e.g. HEAD, refs/heads/master,
@@ -709,12 +713,12 @@ namespace linter::git {
     /// Get the reference's short name. This will transform the reference name
     /// into a name "human-readable" version. If no shortname is appropriate, it
     /// will return the full name.
-    auto shorthand(reference_raw_cptr ref) -> std::string;
+    auto shorthand(ref_raw_cptr ref) -> std::string;
 
     /// Resolve a symbolic reference to a direct reference.
     /// If a direct reference is passed as an argument, a copy of that
     /// reference is returned.
-    auto resolve(reference_raw_cptr symbolic_ref) -> ref_ptr;
+    auto resolve(ref_raw_cptr symbolic_ref) -> ref_ptr;
 
   } // namespace ref
 
@@ -809,7 +813,7 @@ namespace linter::git {
 
     /// A utility to forcely and fastly add all files to staging area.
     /// This function will automatically call write tree to enable this changes.
-    auto add_to_staging(repo_raw_ptr repo, const std::vector<std::string> &files)
+    auto add_files(repo_raw_ptr repo, const std::vector<std::string> &files)
       -> std::tuple<git_oid, tree_ptr>;
 
   } // namespace index
