@@ -48,18 +48,18 @@ namespace linter::git {
   using diff_binary_cb = git_diff_binary_cb;
 
   /// In-memory representation of a file entry in the index.
-  using index_entry = git_index_entry;
+  using index_entry    = git_index_entry;
   using status_options = git_status_options;
-  using status_entry = git_status_entry;
+  using status_entry   = git_status_entry;
 
-  using repo_ptr      = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
-  using index_ptr     = std::unique_ptr<git_index, decltype(::git_index_free) *>;
-  using signature_ptr = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
-  using config_ptr    = std::unique_ptr<git_config, decltype(::git_config_free) *>;
-  using tree_ptr      = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
-  using ref_ptr       = std::unique_ptr<git_reference, decltype(::git_reference_free) *>;
-  using commit_ptr    = std::unique_ptr<git_commit, decltype(::git_commit_free) *>;
-  using object_ptr    = std::unique_ptr<git_object, decltype(::git_object_free) *>;
+  using repo_ptr        = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
+  using index_ptr       = std::unique_ptr<git_index, decltype(::git_index_free) *>;
+  using signature_ptr   = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
+  using config_ptr      = std::unique_ptr<git_config, decltype(::git_config_free) *>;
+  using tree_ptr        = std::unique_ptr<git_tree, decltype(::git_tree_free) *>;
+  using ref_ptr         = std::unique_ptr<git_reference, decltype(::git_reference_free) *>;
+  using commit_ptr      = std::unique_ptr<git_commit, decltype(::git_commit_free) *>;
+  using object_ptr      = std::unique_ptr<git_object, decltype(::git_object_free) *>;
   using status_list_ptr = std::unique_ptr<git_status_list, decltype(::git_status_list_free) *>;
 
   using repo_raw_ptr         = git_repository *;
@@ -78,8 +78,8 @@ namespace linter::git {
   using object_raw_ptr       = git_object *;
   using oid_raw_ptr          = git_oid *;
   using signature_raw_ptr    = git_signature *;
-  using status_list_raw_ptr  = git_status_list*;
-  using status_entry_raw_ptr = git_status_entry*;
+  using status_list_raw_ptr  = git_status_list *;
+  using status_entry_raw_ptr = git_status_entry *;
 
   using repo_raw_cptr         = const git_repository *;
   using config_raw_cptr       = const git_config *;
@@ -97,8 +97,8 @@ namespace linter::git {
   using object_raw_cptr       = const git_object *;
   using oid_raw_cptr          = const git_oid *;
   using signature_raw_cptr    = const git_signature *;
-  using status_list_raw_cptr  = const git_status_list*;
-  using status_entry_raw_cptr = const  git_status_entry*;
+  using status_list_raw_cptr  = const git_status_list *;
+  using status_entry_raw_cptr = const git_status_entry *;
 
   using status_t = ::git_status_t;
 
@@ -308,18 +308,18 @@ namespace linter::git {
 
   constexpr auto convert_to_repo_state(int state) -> repo_state_t {
     switch (state) {
-      case GIT_REPOSITORY_STATE_NONE: return repo_state_t::none;
-      case GIT_REPOSITORY_STATE_MERGE: return repo_state_t::merge;
-      case GIT_REPOSITORY_STATE_REVERT: return repo_state_t::revert;
-      case GIT_REPOSITORY_STATE_REVERT_SEQUENCE: return repo_state_t::revert_sequence;
-      case GIT_REPOSITORY_STATE_CHERRYPICK: return repo_state_t::cherrypick;
-      case GIT_REPOSITORY_STATE_CHERRYPICK_SEQUENCE: return repo_state_t::cherrypick_sequence;
-      case GIT_REPOSITORY_STATE_BISECT: return repo_state_t::bisect;
-      case GIT_REPOSITORY_STATE_REBASE: return repo_state_t::rebase;
-      case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE: return repo_state_t::rebase_interactive;
-      case GIT_REPOSITORY_STATE_REBASE_MERGE: return repo_state_t::rebase_merge;
-      case GIT_REPOSITORY_STATE_APPLY_MAILBOX: return repo_state_t::apply_mailbox;
-      case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE: return repo_state_t::apply_mailbox_or_rebase;
+    case GIT_REPOSITORY_STATE_NONE                   : return repo_state_t::none;
+    case GIT_REPOSITORY_STATE_MERGE                  : return repo_state_t::merge;
+    case GIT_REPOSITORY_STATE_REVERT                 : return repo_state_t::revert;
+    case GIT_REPOSITORY_STATE_REVERT_SEQUENCE        : return repo_state_t::revert_sequence;
+    case GIT_REPOSITORY_STATE_CHERRYPICK             : return repo_state_t::cherrypick;
+    case GIT_REPOSITORY_STATE_CHERRYPICK_SEQUENCE    : return repo_state_t::cherrypick_sequence;
+    case GIT_REPOSITORY_STATE_BISECT                 : return repo_state_t::bisect;
+    case GIT_REPOSITORY_STATE_REBASE                 : return repo_state_t::rebase;
+    case GIT_REPOSITORY_STATE_REBASE_INTERACTIVE     : return repo_state_t::rebase_interactive;
+    case GIT_REPOSITORY_STATE_REBASE_MERGE           : return repo_state_t::rebase_merge;
+    case GIT_REPOSITORY_STATE_APPLY_MAILBOX          : return repo_state_t::apply_mailbox;
+    case GIT_REPOSITORY_STATE_APPLY_MAILBOX_OR_REBASE: return repo_state_t::apply_mailbox_or_rebase;
     }
     std::unreachable();
   }
@@ -429,7 +429,6 @@ namespace linter::git {
     /// level. A higher level means a higher priority. The first occurrence of the
     /// variable will be returned here.
     auto get_int64(config_raw_cptr config_ptr, const std::string &key) -> int64_t;
-
 
     /// Set the value of a string config variable in the config file with the
     /// highest level (usually the local one).
@@ -800,8 +799,10 @@ namespace linter::git {
     /// This method will fail in bare index instances.
     /// This forces the file to be added to the index, not looking at gitignore rules. Those rules can be evaluated through the git_status APIs (in status.h) before calling this.
     /// If this file currently is the result of a merge conflict, this file will no longer be marked as conflicting. The data about the conflict will be moved to the "resolve undo" (REUC) section
-    void add_by_path(index_raw_ptr index, const std::string& path);
+    void add_by_path(index_raw_ptr index, const std::string &path);
 
+    ///
+    void add(const std::string &path);
 
   } // namespace index
 
@@ -811,14 +812,13 @@ namespace linter::git {
 
   } // namespace tree
 
-
   namespace status {
     /// Gather file status information and populate the git_status_list.
     /// Note that if a pathspec is given in the git_status_options to filter
     /// the status, then the results from rename detection (if you enable it) may
     /// not be accurate. To do rename detection properly, this must be called with
     /// no pathspec so that all files can be considered.
-    auto gather(repo_raw_ptr repo, const status_options& options) -> status_list_ptr;
+    auto gather(repo_raw_ptr repo, const status_options &options) -> status_list_ptr;
 
     /// Gets the count of status entries in this list. If there are no changes
     /// in status (at least according the options given when the status list was

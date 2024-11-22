@@ -132,25 +132,23 @@ namespace linter::git {
     return "unknown";
   }
 
-
   auto repo_state_str(repo_state_t state) -> std::string {
     switch (state) {
-      case repo_state_t::none: return "none";
-      case repo_state_t::merge: return "merge";
-      case repo_state_t::revert: return "revert";
-      case repo_state_t::revert_sequence: return "revert_sequence";
-      case repo_state_t::cherrypick: return "cherrypick";
-      case repo_state_t::cherrypick_sequence: return "cherrypick_sequence";
-      case repo_state_t::bisect: return "bisect";
-      case repo_state_t::rebase: return "rebase";
-      case repo_state_t::rebase_interactive: return "rebase_interactive";
-      case repo_state_t::rebase_merge: return "rebase_merge";
-      case repo_state_t::apply_mailbox: return "apply_mailbox";
-      case repo_state_t::apply_mailbox_or_rebase: return "apply_mailbox_or_rebase";
-      }
-      return "unknown";
+    case repo_state_t::none                   : return "none";
+    case repo_state_t::merge                  : return "merge";
+    case repo_state_t::revert                 : return "revert";
+    case repo_state_t::revert_sequence        : return "revert_sequence";
+    case repo_state_t::cherrypick             : return "cherrypick";
+    case repo_state_t::cherrypick_sequence    : return "cherrypick_sequence";
+    case repo_state_t::bisect                 : return "bisect";
+    case repo_state_t::rebase                 : return "rebase";
+    case repo_state_t::rebase_interactive     : return "rebase_interactive";
+    case repo_state_t::rebase_merge           : return "rebase_merge";
+    case repo_state_t::apply_mailbox          : return "apply_mailbox";
+    case repo_state_t::apply_mailbox_or_rebase: return "apply_mailbox_or_rebase";
+    }
+    return "unknown";
   }
-
 
   auto convert_to_signature(signature_raw_cptr sig_ptr) -> signature {
     auto sig  = signature{};
@@ -223,7 +221,7 @@ namespace linter::git {
 
     auto head(repo_raw_ptr repo) -> ref_ptr {
       auto *ref = reference_raw_ptr{nullptr};
-      auto ret    = ::git_repository_head(&ref, repo);
+      auto ret  = ::git_repository_head(&ref, repo);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {ref, ::git_reference_free};
     }
@@ -695,7 +693,7 @@ namespace linter::git {
 
     auto resolve(reference_raw_cptr symbolic_ref) -> ref_ptr {
       auto *ref = reference_raw_ptr{nullptr};
-      auto ret = ::git_reference_resolve(&ref, symbolic_ref);
+      auto ret  = ::git_reference_resolve(&ref, symbolic_ref);
       throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
       return {ref, ::git_reference_free};
     }
@@ -711,7 +709,7 @@ namespace linter::git {
     }
 
     auto complete_sha(repo_raw_ptr repo, const std::string &short_sha) -> std::string {
-      auto obj = single(repo, short_sha);
+      auto obj  = single(repo, short_sha);
       auto type = object::type(obj.get());
       throw_unless(type == object_t::commit, "the given sha is not commit");
       return oid::to_str(object::id(obj.get()));
@@ -771,7 +769,7 @@ namespace linter::git {
       return oid;
     }
 
-    void add_by_path(index_raw_ptr index, const std::string& path) {
+    void add_by_path(index_raw_ptr index, const std::string &path) {
       auto ret = ::git_index_add_bypath(index, path.c_str());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
     }
@@ -789,28 +787,28 @@ namespace linter::git {
   } // namespace tree
 
   namespace status {
-    auto gather(repo_raw_ptr repo, const status_options& options) -> status_list_ptr {
-      auto *list = status_list_raw_ptr{nullptr} ;
+    auto gather(repo_raw_ptr repo, const status_options &options) -> status_list_ptr {
+      auto *list = status_list_raw_ptr{nullptr};
       auto ret   = ::git_status_list_new(&list, repo, &options);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return {list, ::git_status_list_free};
     }
 
     auto entry_count(status_list_raw_ptr status_list) -> std::size_t {
-      auto ret   = ::git_status_list_entrycount(status_list);
+      auto ret = ::git_status_list_entrycount(status_list);
       return ret;
     }
 
     auto default_options() -> status_options {
       auto options = status_options{};
-      auto ret   = ::git_status_options_init(&options, GIT_STATUS_OPTIONS_VERSION);
+      auto ret     = ::git_status_options_init(&options, GIT_STATUS_OPTIONS_VERSION);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return options;
     }
 
     auto get_by_index(status_list_raw_ptr status_list, std::size_t idx) -> status_entry_raw_cptr {
-      const auto *ret   = ::git_status_byindex(status_list, idx);
-      throw_if(ret == nullptr,"get status list error since the given idx is out of range");
+      const auto *ret = ::git_status_byindex(status_list, idx);
+      throw_if(ret == nullptr, "get status list error since the given idx is out of range");
       return ret;
     }
 

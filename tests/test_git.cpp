@@ -15,32 +15,33 @@ using namespace linter;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
-const auto temp_dir = std::filesystem::temp_directory_path();
-const auto temp_repo_dir = temp_dir / "test_git";
+const auto temp_dir       = std::filesystem::temp_directory_path();
+const auto temp_repo_dir  = temp_dir / "test_git";
 const auto default_branch = "master"sv;
 
 namespace {
-auto RefreshRepoDir() {
-  if (std::filesystem::exists(temp_repo_dir)) {
-    std::print("remove old repo directory");
+  auto RefreshRepoDir() {
+    if (std::filesystem::exists(temp_repo_dir)) {
+      std::print("remove old repo directory");
+      std::filesystem::remove_all(temp_repo_dir);
+    }
+    std::filesystem::create_directory(temp_repo_dir);
+  }
+
+  auto RemoveRepoDir() {
     std::filesystem::remove_all(temp_repo_dir);
   }
-  std::filesystem::create_directory(temp_repo_dir);
-}
 
-auto RemoveRepoDir() { std::filesystem::remove_all(temp_repo_dir); }
-
-auto CreateTempFile(const std::string& file_name,
-                    const std::string& content) {
-  auto new_file_path = temp_repo_dir / file_name;
-  if (std::filesystem::exists(new_file_path)) {
-    std::filesystem::remove(new_file_path);
+  auto CreateTempFile(const std::string& file_name, const std::string& content) {
+    auto new_file_path = temp_repo_dir / file_name;
+    if (std::filesystem::exists(new_file_path)) {
+      std::filesystem::remove(new_file_path);
+    }
+    auto file = std::fstream(new_file_path, std::ios::out);
+    REQUIRE(file.is_open());
+    file << content;
+    file.close();
   }
-  auto file = std::fstream(new_file_path, std::ios::out);
-  REQUIRE(file.is_open());
-  file << content;
-  file.close();
-}
 
 } // namespace
 
@@ -55,7 +56,7 @@ TEST_CASE("basics", "[git2][repo]") {
 
 TEST_CASE("basics", "[git2][config]") {
   RefreshRepoDir();
-  auto repo = git::repo::init(temp_repo_dir, false);
+  auto repo   = git::repo::init(temp_repo_dir, false);
   auto origin = git::repo::config(repo.get());
   SECTION("set_string") {
     git::config::set_string(origin.get(), "user.name", "test");
@@ -71,14 +72,13 @@ TEST_CASE("basics", "[git2][config]") {
   RemoveRepoDir();
 }
 
-
 TEST_CASE("compare with head", "[git2][status]") {
   RefreshRepoDir();
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
 
   // default is HEAD
-  auto options = git::status::default_options();
+  auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 0);
   RemoveRepoDir();
@@ -100,7 +100,7 @@ TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][s
   git::index::add_by_path(index.get(), "file2.cpp");
   auto index_tree_oid = git::index::write_tree(index.get());
 
-  auto options = git::status::default_options();
+  auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 2);
 
@@ -111,8 +111,8 @@ TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][s
 
   // we did't have any branches yet.
   auto index_tree_obj = git::tree::lookup(repo.get(), &index_tree_oid);
-  auto sig        = git::sig::create_default(repo.get());
-  auto commit_oid = git::commit::create(
+  auto sig            = git::sig::create_default(repo.get());
+  auto commit_oid     = git::commit::create(
     repo.get(),
     "HEAD",
     sig.get(),
@@ -169,7 +169,7 @@ TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][s
 //   // git::branch::create(repo.get(), "main", );
 // }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[]) {
   git::setup();
   int result = Catch::Session().run(argc, argv);
   git::shutdown();
