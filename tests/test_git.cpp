@@ -44,6 +44,14 @@ namespace {
     file.close();
   }
 
+  auto AppendToFile(const std::string& file_name, const std::string& content) {
+    auto new_file_path = temp_repo_dir / file_name;
+    auto file          = std::fstream(new_file_path, std::ios::app);
+    REQUIRE(file.is_open());
+    file << content;
+    file.close();
+  }
+
   auto CreateTempFilesWithSameContent(const std::vector<std::string>& file_names,
                                       const std::string& content) {
     for (const auto& file: file_names) {
@@ -173,6 +181,32 @@ TEST_CASE("basics", "[git2][revparse]") {
     auto ret = git::revparse::single(repo.get(), default_branch);
     REQUIRE_FALSE(git::object::id_str(ret.get()).empty());
   }
+}
+
+TEST_CASE("basics", "[git2][diff]") {
+  RefreshRepoDir();
+  const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
+  CreateTempFilesWithSameContent(files, "hello world");
+  auto repo                   = InitBasicRepo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+
+  AppendToFile("file1.cpp", "hello world2");
+  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
+  // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
+  auto sig         = git::sig::create_default(repo.get());
+  auto commit_oid2 = git::commit::create(
+    repo.get(),
+    "HEAD",
+    sig.get(),
+    sig.get(),
+    "Two",
+    index2.get(),
+    1,
+    {commit1.get()});
+
+  auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
+  REQUIRE(changed_files.size() == 1);
 }
 
 int main(int argc, char* argv[]) {

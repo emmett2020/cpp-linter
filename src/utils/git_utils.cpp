@@ -6,6 +6,7 @@
 #include <git2/config.h>
 #include <git2/oid.h>
 #include <git2/refs.h>
+#include <stdexcept>
 #include <string>
 
 #include <git2/branch.h>
@@ -473,11 +474,11 @@ namespace linter::git {
       repo_raw_ptr repo,
       tree_raw_ptr old_tree,
       tree_raw_ptr new_tree,
-      diff_options_raw_cptr opts) -> diff_raw_ptr {
+      diff_options_raw_cptr opts) -> diff_ptr {
       auto *ptr = diff_raw_ptr{nullptr};
       auto ret  = ::git_diff_tree_to_tree(&ptr, repo, old_tree, new_tree, opts);
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
-      return ptr;
+      return {ptr, ::git_diff_free};
     }
 
     void init_option(diff_options_raw_ptr opts) {
@@ -572,46 +573,46 @@ namespace linter::git {
       return deltas;
     }
 
-    // auto deltas(repo_raw_ptr repo, const std::string &ref1, const std::string &ref2)
-    //   -> std::vector<git::diff_delta_detail> {
-    //   auto oid1     = ref::name_to_oid(repo, ref1);
-    //   auto oid2     = ref::name_to_oid(repo, ref2);
-    //   auto *commit1 = commit::lookup(repo, &oid1);
-    //   auto *commit2 = commit::lookup(repo, &oid2);
-    //   auto *tree1   = commit::tree(commit1);
-    //   auto *tree2   = commit::tree(commit2);
-    //
-    //   auto *diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
-    //   commit::free(commit1);
-    //   commit::free(commit2);
-    //   object::free(reinterpret_cast<git::object_raw_ptr>(tree1));
-    //   object::free(reinterpret_cast<git::object_raw_ptr>(tree2));
-    //   auto ret = deltas(diff);
-    //   diff::free(diff);
-    //   return ret;
-    // }
-    //
-    // auto changed_files(repo_raw_ptr repo,
-    //                    const std::string &target_ref,
-    //                    const std::string &source_ref) -> std::vector<std::string> {
-    //   auto details = deltas(repo, target_ref, source_ref);
-    //   auto res     = std::vector<std::string>{};
-    //   for (const auto &delta: details) {
-    //     res.emplace_back(delta.new_file.relative_path);
-    //   }
-    //   return res;
-    // }
+    auto deltas(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
+      -> std::vector<git::diff_delta_detail> {
+      auto obj1  = revparse::single(repo, spec1);
+      auto obj2  = revparse::single(repo, spec2);
+      auto type1 = object::type(obj1.get());
+      auto type2 = object::type(obj2.get());
+      throw_if(type1 == object_t::bad || type1 == object_t::blob,
+               std::format("get deltas error since unknwon spec1: {}", spec1));
+      throw_if(type2 == object_t::bad || type2 == object_t::blob,
+               std::format("get deltas error since unknwon spec2: {}", spec2));
 
-    // auto changed_files(repo_ptr repo, const std::string &commit_id1, const
-    // std::string &commid_id2)
-    //   -> std::vector<std::string> {
-    //   auto details = deltas(repo, target_ref, source_ref);
-    //   auto res     = std::vector<std::string>{};
-    //   for (const auto &delta: details) {
-    //     res.emplace_back(delta.new_file.relative_path);
-    //   }
-    //   return res;
-    // }
+      auto *tree1 = tree_raw_ptr{nullptr};
+      auto *tree2 = tree_raw_ptr{nullptr};
+
+      if (type1 == object_t::commit) {
+        tree1 = commit::tree(convert<commit_raw_ptr>(obj1.get()));
+      } else {
+        throw std::runtime_error{"unsupported"};
+      }
+
+      if (type2 == object_t::commit) {
+        tree2 = commit::tree(convert<commit_raw_ptr>(obj2.get()));
+      } else {
+        throw std::runtime_error{"unsupported"};
+      }
+
+      auto diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
+      auto ret  = deltas(diff.get());
+      return ret;
+    }
+
+    auto changed_files(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
+      -> std::vector<std::string> {
+      auto details = deltas(repo, spec1, spec2);
+      auto res     = std::vector<std::string>{};
+      for (const auto &delta: details) {
+        res.emplace_back(delta.new_file.relative_path);
+      }
+      return res;
+    }
 
   } // namespace diff
 

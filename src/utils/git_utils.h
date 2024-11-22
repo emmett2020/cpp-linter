@@ -610,7 +610,7 @@ namespace linter::git {
       repo_raw_ptr repo,
       tree_raw_ptr old_tree,
       tree_raw_ptr new_tree,
-      diff_options_raw_cptr opts) -> diff_raw_ptr;
+      diff_options_raw_cptr opts) -> diff_ptr;
 
     /// @brief Initialize diff options structure
     /// @link https://libgit2.org/libgit2/#v0.20.0/group/diff/git_diff_options_init
@@ -634,18 +634,18 @@ namespace linter::git {
       diff_line_cb line_cb,
       void *payload) -> int;
 
-    /// @brief A simple implmentation which uses for_each to get diff delta details.
+    /// A simple implmentation which uses for_each to get diff delta details.
     auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail>;
 
-    /// @brief A simple implmentation which compares ref1 with ref2's differences.
-    auto deltas(repo_raw_ptr repo, const std::string &ref1, const std::string &ref2)
+    /// A simple implmentation which compares ref1 with ref2's differences.
+    auto deltas(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
       -> std::vector<git::diff_delta_detail>;
 
-    /// @brief Get changed files between two refs.
-    /// @return The modified and new added file names in source reference.
-    auto changed_files(repo_raw_ptr repo,
-                       const std::string &target_ref,
-                       const std::string &source_ref) -> std::vector<std::string>;
+    /// Get changed files between two specs. The spec could be a reference,
+    /// branch, tag or commid id. return The modified and new added file names
+    /// in source reference.
+    auto changed_files(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
+      -> std::vector<std::string>;
 
   } // namespace diff
 
