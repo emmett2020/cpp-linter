@@ -223,8 +223,21 @@ namespace linter::git {
     auto head(repo_raw_ptr repo) -> ref_ptr {
       auto *ref = ref_raw_ptr{nullptr};
       auto ret  = ::git_repository_head(&ref, repo);
+      if (ret == GIT_EUNBORNBRANCH || ret == GIT_ENOTFOUND) {
+        return {nullptr, ::git_reference_free};
+      }
+
       throw_if(ret);
       return {ref, ::git_reference_free};
+    }
+
+    auto head_commit(repo_raw_ptr repo) -> commit_ptr {
+      auto head_ref = head(repo);
+      if (head_ref == nullptr) {
+        return {nullptr, ::git_commit_free};
+      }
+      auto obj = git::ref::peel<commit_ptr>(head_ref.get());
+      return obj;
     }
 
   } // namespace repo
@@ -338,6 +351,9 @@ namespace linter::git {
 
     auto current_name(repo_raw_ptr repo) -> std::string {
       auto head_ref = repo::head(repo);
+      if (head_ref == nullptr) {
+        return "";
+      }
       auto ref_type = ref::type(head_ref.get());
       throw_if(ref_type == ref_t::invalid, "get current branch failed since invalid ref type");
 
@@ -377,30 +393,16 @@ namespace linter::git {
 
     auto create_head(repo_raw_ptr repo, const std::string &message, tree_raw_cptr index_tree)
       -> std::tuple<git_oid, commit_ptr> {
-      auto sig  = git::sig::create_default(repo);
-      auto ref  = repo::head(repo);
-      auto *obj = object_raw_ptr{nullptr};
-      auto ret  = ::git_reference_peel(&obj, ref.get(), git_object_t::GIT_OBJECT_COMMIT);
-      if (ret == GIT_ENOTFOUND) {
-        assert(obj == nullptr);
-        // This is an empty reference without at least a commit.
+      auto sig         = git::sig::create_default(repo);
+      auto head_commit = repo::head_commit(repo);
+      if (head_commit == nullptr) {
         auto oid    = create(repo, "HEAD", sig.get(), sig.get(), message, index_tree, {});
-        auto commit = git::commit::lookup(repo, &oid);
+        auto commit = commit::lookup(repo, &oid);
         return {oid, std::move(commit)};
       }
-      throw_if(ret);
-      assert(obj != nullptr);
-
-      auto oid = create(
-        repo,
-        "HEAD",
-        sig.get(),
-        sig.get(),
-        message,
-        index_tree,
-        {reinterpret_cast<commit_raw_cptr>(obj)});
-      auto commit = git::commit::lookup(repo, &oid);
-      ::git_object_free(obj);
+      auto oid =
+        create(repo, "HEAD", sig.get(), sig.get(), message, index_tree, {head_commit.get()});
+      auto commit = commit::lookup(repo, &oid);
       return {oid, std::move(commit)};
     }
 
@@ -736,6 +738,9 @@ namespace linter::git {
       auto *obj = object_raw_ptr{nullptr};
       auto type = convert_to_git_otype(obj_type);
       auto ret  = ::git_reference_peel(&obj, ref, type);
+      if (ret == GIT_ENOTFOUND) {
+        return {nullptr, ::git_object_free};
+      }
       throw_if(ret);
       return {obj, ::git_object_free};
     }

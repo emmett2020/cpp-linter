@@ -394,7 +394,12 @@ namespace linter::git {
     auto index(repo_raw_ptr repo) -> index_ptr;
 
     /// Retrieve and resolve the reference pointed at by HEAD.
+    /// This function may return a nullpointer when HEAD is missing or HEAD pointers to a non-exists reference.
     auto head(repo_raw_ptr repo) -> ref_ptr;
+
+    /// Get the head commit.
+    /// This function may return a nullpointer when HEAD is missing or HEAD pointers to a non-exists reference.
+    auto head_commit(repo_raw_ptr repo) -> commit_ptr;
   } // namespace repo
 
   namespace config {
@@ -489,6 +494,7 @@ namespace linter::git {
     auto lookup(repo_raw_ptr repo, const std::string &name, branch_t branch_type) -> ref_ptr;
 
     /// Get the current branch name indicated by HEAD reference.
+    /// If HEAD is missing or HEAD pointers to an non-exist reference, this will return an empty string.
     auto current_name(repo_raw_ptr repo) -> std::string;
   } // namespace branch
 
@@ -691,7 +697,10 @@ namespace linter::git {
     template <class T>
     auto peel(ref_raw_cptr ref) -> T {
       if constexpr (std::same_as<T, commit_ptr>) {
-        auto obj  = peel(ref, object_t::commit);
+        auto obj = peel(ref, object_t::commit);
+        if (obj == nullptr) {
+          return {nullptr, ::git_commit_free};
+        }
         auto *raw = obj.release();
         auto ret  = commit_ptr{reinterpret_cast<commit_raw_ptr>(raw), ::git_commit_free};
         return ret;

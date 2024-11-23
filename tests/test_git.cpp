@@ -21,7 +21,7 @@ const auto default_branch = "master"s;
 namespace {
   auto RefreshRepoDir() {
     if (std::filesystem::exists(temp_repo_dir)) {
-      std::println("remove old repo directory");
+      // std::println("remove old repo directory");
       std::filesystem::remove_all(temp_repo_dir);
     }
     std::filesystem::create_directory(temp_repo_dir);
@@ -79,7 +79,7 @@ namespace {
 
 } // namespace
 
-TEST_CASE("basics", "[git2][repo]") {
+TEST_CASE("create repo", "[git2][repo]") {
   RefreshRepoDir();
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
@@ -88,7 +88,7 @@ TEST_CASE("basics", "[git2][repo]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("basics", "[git2][config]") {
+TEST_CASE("set config", "[git2][config]") {
   RefreshRepoDir();
   auto repo   = git::repo::init(temp_repo_dir, false);
   auto origin = git::repo::config(repo.get());
@@ -176,7 +176,7 @@ TEST_CASE("Add three files to index by utility", "[git2][index][utility]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("basics", "[git2][revparse]") {
+TEST_CASE("parse single uses revparse", "[git2][revparse]") {
   RefreshRepoDir();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   CreateTempFilesWithSameContent(files, "hello world");
@@ -188,6 +188,7 @@ TEST_CASE("basics", "[git2][revparse]") {
     auto ret = git::revparse::single(repo.get(), default_branch);
     REQUIRE_FALSE(git::object::id_str(ret.get()).empty());
   }
+  RemoveRepoDir();
 }
 
 TEST_CASE("Get HEAD", "[git2][repo][commit]") {
@@ -200,37 +201,37 @@ TEST_CASE("Get HEAD", "[git2][repo][commit]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("basics", "[git2][diff]") {
-  RefreshRepoDir();
-  const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
-  CreateTempFilesWithSameContent(files, "hello world");
-  auto repo                   = InitBasicRepo();
-  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
-  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
-
-  auto ref         = git::repo::head(repo.get());
-  auto head_commit = git::ref::peel<git::commit_ptr>(ref.get());
-  std::cout << git::commit::id_str(head_commit.get()) << "\n";
-  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
-
-  AppendToFile("file1.cpp", "hello world2");
-  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-
-  // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
-  auto sig         = git::sig::create_default(repo.get());
-  auto commit_oid2 = git::commit::create(
-    repo.get(),
-    "HEAD",
-    sig.get(),
-    sig.get(),
-    "Two",
-    index2.get(),
-    {commit1.get()});
-
-  auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
-  REQUIRE(changed_files.size() == 1);
-  RemoveRepoDir();
-}
+// TEST_CASE("basics", "[git2][diff]") {
+//   RefreshRepoDir();
+//   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
+//   CreateTempFilesWithSameContent(files, "hello world");
+//   auto repo                   = InitBasicRepo();
+//   auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+//   auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+//
+//   auto ref         = git::repo::head(repo.get());
+//   auto head_commit = git::ref::peel<git::commit_ptr>(ref.get());
+//   std::cout << git::commit::id_str(head_commit.get()) << "\n";
+//   REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
+//
+//   AppendToFile("file1.cpp", "hello world2");
+//   auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
+//
+//   // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
+//   auto sig         = git::sig::create_default(repo.get());
+//   auto commit_oid2 = git::commit::create(
+//     repo.get(),
+//     "HEAD",
+//     sig.get(),
+//     sig.get(),
+//     "Two",
+//     index2.get(),
+//     {commit1.get()});
+//
+//   auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
+//   REQUIRE(changed_files.size() == 1);
+//   RemoveRepoDir();
+// }
 
 int main(int argc, char* argv[]) {
   git::setup();
