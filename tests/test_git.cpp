@@ -79,7 +79,7 @@ namespace {
 
 } // namespace
 
-TEST_CASE("create repo", "[git2][repo]") {
+TEST_CASE("Create repo", "[git2][repo]") {
   RefreshRepoDir();
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
@@ -88,7 +88,7 @@ TEST_CASE("create repo", "[git2][repo]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("set config", "[git2][config]") {
+TEST_CASE("Set config", "[git2][config]") {
   RefreshRepoDir();
   auto repo   = git::repo::init(temp_repo_dir, false);
   auto origin = git::repo::config(repo.get());
@@ -106,7 +106,7 @@ TEST_CASE("set config", "[git2][config]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("compare with head", "[git2][status]") {
+TEST_CASE("Compare with head", "[git2][status]") {
   RefreshRepoDir();
   auto repo = git::repo::init(temp_repo_dir, false);
   REQUIRE(git::repo::is_empty(repo.get()));
@@ -176,7 +176,7 @@ TEST_CASE("Add three files to index by utility", "[git2][index][utility]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("parse single uses revparse", "[git2][revparse]") {
+TEST_CASE("Parse single uses revparse", "[git2][revparse]") {
   RefreshRepoDir();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   CreateTempFilesWithSameContent(files, "hello world");
@@ -201,7 +201,7 @@ TEST_CASE("Get HEAD", "[git2][repo][commit]") {
   RemoveRepoDir();
 }
 
-TEST_CASE("Push to commits and get diff files", "[git2][diff]") {
+TEST_CASE("Push two commits and get diff files", "[git2][diff]") {
   RefreshRepoDir();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   CreateTempFilesWithSameContent(files, "hello world");
