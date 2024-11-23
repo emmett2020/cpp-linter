@@ -60,29 +60,6 @@ namespace {
     return {trimmed_version.data(), trimmed_version.size()};
   }
 
-  // auto get_commits(const context &ctx, git::repo_ptr repo)
-  //     -> std::tuple<git::reference_ptr, git::reference_ptr> {
-  //   auto *base = git::reference_ptr{nullptr};
-  //   auto *head = git::reference_ptr{nullptr};
-  //   if (ctx.base_commit.empty()) {
-  //     base = git::branch::lookup(repo, ctx.base_ref, git::branch_t::remote);
-  //   } else {
-  //     auto oid = git::oid::from_str(ctx.base_commit);
-  //     base =
-  //         reinterpret_cast<git::reference_ptr>(git::commit::lookup(repo,
-  //         &oid));
-  //   }
-  //   if (ctx.base_commit.empty()) {
-  //     head = git::branch::lookup(repo, ctx.base_ref, git::branch_t::remote);
-  //   } else {
-  //     auto oid = git::oid::from_str(ctx.base_commit);
-  //     head =
-  //         reinterpret_cast<git::reference_ptr>(git::commit::lookup(repo,
-  //         &oid));
-  //   }
-  //   return {base, head};
-  // }
-
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -111,31 +88,27 @@ auto main(int argc, char **argv) -> int {
   check_context(ctx);
 
   git::setup();
-  // auto *repo = git::repo::open(ctx.repo_path);
-  // auto [base_commit, head_commit] = get_commits(ctx, repo);
+  auto repo          = git::repo::open(ctx.repo_path);
+  auto changed_files = git::diff::changed_files(repo.get(), ctx.base_ref, ctx.head_ref);
+  print_changed_files(changed_files);
 
-  // auto changed_files = git::diff::changed_files(repo, base_commit,
-  // head_commit); print_changed_files(changed_files);
+  auto github_client = github_api_client{};
+  if (ctx.clang_tidy_option.enable_clang_tidy) {
+    auto clang_tidy = find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
+    spdlog::info("The clang-tidyexecutable path: {}", clang_tidy);
 
-  // auto github_client = github_api_client{};
-  // if (ctx.clang_tidy_option.enable_clang_tidy) {
-  //   auto clang_tidy = find_clang_tool("clang-tidy",
-  //   ctx.clang_tidy_option.clang_tidy_version); spdlog::info("The clang-tidy
-  //   executable path: {}", clang_tidy);
-  //
-  //   for (const auto &file: changed_files) {
-  //     auto result = clang_tidy::run(clang_tidy, ctx.clang_tidy_option,
-  //     ctx.repo_path, file); if (!result.pass) {
-  //       github_client.get_issue_comment_id();
-  //       github_client.add_or_update_comment(result.origin_stderr);
-  //       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
-  //         spdlog::info("fast exit");
-  //         return -1;
-  //       }
-  //     }
-  //   }
-  // }
+    for (const auto &file: changed_files) {
+      auto result = clang_tidy::run(clang_tidy, ctx.clang_tidy_option, ctx.repo_path, file);
+      if (!result.pass) {
+        github_client.get_issue_comment_id();
+        github_client.add_or_update_comment(result.origin_stderr);
+        if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
+          spdlog::info("fast exit");
+          return -1;
+        }
+      }
+    }
+  }
 
-  // git::repo::free(repo);
   git::shutdown();
 }
