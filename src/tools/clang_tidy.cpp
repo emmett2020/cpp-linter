@@ -99,7 +99,7 @@ namespace linter::clang_tidy {
       opts.emplace_back(file);
 
       auto arg_str = opts | std::views::join_with(' ') | std::ranges::to<std::string>();
-      spdlog::info("Running {} {}", cmd, arg_str);
+      spdlog::info("Running command: {} {}", cmd, arg_str);
 
       return shell::execute(cmd, opts, repo);
     }
@@ -235,16 +235,20 @@ namespace linter::clang_tidy {
                   std_out,
                   std_err);
 
-    spdlog::info("Successfully ran clang-tidy, now start to parse the outputs of it.");
+    spdlog::info("Successfully ran clang-tidy, now start to parse the output of it.");
     auto res          = result{};
     res.pass          = ec == 0;
     res.diag          = clang_tidy::parse_stdout(std_out);
     res.origin_stderr = std::move(std_err);
 
     if (res.pass) {
-      spdlog::info("Clang-tidy result: pass, information:\n{}", res.origin_stderr);
+      spdlog::info("The final result of ran clang-tidy on {} is : pass, detailed information:\n{}",
+                   file,
+                   res.origin_stderr);
     } else {
-      spdlog::error("Clang-tidy result: fail, information:\n{}", res.origin_stderr);
+      spdlog::error("The final result of ran clang-tidy on {} is: fail, detailed information:\n{}",
+                    file,
+                    res.origin_stderr);
     }
     return res;
   }

@@ -45,8 +45,8 @@ namespace {
 
   auto print_changed_files(const std::vector<std::string> &files) {
     spdlog::info("Got {} changed files", files.size());
-    for (const auto &file: files) {
-      spdlog::debug(file);
+    for (const auto &[idx, file]: std::views::enumerate(files)) {
+      spdlog::info("Index: {}, file: {}", idx, file);
     }
   }
 
@@ -103,7 +103,7 @@ auto main(int argc, char **argv) -> int {
         spdlog::info("file: {} passed {} check.", file, clang_tidy);
         continue;
       }
-      spdlog::info("file: {} doesn't pass {} check.", file, clang_tidy);
+      spdlog::error("file: {} doesn't pass {} check.", file, clang_tidy);
       if (!ctx.use_on_local) {
         github_client.get_issue_comment_id();
         github_client.add_or_update_comment(result.origin_stderr);
