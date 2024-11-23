@@ -6,6 +6,7 @@
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
+#include <utility>
 #include <spdlog/spdlog.h>
 
 #include "utils/util.h"
@@ -15,7 +16,9 @@
 namespace linter {
   class github_api_client {
   public:
-    github_api_client() = default;
+    explicit github_api_client(context ctx)
+      : ctx_(std::move(ctx)) {
+    }
 
     static void check_http_response(const httplib::Result& response) {
       auto code          = response->status / 100;
@@ -126,13 +129,12 @@ namespace linter {
       }
     }
 
-    [[nodiscard]] auto context() const -> const context& {
+    [[nodiscard]] auto ctx() const -> const context& {
       return ctx_;
     }
 
   private:
-    struct context ctx_;
-    bool enable_debug_        = false;
+    context ctx_;
     std::uint32_t comment_id_ = -1;
     httplib::Client client{github_api};
   };

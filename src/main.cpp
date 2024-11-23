@@ -98,7 +98,7 @@ auto main(int argc, char **argv) -> int {
   auto changed_files = git::diff::changed_files(repo.get(), ctx.target, ctx.source);
   print_changed_files(changed_files);
 
-  auto github_client = github_api_client{};
+  auto github_client = github_api_client{ctx};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     auto clang_tidy = find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
     spdlog::info("The clang-tidy executable path: {}", clang_tidy);
@@ -110,10 +110,8 @@ auto main(int argc, char **argv) -> int {
         continue;
       }
       spdlog::error("file: {} doesn't pass {} check.", file, clang_tidy);
-      if (!ctx.use_on_local) {
-        github_client.get_issue_comment_id();
-        github_client.add_or_update_comment(result.origin_stderr);
-      }
+      github_client.get_issue_comment_id();
+      github_client.add_or_update_comment(result.origin_stderr);
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
         return -1;
