@@ -106,9 +106,10 @@ namespace linter {
       throw_unless(comment.is_object(), "comment isn't object");
 
       comment["id"].get_to(comment_id_);
-      spdlog::info("Successfully add new comment for {}, the new added comment id is {}",
-                   ctx_.pr_number,
-                   comment_id_);
+      spdlog::info(
+        "Successfully add new comment for pull-request {}, the new added comment id is {}",
+        ctx_.pr_number,
+        comment_id_);
     }
 
     void update_comment(const std::string& body) {
