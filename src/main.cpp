@@ -73,9 +73,13 @@ auto main(int argc, char **argv) -> int {
     std::print("{}", get_current_version());
     return 0;
   }
-  check_program_options(options);
 
-  auto ctx = create_context_by_program_options(options);
+  auto ctx         = context{};
+  ctx.use_on_local = env::get(github_actions) != "true";
+  spdlog::info("Use cpp-linter on local: {} ", ctx.use_on_local);
+
+  check_program_options(ctx.use_on_local, options);
+  fill_context_by_program_options(options, ctx);
   set_log_level(ctx.log_level);
 
   if (!ctx.use_on_local) {
@@ -84,6 +88,7 @@ auto main(int argc, char **argv) -> int {
     check_github_env(env);
     fill_context_by_env(env, ctx);
   }
+
   print_context(ctx);
   check_context(ctx);
 

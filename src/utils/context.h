@@ -15,6 +15,7 @@ namespace linter {
     std::string event_name;
     std::string target;
     std::string source;
+    std::int32_t pr_number = -1;
 
     clang_tidy::option clang_tidy_option{};
   };

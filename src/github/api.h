@@ -32,6 +32,10 @@ namespace linter {
     {github_event_push, github_event_pull_request, github_event_pull_request_target};
   constexpr auto github_events_with_additional_ref = {github_event_pull_request,
                                                       github_event_pull_request_target};
+  constexpr auto github_events_support_comments    = {github_event_pull_request,
+                                                      github_event_pull_request_target};
+  constexpr auto github_events_support_pr_number   = {github_event_pull_request,
+                                                      github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
@@ -124,12 +128,11 @@ namespace linter {
       return name == our_name;
     }
 
-    // TODO: Maybe do it in another thread to speed up or do it in same thread to eliminate call times?
     void get_issue_comment_id() {
-      spdlog::info("Start to get issue comment id for pull request: {}.", pr_number_);
-      assert(ctx_.event_name == github_event_pull_request);
+      spdlog::info("Start to get issue comment id for pull request: {}.", ctx_.pr_number);
+      assert(std::ranges::contains(github_events_support_comments, ctx_.event_name));
 
-      auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, pr_number_);
+      auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, ctx_.pr_number);
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", ctx_.token)}
@@ -144,29 +147,29 @@ namespace linter {
       // data type check
       auto comments = nlohmann::json::parse(response->body);
       if (comments.is_null()) {
-        spdlog::info("The pull request number {} doesn't have any comments yet", pr_number_);
+        spdlog::info("The pull request number {} doesn't have any comments yet", ctx_.pr_number);
         return;
       }
       throw_unless(comments.is_array(), "issue comments are not an array");
       if (comments.empty()) {
-        spdlog::info("The pull request number {} doesn't have any comments yet", pr_number_);
+        spdlog::info("The pull request number {} doesn't have any comments yet", ctx_.pr_number);
         return;
       }
 
       auto comment = std::ranges::find_if(comments, is_our_comment);
       if (comment == comments.end()) {
-        spdlog::info("The lint doesn't comments on pull request number {} yet", pr_number_);
+        spdlog::info("The lint doesn't comments on pull request number {} yet", ctx_.pr_number);
         return;
       }
 
       (*comment)["id"].get_to(comment_id_);
-      spdlog::info("Got comment id {} in  pr {}", comment_id_, pr_number_);
+      spdlog::info("Got comment id {} in  pr {}", comment_id_, ctx_.pr_number);
     }
 
     void add_comment(const std::string& body) {
-      spdlog::info("Start to add issue comment for pr {}", pr_number_);
+      spdlog::info("Start to add issue comment for pr {}", ctx_.pr_number);
 
-      const auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, pr_number_);
+      const auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, ctx_.pr_number);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx_.token)}
@@ -186,7 +189,7 @@ namespace linter {
 
     void update_comment(const std::string& body) {
       throw_if(comment_id_ == -1, "doesn't have comment_id yet");
-      throw_if(pr_number_ == -1, "doesn't have comment_id yet");
+      throw_if(ctx_.pr_number == -1, "doesn't have comment_id yet");
       spdlog::info("Start to update issue comment");
 
       const auto path    = std::format("/repos/{}/issues/comments/{}", ctx_.repo, comment_id_);
@@ -199,7 +202,7 @@ namespace linter {
       auto response = client.Post(path, headers, body, "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
       check_http_response(response);
-      spdlog::info("Successfully update comment {} of pr {}", comment_id_, pr_number_);
+      spdlog::info("Successfully update comment {} of pr {}", comment_id_, ctx_.pr_number);
     }
 
     void add_or_update_comment(const std::string& body) {
@@ -215,19 +218,8 @@ namespace linter {
     }
 
   private:
-    // TODO: Should this move into context?
-    /// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
-    void parse_pr_number() {
-      auto head_ref = env::get(github_head_ref);
-      spdlog::debug("github head ref: {}", head_ref);
-      auto parts = std::views::split(head_ref, '/') | std::ranges::to<std::vector<std::string>>();
-      throw_if(parts.size() != 4, std::format("head ref format error: {}", github_head_ref));
-      pr_number_ = std::stoi(parts[2]);
-    }
-
     struct context ctx_;
     bool enable_debug_        = false;
-    std::size_t pr_number_    = -1;
     std::uint32_t comment_id_ = -1;
     httplib::Client client{github_api};
   };

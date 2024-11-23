@@ -2,6 +2,7 @@
 #include "github/api.h"
 #include "utils/util.h"
 
+#include <algorithm>
 #include <spdlog/spdlog.h>
 
 namespace linter {
@@ -16,6 +17,7 @@ namespace linter {
     spdlog::debug("\trepository: {}", ctx.repo);
     spdlog::debug("\trepository target: {}", ctx.target);
     spdlog::debug("\trepository source: {}", ctx.source);
+    spdlog::debug("\trepository pull-request number: {}", ctx.pr_number);
 
     const auto &tidy_opt = ctx.clang_tidy_option;
     spdlog::debug("Options of clang-tidy:");
@@ -38,6 +40,9 @@ namespace linter {
     throw_if(ctx.event_name.empty(), "empty event name");
     throw_if(ctx.target.empty(), "empty target");
     throw_if(ctx.source.empty(), "empty source");
+    if (std::ranges::contains(github_events_support_pr_number, ctx.event_name)) {
+      throw_if(ctx.pr_number < 0, "wrong pr number");
+    }
   }
 
 } // namespace linter

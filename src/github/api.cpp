@@ -7,6 +7,16 @@
 #include "utils/env_manager.h"
 
 namespace linter {
+  namespace {
+    // PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
+    auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
+      spdlog::debug("parse pr number uses: {}", ref_name);
+      auto parts = std::views::split(ref_name, '/') | std::ranges::to<std::vector<std::string>>();
+      throw_if(parts.size() != 4, std::format("ref_name format error: {}", ref_name));
+      return std::stoi(parts[2]);
+    }
+  } // namespace
+
   auto read_github_env() -> github_env {
     auto env            = github_env{};
     env.repository      = env::get(github_repository);
@@ -55,26 +65,26 @@ namespace linter {
     throw_if(ctx.use_on_local,
              "The `fill_context_by_env` function must be called only on Github CI environment.");
     throw_unless(ctx.token.empty(),
-                 "The `token` will be automatically acquired by `GITHUB_TOKEN`. Don't set it from "
-                 "program option");
+                 "The `token` will be automatically acquired by `GITHUB_TOKEN`.");
     throw_unless(ctx.repo.empty(),
-                 "The `repo` will be automatically acquired by `GITHUB_REPOSITORY` env. Don't set "
-                 "it from program option");
+                 "The `repo` will be automatically acquired by `GITHUB_REPOSITORY` env.");
     throw_unless(ctx.repo_path.empty(),
-                 "The `repo_path` will be automatically acquired by `GITHUB_WORKSPACE` env. Don't "
-                 "set it from program option");
+                 "The `repo_path` will be automatically acquired by `GITHUB_WORKSPACE` env.");
     throw_unless(ctx.event_name.empty(),
-                 "The `event_name` will be automatically acquired by `GITHUB_EVENT_NAME` env. "
-                 "Don't set it from program option");
+                 "The `event_name` will be automatically acquired by `GITHUB_EVENT_NAME` env.");
     throw_unless(ctx.source.empty(),
-                 "The `head_ref` will be automatically acquired by `GITHUB_REF` or `GITHUB_SHA` "
-                 "env. Don't set it from program option");
+                 "The `source` will be automatically acquired by `GITHUB_REF` or `GITHUB_SHA`env.");
+    throw_unless(ctx.pr_number < 0,
+                 "The `pr_number` will be automatically acquired by `GITHUB_REF` env.");
 
     ctx.token      = env.token;
     ctx.repo       = env.repository;
     ctx.repo_path  = env.workspace;
     ctx.event_name = env.event_name;
     ctx.source     = env.github_sha;
+    if (std::ranges::contains(github_events_support_pr_number, ctx.event_name)) {
+      ctx.pr_number = parse_pr_number(env.github_ref);
+    }
 
     if (std::ranges::contains(github_events_with_additional_ref, ctx.event_name)) {
       spdlog::debug("Github event is {}, so automatically use {} instead of {} as base ref",

@@ -1,5 +1,7 @@
 #include "program_options.h"
 
+#include <algorithm>
+#include <netdb.h>
 #include <ranges>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -21,6 +23,7 @@ namespace linter {
     constexpr auto target                          = "target";
     constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
+    constexpr auto pr_number                       = "pr-number";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
     constexpr auto clang_tidy_version              = "clang-tidy-version";
@@ -34,12 +37,8 @@ namespace linter {
     constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
   } // namespace
 
-  auto create_context_by_program_options(const program_options::variables_map &variables)
-    -> context {
-    auto ctx = context{};
-    spdlog::info("GITHUB_ACTIONS environment variables value: {}", env::get(github_actions));
-    ctx.use_on_local = env::get(github_actions) != "true";
-
+  void fill_context_by_program_options(const program_options::variables_map &variables,
+                                       context &ctx) {
     if (variables.contains(log_level)) {
       ctx.log_level = variables[log_level].as<std::string>();
       boost::algorithm::to_lower(ctx.log_level);
@@ -64,6 +63,9 @@ namespace linter {
     }
     if (variables.contains(event_name)) {
       ctx.event_name = variables[event_name].as<std::string>();
+    }
+    if (variables.contains(pr_number)) {
+      ctx.pr_number = variables[pr_number].as<int32_t>();
     }
     if (variables.contains(enable_clang_tidy)) {
       ctx.clang_tidy_option.enable_clang_tidy = variables[enable_clang_tidy].as<bool>();
@@ -100,8 +102,6 @@ namespace linter {
     if (variables.contains(clang_tidy_line_filter)) {
       ctx.clang_tidy_option.line_filter = variables[clang_tidy_line_filter].as<std::string>();
     }
-
-    return ctx;
   }
 
   auto make_program_options_desc() -> program_options::options_description {
@@ -121,6 +121,7 @@ namespace linter {
       (target,                          value<string>(),   "Set the target reference/commit of git repository")
       (source,                          value<string>(),   "Set the source reference/commit of git repository.")
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
+      (pr_number,                       value<int32_t>(),  "Set the pull-request number of git repository.")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."
                                                            "This means cpp-linter will stop all clang-tidy"
@@ -149,8 +150,22 @@ namespace linter {
     return variables;
   }
 
-  void check_program_options(const boost::program_options::variables_map &variables) {
-    // TODO: check repo format
-    // TODO: check repo_path exists
+  void check_program_options(bool use_on_local,
+                             const boost::program_options::variables_map &variables) {
+    if (use_on_local) {
+      throw_unless(variables.contains(repo_path),
+                   "must specify repo-path when use cpp-linter on local");
+      throw_unless(variables.contains(event_name),
+                   "must specify repo when use cpp-linter on local");
+      throw_unless(variables.contains(target), "must specify target when use cpp-linter on local");
+      throw_unless(variables.contains(source), "must specify source when use cpp-linter on local");
+    }
+
+    if (variables.contains(pr_number)) {
+      throw_unless(use_on_local, "pr-number option only supports use on local");
+      auto event = variables[event_name].as<std::string>();
+      throw_unless(std::ranges::contains(github_events_support_pr_number, event),
+                   std::format("event: {} doesn't support pr-number option", event));
+    }
   }
 } // namespace linter
