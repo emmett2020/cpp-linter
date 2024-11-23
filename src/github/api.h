@@ -24,7 +24,7 @@ namespace linter {
       auto code          = response->status / 100;
       const auto& reason = response->reason;
       throw_unless(code == 1 || code == 2,
-                   std::format("http response error got http status code: {}, reason: {}",
+                   std::format("http response error since http status code: {}, reason: {}",
                                response->status,
                                reason));
     }
