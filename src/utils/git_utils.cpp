@@ -615,15 +615,16 @@ namespace linter::git {
       auto tree2 = tree_ptr{nullptr, ::git_tree_free};
 
       if (type1 == object_t::commit) {
-        tree1 = commit::tree(convert<commit_raw_cptr>(obj1.get()));
+        const auto *ret = convert<commit_raw_cptr>(obj1.get());
+        tree1           = commit::tree(ret);
       } else {
-        throw std::runtime_error{"unsupported"};
+        throw_unsupported();
       }
 
       if (type2 == object_t::commit) {
         tree2 = commit::tree(convert<commit_raw_ptr>(obj2.get()));
       } else {
-        throw std::runtime_error{"unsupported"};
+        throw_unsupported();
       }
 
       auto diff = diff::tree_to_tree(repo, tree1.get(), tree2.get(), nullptr);

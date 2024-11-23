@@ -742,21 +742,22 @@ namespace linter::git {
   template <typename T>
   auto convert(object_raw_ptr obj) -> T {
     auto type = object::type(obj);
-    if constexpr (std::same_as<std::decay_t<T>, commit_raw_ptr>) {
-      throw_if(type != object_t::commit, "The given object isn't git_commit*");
-      return reinterpret_cast<commit_raw_ptr>(obj);
+    if constexpr (std::same_as<T, commit_raw_ptr> || std::same_as<T, commit_raw_cptr>) {
+      throw_if(type != object_t::commit,
+               "The given object isn't commit_raw_ptr or commit_raw_cptr");
+      return reinterpret_cast<T>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, tree_raw_ptr>) {
-      throw_if(type != object_t::tree, "The given object isn't git_tree*");
-      return reinterpret_cast<tree_raw_ptr>(obj);
+    if constexpr (std::same_as<T, tree_raw_ptr> || std::same_as<T, tree_raw_cptr>) {
+      throw_if(type != object_t::tree, "The given object isn't tree_raw_ptr or tree_raw_cptr");
+      return reinterpret_cast<T>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, blob_raw_ptr>) {
-      throw_if(type != object_t::blob, "The given object isn't git_blob*");
-      return reinterpret_cast<blob_raw_ptr>(obj);
+    if constexpr (std::same_as<T, blob_raw_ptr> || std::same_as<T, blob_raw_cptr>) {
+      throw_if(type != object_t::blob, "The given object isn't blob_raw_ptr or blob_raw_cptr");
+      return reinterpret_cast<T>(obj);
     }
-    if constexpr (std::same_as<std::decay_t<T>, tag_raw_ptr>) {
-      throw_if(type != object_t::tag, "The given object isn't git_blob*");
-      return reinterpret_cast<tag_raw_ptr>(obj);
+    if constexpr (std::same_as<T, tag_raw_ptr> || std::same_as<T, tag_raw_cptr>) {
+      throw_if(type != object_t::tag, "The given object isn't tag_raw_ptr or tag_raw_cptr");
+      return reinterpret_cast<T>(obj);
     }
     throw_unsupported();
     std::unreachable(); // Compiler can't well infer the above exception.
