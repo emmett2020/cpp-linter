@@ -6,9 +6,11 @@
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
+#include <string>
 #include <utility>
 #include <spdlog/spdlog.h>
 
+#include "nlohmann/json_fwd.hpp"
 #include "utils/util.h"
 #include "utils/context.h"
 #include "common.h"
@@ -53,7 +55,7 @@ namespace linter {
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", ctx_.token)}
       };
-      spdlog::info("path: {}", path);
+      spdlog::info("Path: {}", path);
 
       auto response = client.Get(path, headers);
 
@@ -79,7 +81,7 @@ namespace linter {
       }
 
       (*comment)["id"].get_to(comment_id_);
-      spdlog::info("Got comment id {} in  pr {}", comment_id_, ctx_.pr_number);
+      spdlog::info("Successfully got comment id {} of pr {}", comment_id_, ctx_.pr_number);
     }
 
     void add_comment(const std::string& body) {
@@ -90,9 +92,13 @@ namespace linter {
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx_.token)}
       };
-      spdlog::trace("Path: {}, Body: {}", path, body);
+      spdlog::info("Path: {}", path);
 
-      auto response = client.Post(path, headers, body, "text/plain");
+      auto json_body    = nlohmann::json{};
+      json_body["body"] = body;
+      spdlog::trace("Body:\n{}", json_body.dump());
+
+      auto response = client.Post(path, headers, json_body.dump(), "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
       check_http_response(response);
 
@@ -100,7 +106,9 @@ namespace linter {
       throw_unless(comment.is_object(), "comment isn't object");
 
       comment["id"].get_to(comment_id_);
-      spdlog::info("The new added comment id is {}", comment_id_);
+      spdlog::info("Successfully add new comment for {}, the new added comment id is {}",
+                   ctx_.pr_number,
+                   comment_id_);
     }
 
     void update_comment(const std::string& body) {
@@ -113,12 +121,16 @@ namespace linter {
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx_.token)}
       };
-      spdlog::trace("Path: {}, Body: {}", path, body);
+      spdlog::info("Path: {}", path);
 
-      auto response = client.Post(path, headers, body, "text/plain");
+      auto json_body    = nlohmann::json{};
+      json_body["body"] = body;
+      spdlog::trace("Body:\n{}", body);
+
+      auto response = client.Post(path, headers, json_body.dump(), "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
       check_http_response(response);
-      spdlog::info("Successfully update comment {} of pr {}", comment_id_, ctx_.pr_number);
+      spdlog::info("Successfully updated comment {} of pr {}", comment_id_, ctx_.pr_number);
     }
 
     void add_or_update_comment(const std::string& body) {
