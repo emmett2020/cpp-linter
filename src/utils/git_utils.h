@@ -532,8 +532,7 @@ namespace linter::git {
       signature_raw_cptr committer,
       const std::string &message,
       tree_raw_cptr tree,
-      std::size_t parent_count,
-      std::span<commit_raw_cptr> parents) -> git_oid;
+      std::vector<commit_raw_cptr> parents) -> git_oid;
 
     /// Create a new commit and set it to HEAD with default signature.
     auto create_head(repo_raw_ptr repo, const std::string &message, tree_raw_cptr index_tree)

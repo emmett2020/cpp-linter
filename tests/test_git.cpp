@@ -153,7 +153,6 @@ TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][s
     sig.get(),
     "Initial commit",
     index_tree_obj.get(),
-    0,
     {});
   REQUIRE(git::branch::current_name(repo.get()) == default_branch);
   RemoveRepoDir();
@@ -214,24 +213,22 @@ TEST_CASE("basics", "[git2][diff]") {
   std::cout << git::commit::id_str(head_commit.get());
   REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
 
-  // AppendToFile("file1.cpp", "hello world2");
-  // auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-
+  AppendToFile("file1.cpp", "hello world2");
+  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
 
   // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
-  // auto sig         = git::sig::create_default(repo.get());
-  // auto commit_oid2 = git::commit::create(
-  //   repo.get(),
-  //   "HEAD",
-  //   sig.get(),
-  //   sig.get(),
-  //   "Two",
-  //   index2.get(),
-  //   1,
-  //   {commit1.get()});
-  //
-  // auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
-  // REQUIRE(changed_files.size() == 1);
+  auto sig         = git::sig::create_default(repo.get());
+  auto commit_oid2 = git::commit::create(
+    repo.get(),
+    "HEAD",
+    sig.get(),
+    sig.get(),
+    "Two",
+    index2.get(),
+    {commit1.get()});
+
+  auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
+  REQUIRE(changed_files.size() == 1);
   RemoveRepoDir();
 }
 

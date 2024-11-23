@@ -359,8 +359,7 @@ namespace linter::git {
       signature_raw_cptr committer,
       const std::string &message,
       tree_raw_cptr tree,
-      std::size_t parent_count,
-      std::span<commit_raw_cptr> parents) -> git_oid {
+      std::vector<commit_raw_cptr> parents) -> git_oid {
       auto id  = git_oid{};
       auto ret = ::git_commit_create(
         &id,
@@ -371,7 +370,7 @@ namespace linter::git {
         "UTF-8",
         message.c_str(),
         tree,
-        parent_count,
+        parents.size(),
         parents.data());
       throw_if(ret < 0, [] noexcept { return ::git_error_last()->message; });
       return id;
@@ -380,7 +379,7 @@ namespace linter::git {
     auto create_head(repo_raw_ptr repo, const std::string &message, tree_raw_cptr index_tree)
       -> std::tuple<git_oid, commit_ptr> {
       auto sig    = git::sig::create_default(repo);
-      auto oid    = create(repo, "HEAD", sig.get(), sig.get(), message, index_tree, 0, {});
+      auto oid    = create(repo, "HEAD", sig.get(), sig.get(), message, index_tree, {});
       auto commit = git::commit::lookup(repo, &oid);
       return {oid, std::move(commit)};
     }
