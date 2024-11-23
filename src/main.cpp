@@ -61,6 +61,12 @@ namespace {
     return {trimmed_version.data(), trimmed_version.size()};
   }
 
+  // For a CI environment, the target reference may not downloaded to git
+  // repository. We download and set a reference to it.
+  // The target reference uses remote type. It must be exists.
+  auto create_target_ref() {
+  }
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
