@@ -20,6 +20,7 @@ namespace linter {
     constexpr auto target                          = "target";
     constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
+    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
     constexpr auto pr_number                       = "pr-number";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
@@ -63,6 +64,9 @@ namespace linter {
     }
     if (variables.contains(pr_number)) {
       ctx.pr_number = variables[pr_number].as<int32_t>();
+    }
+    if (variables.contains(enable_update_issue_comment)) {
+      ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
     }
     if (variables.contains(enable_clang_tidy)) {
       ctx.clang_tidy_option.enable_clang_tidy = variables[enable_clang_tidy].as<bool>();
@@ -119,6 +123,7 @@ namespace linter {
       (source,                          value<string>(),   "Set the source reference/commit of git repository.")
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       (pr_number,                       value<int32_t>(),  "Set the pull-request number of git repository.")
+      (enable_update_issue_comment,     value<bool>(),     "Enable update issue comment. This will set http request to github")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."
                                                            "This means cpp-linter will stop all clang-tidy"
@@ -159,6 +164,12 @@ namespace linter {
                    std::format("unsupported event name: {}", event));
       throw_unless(variables.contains(target), "must specify target when use cpp-linter on local");
       throw_unless(variables.contains(source), "must specify source when use cpp-linter on local");
+
+      if (variables.contains(enable_update_issue_comment)) {
+        throw_unless(variables.contains(token),
+                     "must specify token when use cpp-linter on local while enables update issue "
+                     "comment");
+      }
     }
 
     if (variables.contains(pr_number)) {

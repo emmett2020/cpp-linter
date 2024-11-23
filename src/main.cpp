@@ -110,8 +110,10 @@ auto main(int argc, char **argv) -> int {
         continue;
       }
       spdlog::error("file: {} doesn't pass {} check.", file, clang_tidy);
-      github_client.get_issue_comment_id();
-      github_client.add_or_update_comment(result.origin_stderr);
+      if (ctx.enable_update_issue_comment) {
+        github_client.get_issue_comment_id();
+        github_client.add_or_update_comment(result.origin_stderr);
+      }
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
         return -1;

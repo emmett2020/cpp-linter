@@ -41,7 +41,6 @@ namespace linter {
   constexpr auto github_event_name = "GITHUB_EVENT_NAME";
   constexpr auto github_event_path = "GITHUB_EVENT_PATH";
 
-
   /// The default working directory on the runner for steps, and the default
   /// location of your repository when using the checkout action. For example,
   /// /home/runner/work/my-repo-name/my-repo-name.
