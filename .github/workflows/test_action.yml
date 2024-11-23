@@ -25,6 +25,11 @@ jobs:
           git fetch --all
           git branch -r
 
+      - name: Set reference to a specific branch
+        run: |
+          git checkout test-action
+          git checkout -
+
       - uses: ./
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
