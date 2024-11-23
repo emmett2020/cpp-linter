@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <exception>
 #include <git2/config.h>
 #include <git2/oid.h>
 #include <git2/refs.h>
@@ -455,6 +456,11 @@ namespace linter::git {
       git::object::free(reinterpret_cast<object_raw_ptr>(commit));
     }
 
+    auto id_str(commit_raw_cptr commit) -> std::string {
+      const auto *obj = reinterpret_cast<object_raw_cptr>(commit);
+      return object::id_str(obj);
+    }
+
   } // namespace commit
 
   namespace diff {
@@ -705,6 +711,14 @@ namespace linter::git {
       auto ret  = ::git_reference_resolve(&ref, symbolic_ref);
       throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
       return {ref, ::git_reference_free};
+    }
+
+    auto peel(ref_raw_cptr ref, object_t obj_type) -> object_ptr {
+      auto *obj = object_raw_ptr{nullptr};
+      auto type = convert_to_git_otype(obj_type);
+      auto ret  = ::git_reference_peel(&obj, ref, type);
+      throw_if(ret < 0, [] noexcept { return git_error_last()->message; });
+      return {obj, ::git_object_free};
     }
 
   } // namespace ref

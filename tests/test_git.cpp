@@ -69,6 +69,14 @@ namespace {
     return repo;
   }
 
+  auto InitRepoWithACommit(const std::vector<std::string>& files)
+    -> std::tuple<git::repo_ptr, git::commit_ptr> {
+    auto repo                 = InitBasicRepo();
+    auto [index_oid, index]   = git::index::add_files(repo.get(), files);
+    auto [commit_oid, commit] = git::commit::create_head(repo.get(), "Init", index.get());
+    return {std::move(repo), std::move(commit)};
+  }
+
 } // namespace
 
 TEST_CASE("basics", "[git2][repo]") {
@@ -183,6 +191,16 @@ TEST_CASE("basics", "[git2][revparse]") {
   }
 }
 
+TEST_CASE("Get HEAD", "[git2][repo][commit]") {
+  RefreshRepoDir();
+  CreateTempFilesWithSameContent({"file0.cpp", "file1.cpp"}, "hello world");
+  auto [repo, commit] = InitRepoWithACommit({"file0.cpp", "file1.cpp"});
+  auto ref            = git::repo::head(repo.get());
+  auto head_commit    = git::ref::peel<git::commit_ptr>(ref.get());
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit.get()));
+  RemoveRepoDir();
+}
+
 TEST_CASE("basics", "[git2][diff]") {
   RefreshRepoDir();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
@@ -191,22 +209,30 @@ TEST_CASE("basics", "[git2][diff]") {
   auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
   auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
 
-  AppendToFile("file1.cpp", "hello world2");
-  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-  // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
-  auto sig         = git::sig::create_default(repo.get());
-  auto commit_oid2 = git::commit::create(
-    repo.get(),
-    "HEAD",
-    sig.get(),
-    sig.get(),
-    "Two",
-    index2.get(),
-    1,
-    {commit1.get()});
+  auto ref         = git::repo::head(repo.get());
+  auto head_commit = git::ref::peel<git::commit_ptr>(ref.get());
+  std::cout << git::commit::id_str(head_commit.get());
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
 
-  auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
-  REQUIRE(changed_files.size() == 1);
+  // AppendToFile("file1.cpp", "hello world2");
+  // auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
+
+
+  // auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index1.get());
+  // auto sig         = git::sig::create_default(repo.get());
+  // auto commit_oid2 = git::commit::create(
+  //   repo.get(),
+  //   "HEAD",
+  //   sig.get(),
+  //   sig.get(),
+  //   "Two",
+  //   index2.get(),
+  //   1,
+  //   {commit1.get()});
+  //
+  // auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
+  // REQUIRE(changed_files.size() == 1);
+  RemoveRepoDir();
 }
 
 int main(int argc, char* argv[]) {

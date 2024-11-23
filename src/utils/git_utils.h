@@ -590,6 +590,9 @@ namespace linter::git {
 
     void free(commit_raw_ptr commit);
 
+    /// Get this commit's id and convert it to string.
+    auto id_str(commit_raw_cptr commit) -> std::string;
+
   } // namespace commit
 
   namespace diff {
@@ -719,6 +722,24 @@ namespace linter::git {
     /// If a direct reference is passed as an argument, a copy of that
     /// reference is returned.
     auto resolve(ref_raw_cptr symbolic_ref) -> ref_ptr;
+
+    /// Recursively peel reference until object of the specified type is found.
+    /// If you pass GIT_OBJECT_ANY as the target type, then the object will be
+    /// peeled until a non-tag object is met.
+    auto peel(ref_raw_cptr ref, object_t obj_type) -> object_ptr;
+
+    /// Like peel(ref_raw_ptr, object_t) but automatically convert to given type.
+    template <class T>
+    auto peel(ref_raw_cptr ref) -> T {
+      if constexpr (std::same_as<T, commit_ptr>) {
+        auto obj  = peel(ref, object_t::commit);
+        auto *raw = obj.release();
+        auto ret  = commit_ptr{reinterpret_cast<commit_raw_ptr>(raw), ::git_commit_free};
+        return ret;
+      }
+      throw std::runtime_error{"unsupported"};
+    }
+
 
   } // namespace ref
 
