@@ -220,10 +220,11 @@ namespace linter {
     // TODO: Should this move into context?
     /// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
     void parse_pr_number() {
-      assert(!ctx_.head_ref.empty());
-      auto parts = std::views::split(ctx_.head_ref, '/')
+      assert(false && "TODO");
+      assert(!ctx_.source.empty());
+      auto parts = std::views::split(ctx_.source, '/')
                  | std::ranges::to<std::vector<std::string>>();
-      throw_if(parts.size() != 4, std::format("source ref format error: {}", ctx_.head_ref));
+      throw_if(parts.size() != 4, std::format("source ref format error: {}", ctx_.source));
       pr_number_ = std::stoi(parts[2]);
     }
 

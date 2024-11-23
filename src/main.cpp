@@ -89,7 +89,7 @@ auto main(int argc, char **argv) -> int {
 
   git::setup();
   auto repo          = git::repo::open(ctx.repo_path);
-  auto changed_files = git::diff::changed_files(repo.get(), ctx.base_ref, ctx.head_ref);
+  auto changed_files = git::diff::changed_files(repo.get(), ctx.target, ctx.source);
   print_changed_files(changed_files);
 
   auto github_client = github_api_client{};

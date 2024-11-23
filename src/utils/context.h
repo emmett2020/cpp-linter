@@ -13,10 +13,8 @@ namespace linter {
     std::string repo;
     std::string token;
     std::string event_name;
-    std::string base_commit;
-    std::string head_commit;
-    std::string base_ref;
-    std::string head_ref;
+    std::string target;
+    std::string source;
 
     clang_tidy::option clang_tidy_option{};
   };

@@ -15,10 +15,8 @@ namespace linter {
     constexpr auto repo_path                       = "repo-path";
     constexpr auto repo                            = "repo";
     constexpr auto token                           = "token";
-    constexpr auto base_ref                        = "base-ref";    // only used in pr
-    constexpr auto head_ref                        = "head-ref";
-    constexpr auto base_commit                     = "base-commit"; // pr
-    constexpr auto head_commit                     = "head-commit";
+    constexpr auto target                          = "target";
+    constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
@@ -54,17 +52,11 @@ namespace linter {
     if (variables.contains(token)) {
       ctx.token = variables[token].as<std::string>();
     }
-    if (variables.contains(base_ref)) {
-      ctx.base_ref = variables[base_ref].as<std::string>();
+    if (variables.contains(target)) {
+      ctx.target = variables[target].as<std::string>();
     }
-    if (variables.contains(head_ref)) {
-      ctx.head_ref = variables[head_ref].as<std::string>();
-    }
-    if (variables.contains(base_commit)) {
-      ctx.base_commit = variables[base_commit].as<std::string>();
-    }
-    if (variables.contains(head_commit)) {
-      ctx.head_commit = variables[head_commit].as<std::string>();
+    if (variables.contains(source)) {
+      ctx.source = variables[source].as<std::string>();
     }
     if (variables.contains(event_name)) {
       ctx.event_name = variables[event_name].as<std::string>();
@@ -122,11 +114,8 @@ namespace linter {
       (repo_path,                       value<string>(),   "Set the full path of git repository")
       (repo,                            value<string>(),   "Set the owner/repo of git repository")
       (token,                           value<string>(),   "Set github token of git repository")
-      (base_ref,                        value<string>(),   "Set the base/target reference of git repository")
-      (head_ref,                        value<string>(),   "Set the head/cur reference of git repository."
-                                                           "This could be same as base_ref.")
-      (base_commit,                     value<string>(),   "Set the base commit of git repository")
-      (head_commit,                     value<string>(),   "Set the head commit of git repository")
+      (target,                          value<string>(),   "Set the target reference/commit of git repository")
+      (source,                          value<string>(),   "Set the source reference/commit of git repository.")
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."
@@ -159,8 +148,5 @@ namespace linter {
   void check_program_options(const boost::program_options::variables_map &variables) {
     // TODO: check repo format
     // TODO: check repo_path exists
-    if (variables.contains(base_ref) && variables.contains(base_commit)) {
-      spdlog::info("Set both base_ref and base_commit , base_ref will be ignored");
-    }
   }
 } // namespace linter

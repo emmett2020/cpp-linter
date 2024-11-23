@@ -14,10 +14,8 @@ namespace linter {
     spdlog::debug("Repository Options:");
     spdlog::debug("\trepository path: {}", ctx.repo_path);
     spdlog::debug("\trepository: {}", ctx.repo);
-    spdlog::debug("\trepository base ref: {}", ctx.base_ref);
-    spdlog::debug("\trepository head ref: {}", ctx.head_ref);
-    spdlog::debug("\trepository base commit: {}", ctx.base_commit);
-    spdlog::debug("\trepository head commit: {}", ctx.head_commit);
+    spdlog::debug("\trepository target: {}", ctx.target);
+    spdlog::debug("\trepository source: {}", ctx.source);
 
     const auto &tidy_opt = ctx.clang_tidy_option;
     spdlog::debug("Options of clang-tidy:");
@@ -38,10 +36,8 @@ namespace linter {
   void check_context(const context &ctx) {
     throw_if(ctx.repo_path.empty(), "empty repository path");
     throw_if(ctx.event_name.empty(), "empty event name");
-    throw_if(ctx.base_ref.empty() && ctx.base_commit.empty(),
-             "both base-ref and base-commit are empty");
-    throw_if(ctx.head_ref.empty() && ctx.head_commit.empty(),
-             "both head-ref and head-commit are empty");
+    throw_if(ctx.target.empty(), "empty target");
+    throw_if(ctx.source.empty(), "empty source");
   }
 
 } // namespace linter

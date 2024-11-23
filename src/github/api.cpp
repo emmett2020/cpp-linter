@@ -55,26 +55,23 @@ namespace linter {
     throw_unless(ctx.event_name.empty(),
                  "The `event_name` will be automatically acquired by `GITHUB_EVENT_NAME` env. "
                  "Don't set it from program option");
-    throw_unless(ctx.head_ref.empty(),
-                 "The `head_ref` will be automatically acquired by `GITHUB_REF` env. Don't set it "
-                 "from program option");
-    throw_unless(ctx.head_commit.empty(),
-                 "The `head_commit` will be automatically acquired by `GITHUB_SHA` env. Don't set "
-                 "it from program option");
+    throw_unless(ctx.source.empty(),
+                 "The `head_ref` will be automatically acquired by `GITHUB_REF` or `GITHUB_SHA` "
+                 "env. Don't set it from program option");
 
-    ctx.token       = env.token;
-    ctx.repo        = env.repository;
-    ctx.repo_path   = env.workspace;
-    ctx.event_name  = env.event_name;
-    ctx.head_ref    = env.head_ref;
-    ctx.head_commit = env.github_sha;
+    ctx.token      = env.token;
+    ctx.repo       = env.repository;
+    ctx.repo_path  = env.workspace;
+    ctx.event_name = env.event_name;
+    // ctx.head_ref   = env.head_ref;
+    ctx.source = env.github_sha;
 
     if (std::ranges::contains(github_events_automatic_infer_base_ref, ctx.event_name)) {
       spdlog::debug("Github event is {}, so automatically use {} instead of {} as base ref",
                     env.event_name,
-                    ctx.base_ref,
+                    ctx.target,
                     env.base_ref);
-      ctx.base_ref = env.base_ref;
+      ctx.target = env.base_ref;
     }
   }
 
