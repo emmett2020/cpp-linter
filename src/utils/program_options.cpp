@@ -169,6 +169,9 @@ namespace linter {
         throw_unless(variables.contains(token),
                      "must specify token when use cpp-linter on local while enables update issue "
                      "comment");
+        throw_unless(variables.contains(repo),
+                     "must specify repo when use cpp-linter on local while enables update issue "
+                     "comment");
       }
     }
 

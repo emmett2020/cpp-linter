@@ -53,7 +53,7 @@ namespace linter {
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", ctx_.token)}
       };
-      spdlog::trace("path: {}", path);
+      spdlog::info("path: {}", path);
 
       auto response = client.Get(path, headers);
 
@@ -74,7 +74,7 @@ namespace linter {
 
       auto comment = std::ranges::find_if(comments, is_our_comment);
       if (comment == comments.end()) {
-        spdlog::info("The lint doesn't comments on pull request number {} yet", ctx_.pr_number);
+        spdlog::info("The cpp-lint doesn't comments on pull request number {} yet", ctx_.pr_number);
         return;
       }
 
