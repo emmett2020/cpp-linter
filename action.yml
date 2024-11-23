@@ -15,8 +15,6 @@ inputs:
     description: Choose which clang-tidy version you want to use
     required: true
     default: 18
-  token:
-    description: Github token
   enable-clang-tidy:
     description: Enable clang-tidy check
     type: boolean
@@ -28,8 +26,8 @@ inputs:
     description: clang tidy command database
     type: string
     default: build
-  default-branch:
-    description: For non-pr related events
+  target:
+    description: Default branch which usually useds for non-pr related events
     type: string
 
 outputs:
@@ -63,6 +61,7 @@ runs:
         /usr/local/bin/cpp-linter --log-level=${{ inputs.log-level }}                          \
                                   --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
                                   --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
-                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}
+                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}      \
+                                  --target=${{ inputs.target }}
 
 
