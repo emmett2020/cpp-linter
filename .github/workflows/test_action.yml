@@ -19,11 +19,17 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
+
+      - name: Fetch all branches
+        run: |
+          git fetch --all
+          git branch -r
+
       - uses: ./
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           log-level: ${{ inputs.log-level }}
           clang-tidy-version: 12
-          target: master
+          target: test-action
 
