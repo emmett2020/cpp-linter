@@ -9,7 +9,7 @@ namespace linter {
   namespace {
     // PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
     auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
-      spdlog::debug("parse pr number uses: {}", ref_name);
+      spdlog::debug("Parse pr number uses: {}", ref_name);
       auto parts = std::views::split(ref_name, '/') | std::ranges::to<std::vector<std::string>>();
       throw_if(parts.size() != 4, std::format("ref_name format error: {}", ref_name));
       return std::stoi(parts[2]);
@@ -17,6 +17,7 @@ namespace linter {
   } // namespace
 
   auto read_github_env() -> github_env {
+    spdlog::debug("Read github environment.");
     auto env            = github_env{};
     env.repository      = env::get(github_repository);
     env.token           = env::get(github_token);
@@ -31,6 +32,7 @@ namespace linter {
   }
 
   void check_github_env(const github_env &env) {
+    spdlog::debug("Start to check github environment variables");
     throw_if(env.repository.empty(), "empty git repository, check env: GITHUB_REPOSITORY");
     throw_if(env.token.empty(), "empty token, check env: GITHUB_TOKEN");
     throw_if(env.event_name.empty(), "empty git event, check env: GITHUB_EVENT_NAME");

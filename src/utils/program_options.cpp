@@ -154,6 +154,7 @@ namespace linter {
 
   void check_program_options(bool use_on_local,
                              const boost::program_options::variables_map &variables) {
+    spdlog::debug("Start to check program_options");
     if (use_on_local) {
       throw_unless(variables.contains(repo_path),
                    "must specify repo-path when use cpp-linter on local");

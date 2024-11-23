@@ -37,6 +37,7 @@ namespace linter {
   }
 
   void check_context(const context &ctx) {
+    spdlog::debug("Start to check context");
     throw_if(ctx.repo_path.empty(), "empty repository path");
     throw_if(ctx.event_name.empty(), "empty event name");
     throw_if(ctx.target.empty(), "empty target");
