@@ -1,9 +1,12 @@
 #include "program_options.h"
 
+#include <ranges>
+
+#include <boost/algorithm/string/case_conv.hpp>
+
 #include "utils/env_manager.h"
 #include "github/api.h"
 #include "utils/util.h"
-#include <ranges>
 
 namespace linter {
   namespace program_options = boost::program_options;
@@ -39,6 +42,7 @@ namespace linter {
 
     if (variables.contains(log_level)) {
       ctx.log_level = variables[log_level].as<std::string>();
+      boost::algorithm::to_lower(ctx.log_level);
       throw_unless(std::ranges::contains(supported_log_level, ctx.log_level),
                    "unsupported log level");
     }

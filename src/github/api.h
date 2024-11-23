@@ -3,16 +3,13 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdlib>
-#include <fstream>
 #include <ranges>
 #include <print>
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
-#include <utility>
 
-#include "nlohmann/json_fwd.hpp"
 #include "utils/env_manager.h"
 #include "utils/util.h"
 #include "utils/context.h"
@@ -33,8 +30,8 @@ namespace linter {
 
   constexpr auto all_github_events =
     {github_event_push, github_event_pull_request, github_event_pull_request_target};
-  constexpr auto github_events_automatic_infer_base_ref = {github_event_pull_request,
-                                                           github_event_pull_request_target};
+  constexpr auto github_events_with_additional_ref = {github_event_pull_request,
+                                                      github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables
@@ -84,19 +81,18 @@ namespace linter {
   /// Reads from the actual Github runner.
   struct github_env {
     std::string repository;
+    std::string token;
     std::string event_name;
-    std::string event_path;
     std::string base_ref;
     std::string head_ref;
     std::string github_ref;
     std::string github_sha;
     std::string github_ref_type;
     std::string workspace;
-    std::string token;
   };
 
   auto read_github_env() -> github_env;
-  void check_github_env();
+  void check_github_env(const github_env& env);
   void print_github_env(const github_env& env);
   void fill_context_by_env(const github_env& env, context& ctx);
 
@@ -108,7 +104,9 @@ namespace linter {
       auto code          = response->status / 100;
       const auto& reason = response->reason;
       throw_unless(code == 1 || code == 2,
-                   std::format("Got http status code: {}, reason: {}", response->status, reason));
+                   std::format("http response error got http status code: {}, reason: {}",
+                               response->status,
+                               reason));
     }
 
     static void print_request(const httplib::Client& request) {
@@ -220,11 +218,10 @@ namespace linter {
     // TODO: Should this move into context?
     /// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
     void parse_pr_number() {
-      assert(false && "TODO");
-      assert(!ctx_.source.empty());
-      auto parts = std::views::split(ctx_.source, '/')
-                 | std::ranges::to<std::vector<std::string>>();
-      throw_if(parts.size() != 4, std::format("source ref format error: {}", ctx_.source));
+      auto head_ref = env::get(github_head_ref);
+      spdlog::debug("github head ref: {}", head_ref);
+      auto parts = std::views::split(head_ref, '/') | std::ranges::to<std::vector<std::string>>();
+      throw_if(parts.size() != 4, std::format("head ref format error: {}", github_head_ref));
       pr_number_ = std::stoi(parts[2]);
     }
 

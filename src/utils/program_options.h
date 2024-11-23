@@ -8,7 +8,7 @@
 #include "utils/context.h"
 
 namespace linter {
-  constexpr auto supported_log_level = {"TRACE", "DEBUG", "INFO", "ERROR"};
+  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
   auto make_program_options_desc() -> boost::program_options::options_description;
 

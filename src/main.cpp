@@ -31,11 +31,11 @@ namespace {
   /// This must be called before any spdlog use.
   void set_log_level(const std::string &log_level_str) {
     auto log_level = spdlog::level::info;
-    if (log_level_str == "TRACE") {
+    if (log_level_str == "trace") {
       log_level = spdlog::level::trace;
-    } else if (log_level_str == "DEBUG") {
+    } else if (log_level_str == "debuf") {
       log_level = spdlog::level::debug;
-    } else if (log_level_str == "ERROR") {
+    } else if (log_level_str == "error") {
       log_level = spdlog::level::err;
     } else {
       log_level = spdlog::level::info;
@@ -81,7 +81,7 @@ auto main(int argc, char **argv) -> int {
   if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
-    check_github_env();
+    check_github_env(env);
     fill_context_by_env(env, ctx);
   }
   print_context(ctx);
@@ -95,17 +95,22 @@ auto main(int argc, char **argv) -> int {
   auto github_client = github_api_client{};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     auto clang_tidy = find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
-    spdlog::info("The clang-tidyexecutable path: {}", clang_tidy);
+    spdlog::info("The clang-tidy executable path: {}", clang_tidy);
 
     for (const auto &file: changed_files) {
       auto result = clang_tidy::run(clang_tidy, ctx.clang_tidy_option, ctx.repo_path, file);
-      if (!result.pass) {
+      if (result.pass) {
+        spdlog::info("file: {} passed {} check.", file, clang_tidy);
+        continue;
+      }
+      spdlog::info("file: {} doesn't pass {} check.", file, clang_tidy);
+      if (!ctx.use_on_local) {
         github_client.get_issue_comment_id();
         github_client.add_or_update_comment(result.origin_stderr);
-        if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
-          spdlog::info("fast exit");
-          return -1;
-        }
+      }
+      if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
+        spdlog::info("clang-tidy fastly exit");
+        return -1;
       }
     }
   }
