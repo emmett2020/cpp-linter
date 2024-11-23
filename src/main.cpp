@@ -18,6 +18,10 @@ using namespace linter; // NOLINT
 using namespace std::string_literals;
 
 namespace {
+  int func() {
+    return 1.1;
+  }
+
   /// Find the full executable path of clang tools with specific version.
   auto find_clang_tool(std::string_view tool, std::uint16_t version) -> std::string {
     auto command                = std::format("{}-{}", tool, version);
