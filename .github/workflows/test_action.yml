@@ -25,5 +25,5 @@ jobs:
         with:
           log-level: ${{ inputs.log-level }}
           clang-tidy-version: 12
-          target: test-action
+          target: master
 
