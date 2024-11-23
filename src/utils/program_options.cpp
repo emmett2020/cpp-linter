@@ -154,6 +154,9 @@ namespace linter {
                    "must specify repo-path when use cpp-linter on local");
       throw_unless(variables.contains(event_name),
                    "must specify repo when use cpp-linter on local");
+      auto event = variables[event_name].as<std::string>();
+      throw_unless(std::ranges::contains(all_github_events, event),
+                   std::format("unsupported event name: {}", event));
       throw_unless(variables.contains(target), "must specify target when use cpp-linter on local");
       throw_unless(variables.contains(source), "must specify source when use cpp-linter on local");
     }
