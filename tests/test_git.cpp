@@ -21,7 +21,7 @@ const auto default_branch = "master"s;
 namespace {
   auto RefreshRepoDir() {
     if (std::filesystem::exists(temp_repo_dir)) {
-      std::print("remove old repo directory");
+      std::println("remove old repo directory");
       std::filesystem::remove_all(temp_repo_dir);
     }
     std::filesystem::create_directory(temp_repo_dir);
@@ -210,7 +210,7 @@ TEST_CASE("basics", "[git2][diff]") {
 
   auto ref         = git::repo::head(repo.get());
   auto head_commit = git::ref::peel<git::commit_ptr>(ref.get());
-  std::cout << git::commit::id_str(head_commit.get());
+  std::cout << git::commit::id_str(head_commit.get()) << "\n";
   REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
 
   AppendToFile("file1.cpp", "hello world2");
