@@ -8,6 +8,7 @@
 #include "github/api.h"
 #include "tools/clang_tidy.h"
 #include "utils/context.h"
+#include "utils/env_manager.h"
 #include "utils/git_utils.h"
 #include "utils/program_options.h"
 #include "utils/shell.h"

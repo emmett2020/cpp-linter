@@ -2,18 +2,14 @@
 
 #include <cstdint>
 #include <cstring>
-#include <git2/repository.h>
-#include <git2/status.h>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 #include <git2.h>
-#include <git2/deprecated.h>
-#include <git2/types.h>
 
 #include "utils/git_error.h"
-#include "utils/util.h"
 
 /// TODO: Maybe a standlone repository with libgit2 as submodule
 

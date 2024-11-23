@@ -4,20 +4,6 @@
 #include <cassert>
 #include <cstring>
 #include <string>
-#include <stdexcept>
-
-#include <git2/config.h>
-#include <git2/oid.h>
-#include <git2/refs.h>
-#include <git2/branch.h>
-#include <git2/commit.h>
-#include <git2/diff.h>
-#include <git2/errors.h>
-#include <git2/object.h>
-#include <git2/rebase.h>
-#include <git2/repository.h>
-#include <git2/signature.h>
-#include <git2/types.h>
 
 #include "utils/git_error.h"
 

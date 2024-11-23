@@ -31,6 +31,7 @@ set(SRC_FILE
   src/utils/context.cpp
   src/tools/clang_tidy.cpp
   src/github/api.cpp
+  src/github/common.cpp
 )
 
 add_executable(cpp-linter ${SRC_FILE})

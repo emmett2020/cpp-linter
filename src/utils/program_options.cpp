@@ -1,14 +1,11 @@
 #include "program_options.h"
 
 #include <algorithm>
-#include <netdb.h>
-#include <ranges>
 
 #include <boost/algorithm/string/case_conv.hpp>
 
-#include "utils/env_manager.h"
-#include "github/api.h"
 #include "utils/util.h"
+#include "github/common.h"
 
 namespace linter {
   namespace program_options = boost::program_options;

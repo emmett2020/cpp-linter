@@ -1,9 +1,10 @@
 #include "context.h"
-#include "github/api.h"
-#include "utils/util.h"
 
 #include <algorithm>
 #include <spdlog/spdlog.h>
+
+#include "github/common.h"
+#include "utils/util.h"
 
 namespace linter {
   void print_context(const context &ctx) {

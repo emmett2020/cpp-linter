@@ -2,10 +2,7 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
 #include <vector>
-
-#include "utils/shell.h"
 
 namespace linter::clang_tidy {
   /// Each diagnostic hase a header line.
