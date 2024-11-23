@@ -59,12 +59,12 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        # ls -lrtha
-        # echo "---------------"
-        # ls -lrthaR .git
-        # echo "---------------"
-        # git rev-parse test-action
-        # echo "---xyyx------------"
+        ls -lrtha
+        echo "---------------"
+        ls -lrthaR .git
+        echo "---------------"
+        git rev-parse test-action
+        echo "---xyyx------------"
         /usr/local/bin/cpp-linter --log-level=${{ inputs.log-level }}                          \
                                   --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
                                   --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
