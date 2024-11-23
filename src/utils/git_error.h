@@ -26,27 +26,28 @@ namespace linter::git {
   }
 
   inline void throw_if(int error) {
-    auto *msg = ::git_error_last()->message;
-    throw_if(error, msg);
+    if (error < 0) {
+      auto *msg = ::git_error_last()->message;
+      throw git_exception{error, msg};
+    }
   }
 
-  // inline void throw_if(bool condition) {
-  //   if (condition) {
-  //     auto *msg = ::git_error_last()->message;
-  //     throw_if(::git_error_code::GIT_ERROR, msg);
-  //   }
-  // }
-
+  /// Will throw a GIT_ERROR with given message if condition is true.
   inline void throw_if(bool condition, const std::string &msg) {
     if (condition) {
       throw_if(::git_error_code::GIT_ERROR, msg);
     }
   }
 
+  /// Will throw a GIT_ERROR with given message if condition isn't true.
   inline void throw_unless(bool condition, const std::string &msg) {
     if (!condition) {
       throw_if(::git_error_code::GIT_ERROR, msg);
     }
+  }
+
+  inline void throw_unsupported() {
+    throw git_exception{GIT_ERROR, "unsupported"};
   }
 } // namespace linter::git
 

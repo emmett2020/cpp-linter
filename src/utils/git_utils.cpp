@@ -3,13 +3,12 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
-#include <exception>
+#include <string>
+#include <stdexcept>
+
 #include <git2/config.h>
 #include <git2/oid.h>
 #include <git2/refs.h>
-#include <stdexcept>
-#include <string>
-
 #include <git2/branch.h>
 #include <git2/commit.h>
 #include <git2/diff.h>
@@ -20,7 +19,6 @@
 #include <git2/signature.h>
 #include <git2/types.h>
 
-#include "utils/util.h"
 #include "utils/git_error.h"
 
 namespace linter::git {
@@ -30,7 +28,7 @@ namespace linter::git {
     }
   } // namespace
 
-  auto setup() -> int {
+  int setup() {
     return ::git_libgit2_init();
   }
 
@@ -183,7 +181,7 @@ namespace linter::git {
 
     auto path(repo_raw_ptr repo) -> std::string {
       const auto *ret = ::git_repository_path(repo);
-      throw_if(ret == nullptr, "can't cat repository path");
+      throw_if(ret == nullptr, "can't get repository path");
       return ret;
     }
 
@@ -406,11 +404,11 @@ namespace linter::git {
       return {oid, std::move(commit)};
     }
 
-    auto tree(commit_raw_cptr commit) -> tree_raw_ptr {
+    auto tree(commit_raw_cptr commit) -> tree_ptr {
       auto *ptr = tree_raw_ptr{nullptr};
       auto ret  = ::git_commit_tree(&ptr, commit);
       throw_if(ret);
-      return ptr;
+      return {ptr, ::git_tree_free};
     }
 
     auto tree_id(commit_raw_cptr commit) -> oid_raw_cptr {
@@ -450,18 +448,18 @@ namespace linter::git {
       return ret;
     }
 
-    auto nth_gen_ancestor(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr {
+    auto nth_gen_ancestor(commit_raw_cptr commit, std::uint32_t n) -> commit_ptr {
       auto *out = commit_raw_ptr{nullptr};
       auto ret  = ::git_commit_nth_gen_ancestor(&out, commit, n);
       throw_if(ret);
-      return out;
+      return {out, ::git_commit_free};
     }
 
-    auto parent(commit_raw_cptr commit, std::uint32_t n) -> commit_raw_ptr {
+    auto parent(commit_raw_cptr commit, std::uint32_t n) -> commit_ptr {
       auto *out = commit_raw_ptr{nullptr};
       auto ret  = ::git_commit_parent(&out, commit, n);
       throw_if(ret);
-      return out;
+      return {out, ::git_commit_free};
     }
 
     auto parent_id(commit_raw_cptr commit, std::uint32_t n) -> oid_raw_cptr {
@@ -490,11 +488,11 @@ namespace linter::git {
     }
 
     auto index_to_workdir(repo_raw_ptr repo, index_raw_ptr index, diff_options_raw_cptr opts)
-      -> diff_raw_ptr {
+      -> diff_ptr {
       auto *ptr = diff_raw_ptr{nullptr};
       auto ret  = ::git_diff_index_to_workdir(&ptr, repo, index, opts);
       throw_if(ret);
-      return ptr;
+      return {ptr, ::git_diff_free};
     }
 
     auto tree_to_tree(
@@ -611,11 +609,11 @@ namespace linter::git {
       throw_if(type2 == object_t::bad || type2 == object_t::blob,
                std::format("get deltas error since unknwon spec2: {}", spec2));
 
-      auto *tree1 = tree_raw_ptr{nullptr};
-      auto *tree2 = tree_raw_ptr{nullptr};
+      auto tree1 = tree_ptr{nullptr, ::git_tree_free};
+      auto tree2 = tree_ptr{nullptr, ::git_tree_free};
 
       if (type1 == object_t::commit) {
-        tree1 = commit::tree(convert<commit_raw_ptr>(obj1.get()));
+        tree1 = commit::tree(convert<commit_raw_cptr>(obj1.get()));
       } else {
         throw std::runtime_error{"unsupported"};
       }
@@ -626,7 +624,7 @@ namespace linter::git {
         throw std::runtime_error{"unsupported"};
       }
 
-      auto diff = diff::tree_to_tree(repo, tree1, tree2, nullptr);
+      auto diff = diff::tree_to_tree(repo, tree1.get(), tree2.get(), nullptr);
       auto ret  = deltas(diff.get());
       return ret;
     }
@@ -707,11 +705,11 @@ namespace linter::git {
       return ret;
     }
 
-    auto lookup(repo_raw_ptr repo, const std::string &name) -> ref_raw_ptr {
+    auto lookup(repo_raw_ptr repo, const std::string &name) -> ref_ptr {
       auto *ref = ref_raw_ptr{nullptr};
       auto ret  = ::git_reference_lookup(&ref, repo, name.c_str());
       throw_if(ret);
-      return ref;
+      return {ref, ::git_reference_free};
     }
 
     auto name_to_oid(repo_raw_ptr repo, const std::string &name) -> git_oid {
@@ -781,11 +779,11 @@ namespace linter::git {
       return oid::to_str(id(obj));
     }
 
-    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_raw_ptr {
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid, object_t type) -> object_ptr {
       auto *obj = object_raw_ptr{nullptr};
       auto ret  = ::git_object_lookup(&obj, repo, oid, convert_to_git_otype(type));
       throw_if(ret);
-      return obj;
+      return {obj, ::git_object_free};
     }
 
   } // namespace object
