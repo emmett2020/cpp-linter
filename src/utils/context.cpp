@@ -1,10 +1,6 @@
 #include "context.h"
 
-#include <algorithm>
 #include <spdlog/spdlog.h>
-
-#include "github/common.h"
-#include "utils/util.h"
 
 namespace linter {
   void print_context(const context &ctx) {
@@ -37,6 +33,7 @@ namespace linter {
     spdlog::info("\tdatabase: {}", tidy_opt.database);
     spdlog::info("\theader filter: {}", tidy_opt.header_filter);
     spdlog::info("\tline filter: {}", tidy_opt.line_filter);
+    spdlog::info("\tsource file iregex: {}", tidy_opt.source_iregex);
     spdlog::info("");
   }
 

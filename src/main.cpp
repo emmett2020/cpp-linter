@@ -4,6 +4,7 @@
 #include <string>
 
 #include <spdlog/spdlog.h>
+#include <boost/regex.hpp>
 
 #include "github/api.h"
 #include "tools/clang_tidy.h"
@@ -11,7 +12,6 @@
 #include "utils/env_manager.h"
 #include "utils/git_utils.h"
 #include "utils/program_options.h"
-#include "utils/shell.h"
 #include "utils/util.h"
 
 using namespace linter; // NOLINT
@@ -40,6 +40,11 @@ namespace {
     }
   }
 
+  bool file_needs_to_be_checked(const std::string &iregex, const std::string &file) {
+    auto regex = boost::regex{iregex, boost::regex::icase};
+    return boost::regex_match(file, regex);
+  }
+
   auto get_current_version() -> std::string {
     auto file = std::ifstream{"VERSION"};
     throw_if(file.bad(), "Open VERSION file to read failed");
@@ -48,6 +53,24 @@ namespace {
     auto trimmed_version = linter::trim(buffer);
     throw_if(buffer.empty(), "VERSION file is empty");
     return {trimmed_version.data(), trimmed_version.size()};
+  }
+
+  struct clang_tidy_total_result {
+    std::uint32_t total   = 0;
+    std::uint32_t ignored = 0;
+    std::uint32_t passed  = 0;
+    std::uint32_t failed  = 0;
+  };
+
+  void print_clang_tidy_total_result(const clang_tidy_total_result &result) {
+    spdlog::info(
+      "Total changed file number: {}. While {} files are igored by user, {} files checked by "
+      "clang-tidy, {} files check is passed, {} files check is failed",
+      result.total,
+      result.ignored,
+      result.total - result.ignored,
+      result.passed,
+      result.failed);
   }
 } // namespace
 
@@ -83,13 +106,23 @@ auto main(int argc, char **argv) -> int {
 
   auto github_client = github_api_client{ctx};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
-    const auto &opt = ctx.clang_tidy_option;
+    const auto &opt    = ctx.clang_tidy_option;
+    auto total_result  = clang_tidy_total_result{};
+    total_result.total = changed_files.size();
+
     for (const auto &file: changed_files) {
+      if (!file_needs_to_be_checked(opt.source_iregex, file)) {
+        ++total_result.ignored;
+        spdlog::trace("file is ignored {}", file);
+        continue;
+      }
       auto result = clang_tidy::run(opt, ctx.repo_path, file);
       if (result.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
+        ++total_result.passed;
         continue;
       }
+      ++total_result.failed;
       spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
       if (ctx.enable_update_issue_comment) {
         github_client.get_issue_comment_id();
@@ -100,6 +133,7 @@ auto main(int argc, char **argv) -> int {
         return -1;
       }
     }
+    print_clang_tidy_total_result(total_result);
   }
 
   git::shutdown();

@@ -62,6 +62,7 @@ namespace linter::clang_tidy {
     std::string database;
     std::string header_filter;
     std::string line_filter;
+    std::string source_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
   };
 
   /// Run clang tidy on one file.

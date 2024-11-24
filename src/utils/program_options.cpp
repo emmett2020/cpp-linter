@@ -37,6 +37,7 @@ namespace linter {
     constexpr auto clang_tidy_database             = "clang-tidy-database";
     constexpr auto clang_tidy_header_filter        = "clang-tidy-header-filter";
     constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
+    constexpr auto clang_tidy_iregex               = "clang-tidy-iregex";
 
     // Find the full executable path of clang tools with specific version.
     auto find_clang_tool(std::string_view tool, std::uint16_t version) -> std::string {
@@ -142,6 +143,9 @@ namespace linter {
         }
         if (variables.contains(clang_tidy_line_filter)) {
           tidy_opt.line_filter = variables[clang_tidy_line_filter].as<std::string>();
+        }
+        if (variables.contains(clang_tidy_iregex)) {
+          tidy_opt.source_iregex = variables[clang_tidy_iregex].as<std::string>();
         }
       }
     }
