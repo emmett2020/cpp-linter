@@ -233,7 +233,7 @@ namespace linter::clang_tidy {
     spdlog::info("Successfully ran clang-tidy, now start to parse the output of it.");
     auto res          = result{};
     res.pass          = ec == 0;
-    res.diag          = clang_tidy::parse_stdout(std_out);
+    res.diags         = clang_tidy::parse_stdout(std_out);
     res.origin_stderr = std::move(std_err);
 
     if (res.pass) {

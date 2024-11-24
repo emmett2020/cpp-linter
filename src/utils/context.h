@@ -10,6 +10,7 @@ namespace linter {
     bool use_on_local = false;
     std::string log_level;
     bool enable_update_issue_comment = false;
+    bool enable_step_summary         = true;
 
     std::string repo_path;
     std::string repo;

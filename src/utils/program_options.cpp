@@ -23,8 +23,9 @@ namespace linter {
     constexpr auto target                          = "target";
     constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
-    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
     constexpr auto pr_number                       = "pr-number";
+    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
+    constexpr auto enable_step_summary             = "enable-step_summary";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
     constexpr auto clang_tidy_version              = "clang-tidy-version";
@@ -155,6 +156,14 @@ namespace linter {
       spdlog::trace("check_and_fill_context_on_ci");
       auto must_not_specify_option = {repo_path, repo, source, event_name, pr_number};
       must_not_specify("use cpp-linter on CI", variables, must_not_specify_option);
+
+      if (variables.contains(enable_step_summary)) {
+        ctx.enable_step_summary = variables[enable_step_summary].as<bool>();
+      }
+
+      if (variables.contains(enable_update_issue_comment)) {
+        ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
+      }
     }
 
     void check_and_fill_context_on_local(const program_options::variables_map &variables,
@@ -173,8 +182,9 @@ namespace linter {
         must_specify("use cpp-linter on local and enable update issue comment",
                      variables,
                      {token, repo});
-        ctx.token = variables[token].as<std::string>();
-        ctx.repo  = variables[repo].as<std::string>();
+        ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
+        ctx.token                       = variables[token].as<std::string>();
+        ctx.repo                        = variables[repo].as<std::string>();
       }
 
       if (variables.contains(pr_number)) {
@@ -207,6 +217,7 @@ namespace linter {
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       (pr_number,                       value<int32_t>(),  "Set the pull-request number of git repository.")
       (enable_update_issue_comment,     value<bool>(),     "Enable update issue comment. This will set http request to github")
+      (enable_step_summary,             value<bool>(),     "Enable step summary.")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."
                                                            "This means cpp-linter will stop all clang-tidy"

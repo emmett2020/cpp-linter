@@ -1,4 +1,5 @@
 #include <cctype>
+#include <fstream>
 #include <git2/oid.h>
 #include <print>
 #include <string>
@@ -7,6 +8,7 @@
 #include <boost/regex.hpp>
 
 #include "github/api.h"
+#include "github/common.h"
 #include "tools/clang_tidy.h"
 #include "utils/context.h"
 #include "utils/env_manager.h"
@@ -58,8 +60,8 @@ namespace {
   struct clang_tidy_all_files_result {
     std::uint32_t total   = 0;
     std::uint32_t ignored = 0;
-    std::uint32_t passed  = 0;
-    std::uint32_t failed  = 0;
+    std::vector<clang_tidy::result> passed;
+    std::vector<clang_tidy::result> failed;
   };
 
   void print_clang_tidy_total_result(const clang_tidy_all_files_result &result) {
@@ -69,9 +71,39 @@ namespace {
       result.total,
       result.ignored,
       result.total - result.ignored,
-      result.passed,
-      result.failed);
+      result.passed.size(),
+      result.failed.size());
   }
+
+  auto make_step_summary(const context &ctx, const clang_tidy_all_files_result &result)
+    -> std::string {
+    const auto title = "# The cpp-linter Result"s;
+    auto prefix      = std::string{};
+    auto comment     = std::string{};
+    if (result.failed.empty()) {
+      prefix = ":heavy_check_mark:\nAll checks passed.";
+    } else {
+      prefix   = ":warnings:\nSome files didn't pass the cpp-linter checks\n";
+      comment += std::format("<details><summary>{} reports: <strong>",
+                             ctx.clang_tidy_option.clang_tidy_binary);
+      for (const auto &failed: result.failed) {
+        for (const auto &diag: failed.diags) {
+          auto one = std::format(
+            "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
+            diag.header.file_name,
+            diag.header.row_idx,
+            diag.header.col_idx,
+            diag.header.serverity,
+            diag.header.diagnostic_type,
+            diag.header.brief);
+          comment += one;
+        }
+      }
+      comment += std::format("{} fails</strong></summary>\n\n\n</details>", result.failed.size());
+    }
+    return title + prefix + comment;
+  }
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -118,10 +150,10 @@ auto main(int argc, char **argv) -> int {
       auto result_per_file = clang_tidy::run(opt, ctx.repo_path, file);
       if (result_per_file.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
-        ++clang_tidy_result.passed;
+        clang_tidy_result.passed.emplace_back(std::move(result_per_file));
         continue;
       }
-      ++clang_tidy_result.failed;
+      clang_tidy_result.failed.emplace_back(std::move(result_per_file));
       spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
 
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
@@ -132,11 +164,21 @@ auto main(int argc, char **argv) -> int {
     print_clang_tidy_total_result(clang_tidy_result);
   }
 
+  if (ctx.enable_step_summary) {
+    auto summary_file = env::get(github_step_summary);
+    auto file         = std::fstream{summary_file, std::ios::app};
+    throw_unless(file.is_open(), "error to open step summary file to write");
+    auto step_summary = make_step_summary(ctx, clang_tidy_result);
+    file << step_summary;
+  }
+
   if (ctx.enable_update_issue_comment) {
     auto github_client = github_api_client{ctx};
     github_client.get_issue_comment_id();
-    github_client.add_or_update_comment(
-      std::format("{} passed, failed: {}", clang_tidy_result.passed, clang_tidy_result.failed));
+    github_client.add_or_update_comment(std::format(
+      "{} passed, failed: {}",
+      clang_tidy_result.passed.size(),
+      clang_tidy_result.failed.size()));
   }
 
   // teardown
@@ -144,7 +186,7 @@ auto main(int argc, char **argv) -> int {
 
   auto all_passes = true;
   if (ctx.clang_tidy_option.enable_clang_tidy) {
-    all_passes &= (clang_tidy_result.failed == 0);
+    all_passes &= (clang_tidy_result.failed.empty());
   }
   return static_cast<int>(all_passes);
 }
