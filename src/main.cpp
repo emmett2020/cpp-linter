@@ -34,7 +34,7 @@ namespace {
     auto log_level = spdlog::level::info;
     if (log_level_str == "trace") {
       log_level = spdlog::level::trace;
-    } else if (log_level_str == "debuf") {
+    } else if (log_level_str == "debug") {
       log_level = spdlog::level::debug;
     } else if (log_level_str == "error") {
       log_level = spdlog::level::err;
