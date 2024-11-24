@@ -55,14 +55,14 @@ namespace {
     return {trimmed_version.data(), trimmed_version.size()};
   }
 
-  struct clang_tidy_total_result {
+  struct clang_tidy_all_files_result {
     std::uint32_t total   = 0;
     std::uint32_t ignored = 0;
     std::uint32_t passed  = 0;
     std::uint32_t failed  = 0;
   };
 
-  void print_clang_tidy_total_result(const clang_tidy_total_result &result) {
+  void print_clang_tidy_total_result(const clang_tidy_all_files_result &result) {
     spdlog::info(
       "Total changed file number: {}. While {} files are igored by user, {} files checked by "
       "clang-tidy, {} files check is passed, {} files check is failed",
@@ -104,25 +104,24 @@ auto main(int argc, char **argv) -> int {
   auto changed_files = git::diff::changed_files(repo.get(), ctx.target, ctx.source);
   print_changed_files(changed_files);
 
-  auto github_client = github_api_client{ctx};
-  if (ctx.clang_tidy_option.enable_clang_tidy) {
-    const auto &opt    = ctx.clang_tidy_option;
-    auto total_result  = clang_tidy_total_result{};
-    total_result.total = changed_files.size();
+  auto clang_tidy_result  = clang_tidy_all_files_result{};
+  clang_tidy_result.total = changed_files.size();
 
+  if (ctx.clang_tidy_option.enable_clang_tidy) {
+    const auto &opt = ctx.clang_tidy_option;
     for (const auto &file: changed_files) {
       if (!file_needs_to_be_checked(opt.source_iregex, file)) {
-        ++total_result.ignored;
+        ++clang_tidy_result.ignored;
         spdlog::trace("file is ignored {}", file);
         continue;
       }
-      auto result = clang_tidy::run(opt, ctx.repo_path, file);
-      if (result.pass) {
+      auto result_per_file = clang_tidy::run(opt, ctx.repo_path, file);
+      if (result_per_file.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
-        ++total_result.passed;
+        ++clang_tidy_result.passed;
         continue;
       }
-      ++total_result.failed;
+      ++clang_tidy_result.failed;
       spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
 
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
@@ -130,13 +129,22 @@ auto main(int argc, char **argv) -> int {
         return -1;
       }
     }
-    print_clang_tidy_total_result(total_result);
-    if (ctx.enable_update_issue_comment) {
-      github_client.get_issue_comment_id();
-      github_client.add_or_update_comment(
-        std::format("{} passed, failed: {}", total_result.passed, total_result.failed));
-    }
+    print_clang_tidy_total_result(clang_tidy_result);
   }
 
+  if (ctx.enable_update_issue_comment) {
+    auto github_client = github_api_client{ctx};
+    github_client.get_issue_comment_id();
+    github_client.add_or_update_comment(
+      std::format("{} passed, failed: {}", clang_tidy_result.passed, clang_tidy_result.failed));
+  }
+
+  // teardown
   git::shutdown();
+
+  auto all_passes = true;
+  if (ctx.clang_tidy_option.enable_clang_tidy) {
+    all_passes &= (clang_tidy_result.failed == 0);
+  }
+  return static_cast<int>(all_passes);
 }
