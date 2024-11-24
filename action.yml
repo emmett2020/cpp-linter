@@ -59,7 +59,7 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        if [[ ${{ inputs.debug }} == "trace" ]]; then
+        if [[ ${{ inputs.log-level }} == "trace" ]]; then
           echo "The git repo details:"
           ls -lrthaR .git
         fi
