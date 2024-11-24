@@ -10,7 +10,7 @@ branding:
 inputs:
   log-level:
     description: Set log level for cpp-linter
-    default: ERROR
+    default: info
   clang-tidy-version:
     description: Choose which clang-tidy version you want to use
     required: true
@@ -59,12 +59,10 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        ls -lrtha
-        echo "---------------"
-        ls -lrthaR .git
-        echo "---------------"
-        # git rev-parse test-action
-        echo "---xyyx------------"
+        if [[ ${{ inputs.debug }} == "trace" ]]; then
+          echo "The git repo details:"
+          ls -lrthaR .git
+        fi
         /usr/local/bin/cpp-linter --log-level=${{ inputs.log-level }}                          \
                                   --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
                                   --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
