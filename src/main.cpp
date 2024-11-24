@@ -81,11 +81,12 @@ namespace {
     auto prefix      = std::string{};
     auto comment     = std::string{};
     if (result.failed.empty()) {
-      prefix = ":heavy_check_mark:\nAll checks passed.";
+      prefix = ":rocket:\nAll checks passed.";
     } else {
-      prefix   = ":warnings:\nSome files didn't pass the cpp-linter checks\n";
+      prefix   = ":warning:\nSome files didn't pass the cpp-linter checks\n";
       comment += std::format("<details><summary>{} reports: <strong>",
                              ctx.clang_tidy_option.clang_tidy_binary);
+      comment += std::format("{} fails</strong></summary>\n\n", result.failed.size());
       for (const auto &failed: result.failed) {
         for (const auto &diag: failed.diags) {
           auto one = std::format(
@@ -99,7 +100,7 @@ namespace {
           comment += one;
         }
       }
-      comment += std::format("{} fails</strong></summary>\n\n\n</details>", result.failed.size());
+      comment += "\n</details>";
     }
     return title + prefix + comment;
   }
@@ -188,5 +189,5 @@ auto main(int argc, char **argv) -> int {
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     all_passes &= (clang_tidy_result.failed.empty());
   }
-  return static_cast<int>(all_passes);
+  return all_passes ? 0 : 1;
 }
