@@ -32,9 +32,15 @@ inputs:
     default: master
 
 outputs:
-  random-number:
-    description: "Random number"
-    value: ${{ steps.random-number-generator.outputs.random-number }}
+  failed:
+    description: All checks total failed number.
+    value: ${{ steps.cpp_linter_on_unix.outputs.total_failed }}
+  clang-tidy-checks-failed:
+    description: An integer of how many file fails on clang tidy check
+    value: ${{ steps.cpp_linter_on_unix.outputs.clang_tidy_failed_number }}
+  clang-format-checks-failed:
+    description: An integer of how many file fails on clang format check
+    value: ${{ steps.cpp_linter_on_unix.outputs.clang_format_failed_number }}
 
 runs:
   using: "composite"
@@ -56,6 +62,7 @@ runs:
         submodules: true
 
     - name: Run cpp-linter On Linux
+      id: cpp_linter_on_linux
       if: runner.os == 'Linux'
       shell: bash
       run: |

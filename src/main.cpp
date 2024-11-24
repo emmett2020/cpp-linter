@@ -105,6 +105,16 @@ namespace {
     return title + prefix + comment;
   }
 
+  void write_to_github_output([[maybe_unused]] const context &ctx,
+                              const clang_tidy_all_files_result &clang_tidy_result) {
+    auto output = env::get(github_output);
+    auto file   = std::fstream{output, std::ios::app};
+    throw_unless(file.is_open(), "error to open output file to write");
+    file << std::format("total_failed={}\n", clang_tidy_result.failed.size());
+    file << std::format("clang_tidy_failed_number={}\n", clang_tidy_result.failed.size());
+    file << std::format("clang_format_failed_number={}\n", 0);
+  }
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -184,6 +194,10 @@ auto main(int argc, char **argv) -> int {
 
   // teardown
   git::shutdown();
+
+  if (!ctx.use_on_local) {
+    write_to_github_output(ctx, clang_tidy_result);
+  }
 
   auto all_passes = true;
   if (ctx.clang_tidy_option.enable_clang_tidy) {

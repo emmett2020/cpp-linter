@@ -46,6 +46,8 @@ namespace linter {
 
   constexpr auto github_step_summary = "GITHUB_STEP_SUMMARY";
 
+  constexpr auto github_output = "GITHUB_OUTPUT";
+
   /// The default working directory on the runner for steps, and the default
   /// location of your repository when using the checkout action. For example,
   /// /home/runner/work/my-repo-name/my-repo-name.
