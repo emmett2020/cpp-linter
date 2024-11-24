@@ -81,9 +81,9 @@ namespace {
     auto prefix      = std::string{};
     auto comment     = std::string{};
     if (result.failed.empty()) {
-      prefix = ":rocket:\nAll checks passed.";
+      prefix = ":rocket: All checks passed.";
     } else {
-      prefix   = ":warning:\nSome files didn't pass the cpp-linter checks\n";
+      prefix   = ":warning: Some files didn't pass the cpp-linter checks\n";
       comment += std::format("<details><summary>{} reports: <strong>",
                              ctx.clang_tidy_option.clang_tidy_binary);
       comment += std::format("{} fails</strong></summary>\n\n", result.failed.size());
