@@ -124,16 +124,18 @@ auto main(int argc, char **argv) -> int {
       }
       ++total_result.failed;
       spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
-      if (ctx.enable_update_issue_comment) {
-        github_client.get_issue_comment_id();
-        github_client.add_or_update_comment(result.origin_stderr);
-      }
+
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
         return -1;
       }
     }
     print_clang_tidy_total_result(total_result);
+    if (ctx.enable_update_issue_comment) {
+      github_client.get_issue_comment_id();
+      github_client.add_or_update_comment(
+        std::format("{} passed, failed: {}", total_result.passed, total_result.failed));
+    }
   }
 
   git::shutdown();
