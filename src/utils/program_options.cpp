@@ -111,6 +111,12 @@ namespace linter {
           throw_if(variables.contains(clang_tidy_version),
                    "specify both clang-tidy-binary and clang-tidy-version will be ambiguous");
           tidy_opt.clang_tidy_binary = variables[clang_tidy_binary].as<std::string>();
+          if (tidy_opt.enable_clang_tidy) {
+            auto [ec, stdout, stderr] = shell::which(tidy_opt.clang_tidy_binary);
+            throw_unless(
+              ec == 0,
+              std::format("can't find given clang_tidy_binary: {}", tidy_opt.clang_tidy_binary));
+          }
         }
         spdlog::info("The clang-tidy executable path: {}", ctx.clang_tidy_option.clang_tidy_binary);
         if (variables.contains(clang_tidy_allow_no_checks)) {

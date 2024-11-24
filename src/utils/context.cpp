@@ -17,7 +17,7 @@ namespace linter {
     spdlog::info("Repository Options:");
     spdlog::info("\trepository path: {}", ctx.repo_path);
     spdlog::info("\trepository: {}", ctx.repo);
-    spdlog::info("\trepository token: {}", ctx.token);
+    spdlog::info("\trepository token: {}", "***");
     spdlog::info("\trepository event_name: {}", ctx.event_name);
     spdlog::info("\trepository target: {}", ctx.target);
     spdlog::info("\trepository source: {}", ctx.source);
