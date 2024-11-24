@@ -74,9 +74,7 @@ auto main(int argc, char **argv) -> int {
     check_github_env(env);
     fill_context_by_env(env, ctx);
   }
-
   print_context(ctx);
-  check_context(ctx);
 
   git::setup();
   auto repo          = git::repo::open(ctx.repo_path);
