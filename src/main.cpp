@@ -18,17 +18,6 @@ using namespace linter; // NOLINT
 using namespace std::string_literals;
 
 namespace {
-  /// Find the full executable path of clang tools with specific version.
-  auto find_clang_tool(std::string_view tool, std::uint16_t version) -> std::string {
-    auto command                = std::format("{}-{}", tool, version);
-    auto [ec, std_out, std_err] = shell::which(command);
-    throw_unless(ec == 0,
-                 std::format("find {}-{} failed, error message: {}", tool, version, std_err));
-    auto trimmed = trim(std_out);
-    throw_if(trimmed.empty(), "got empty clang tool path");
-    return {trimmed.data(), trimmed.size()};
-  }
-
   /// This must be called before any spdlog use.
   void set_log_level(const std::string &log_level_str) {
     auto log_level = spdlog::level::info;
@@ -47,7 +36,7 @@ namespace {
   auto print_changed_files(const std::vector<std::string> &files) {
     spdlog::info("Got {} changed files", files.size());
     for (const auto &[idx, file]: std::views::enumerate(files)) {
-      spdlog::info("Index: {}, file: {}", idx, file);
+      spdlog::info("File index: {}, file path: {}", idx, file);
     }
   }
 
@@ -60,13 +49,6 @@ namespace {
     throw_if(buffer.empty(), "VERSION file is empty");
     return {trimmed_version.data(), trimmed_version.size()};
   }
-
-  // For a CI environment, the target reference may not downloaded to git
-  // repository. We download and set a reference to it.
-  // The target reference uses remote type. It must be exists.
-  auto create_target_ref() {
-  }
-
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -83,10 +65,7 @@ auto main(int argc, char **argv) -> int {
 
   auto ctx         = context{};
   ctx.use_on_local = env::get(github_actions) != "true";
-  spdlog::info("Use cpp-linter on local: {} ", ctx.use_on_local);
-
-  check_program_options(ctx.use_on_local, options);
-  fill_context_by_program_options(options, ctx);
+  check_and_fill_context_by_program_options(options, ctx);
   set_log_level(ctx.log_level);
 
   if (!ctx.use_on_local) {
@@ -106,16 +85,14 @@ auto main(int argc, char **argv) -> int {
 
   auto github_client = github_api_client{ctx};
   if (ctx.clang_tidy_option.enable_clang_tidy) {
-    auto clang_tidy = find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
-    spdlog::info("The clang-tidy executable path: {}", clang_tidy);
-
+    const auto &opt = ctx.clang_tidy_option;
     for (const auto &file: changed_files) {
-      auto result = clang_tidy::run(clang_tidy, ctx.clang_tidy_option, ctx.repo_path, file);
+      auto result = clang_tidy::run(opt, ctx.repo_path, file);
       if (result.pass) {
-        spdlog::info("file: {} passed {} check.", file, clang_tidy);
+        spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
         continue;
       }
-      spdlog::error("file: {} doesn't pass {} check.", file, clang_tidy);
+      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
       if (ctx.enable_update_issue_comment) {
         github_client.get_issue_comment_id();
         github_client.add_or_update_comment(result.origin_stderr);

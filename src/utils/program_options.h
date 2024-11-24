@@ -16,9 +16,7 @@ namespace linter {
     const boost::program_options::options_description& desc)
     -> boost::program_options::variables_map;
 
-  void fill_context_by_program_options(const boost::program_options::variables_map& variables,
-                                       context& ctx);
-
-  void check_program_options(bool use_on_local,
-                             const boost::program_options::variables_map& variables);
+  void check_and_fill_context_by_program_options(
+    const boost::program_options::variables_map& variables,
+    context& ctx);
 } // namespace linter

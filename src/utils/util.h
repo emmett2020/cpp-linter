@@ -59,4 +59,13 @@ namespace linter {
     }
   }
 
+  template <noexcept_str_func Func>
+  void throw_unless(bool condition, Func &&func) {
+    if (!condition) {
+      auto msg = std::forward<Func>(func)();
+      throw std::runtime_error{msg};
+    }
+  }
+
+
 } // namespace linter

@@ -9,7 +9,7 @@ namespace linter {
   namespace {
     // PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
     auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
-      spdlog::debug("Parse pr number uses: {}", ref_name);
+      spdlog::trace("parse pr number uses: {}", ref_name);
       auto parts = std::views::split(ref_name, '/') | std::ranges::to<std::vector<std::string>>();
       throw_if(parts.size() != 4, std::format("ref_name format error: {}", ref_name));
       return std::stoi(parts[2]);
@@ -17,7 +17,7 @@ namespace linter {
   } // namespace
 
   auto read_github_env() -> github_env {
-    spdlog::debug("Read github environment.");
+    spdlog::trace("read_github_env");
     auto env            = github_env{};
     env.repository      = env::get(github_repository);
     env.token           = env::get(github_token);
@@ -61,22 +61,12 @@ namespace linter {
     spdlog::debug("");
   }
 
+  // This function will be called after `check_and_fill_context_by_program_options`.
+  // The confliction check is already done in that function.
   void fill_context_by_env(const github_env &env, context &ctx) {
-    spdlog::debug("Fill context by Github environment variables");
+    spdlog::trace("Fill context by Github environment variables");
     throw_if(ctx.use_on_local,
              "The `fill_context_by_env` function must be called only on Github CI environment.");
-    throw_unless(ctx.token.empty(),
-                 "The `token` will be automatically acquired by `GITHUB_TOKEN`.");
-    throw_unless(ctx.repo.empty(),
-                 "The `repo` will be automatically acquired by `GITHUB_REPOSITORY` env.");
-    throw_unless(ctx.repo_path.empty(),
-                 "The `repo_path` will be automatically acquired by `GITHUB_WORKSPACE` env.");
-    throw_unless(ctx.event_name.empty(),
-                 "The `event_name` will be automatically acquired by `GITHUB_EVENT_NAME` env.");
-    throw_unless(ctx.source.empty(),
-                 "The `source` will be automatically acquired by `GITHUB_REF` or `GITHUB_SHA`env.");
-    throw_unless(ctx.pr_number < 0,
-                 "The `pr_number` will be automatically acquired by `GITHUB_REF` env.");
 
     ctx.token      = env.token;
     ctx.repo       = env.repository;

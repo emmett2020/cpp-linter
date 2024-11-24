@@ -66,10 +66,8 @@ namespace linter::clang_tidy {
       return header;
     }
 
-    auto execute(std::string_view cmd,
-                 const option& option,
-                 std::string_view repo,
-                 std::string_view file) -> shell::result {
+    auto execute(const option& option, std::string_view repo, std::string_view file)
+      -> shell::result {
       auto opts = std::vector<std::string>{};
       if (!option.database.empty()) {
         opts.emplace_back(std::format("-p={}", option.database));
@@ -99,9 +97,9 @@ namespace linter::clang_tidy {
       opts.emplace_back(file);
 
       auto arg_str = opts | std::views::join_with(' ') | std::ranges::to<std::string>();
-      spdlog::info("Running command: {} {}", cmd, arg_str);
+      spdlog::info("Running command: {} {}", option.clang_tidy_binary, arg_str);
 
-      return shell::execute(cmd, opts, repo);
+      return shell::execute(option.clang_tidy_binary, opts, repo);
     }
 
     void try_match(const std::string& line, const char* regex_str, auto callback) {
@@ -224,12 +222,9 @@ namespace linter::clang_tidy {
 
   } // namespace
 
-  auto run(const std::string& cmd,
-           const option& option,
-           const std::string& repo,
-           const std::string& file) -> result {
+  auto run(const option& option, const std::string& repo, const std::string& file) -> result {
     spdlog::info("Start to run clang-tidy");
-    auto [ec, std_out, std_err] = execute(cmd, option, repo, file);
+    auto [ec, std_out, std_err] = execute(option, repo, file);
     spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
                   ec,
                   std_out,
