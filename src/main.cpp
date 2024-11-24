@@ -105,6 +105,12 @@ namespace {
     return title + prefix + comment;
   }
 
+  auto make_pull_request_review(const context &ctx, const clang_tidy_all_files_result &result)
+    -> std::string {
+    //
+    //
+  }
+
   void write_to_github_output([[maybe_unused]] const context &ctx,
                               const clang_tidy_all_files_result &clang_tidy_result) {
     auto output = env::get(github_output);
@@ -190,6 +196,9 @@ auto main(int argc, char **argv) -> int {
       "{} passed, failed: {}",
       clang_tidy_result.passed.size(),
       clang_tidy_result.failed.size()));
+  }
+
+  if (ctx.enable_pull_request_review) {
   }
 
   // teardown

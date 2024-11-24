@@ -84,7 +84,7 @@ namespace linter {
       spdlog::info("Successfully got comment id {} of pr {}", comment_id_, ctx_.pr_number);
     }
 
-    void add_comment(const std::string& body) {
+    void add_issue_comment(const std::string& body) {
       spdlog::info("Start to add issue comment for pr {}", ctx_.pr_number);
 
       const auto path    = std::format("/repos/{}/issues/{}/comments", ctx_.repo, ctx_.pr_number);
@@ -112,7 +112,7 @@ namespace linter {
         comment_id_);
     }
 
-    void update_comment(const std::string& body) {
+    void update_issue_comment(const std::string& body) {
       throw_if(comment_id_ == -1, "doesn't have comment_id yet");
       throw_if(ctx_.pr_number == -1, "doesn't have comment_id yet");
       spdlog::info("Start to update issue comment");
@@ -134,12 +134,42 @@ namespace linter {
       spdlog::info("Successfully updated comment {} of pr {}", comment_id_, ctx_.pr_number);
     }
 
-    void add_or_update_comment(const std::string& body) {
+    void add_or_update_issue_comment(const std::string& body) {
       if (comment_id_ == -1) {
-        add_comment(body);
+        add_issue_comment(body);
       } else {
-        update_comment(body);
+        update_issue_comment(body);
       }
+    }
+
+    void post_pull_request_review(const std::string& body) {
+      spdlog::info("Start to post pull request review for pr number {}", ctx_.pr_number);
+
+      const auto path    = std::format("/repos/{}/pulls/{}/reviews", ctx_.repo, ctx_.pr_number);
+      const auto headers = httplib::Headers{
+        {"Accept", "application/vnd.github.use_diff"},
+        {"Authorization", std::format("token {}", ctx_.token)}
+      };
+      spdlog::info("Path: {}", path);
+
+
+      // debug
+      auto json_body    = nlohmann::json{};
+      json_body["body"] = body;
+      spdlog::trace("Body:\n{}", json_body.dump());
+
+      auto response = client.Post(path, headers, json_body.dump(), "text/plain");
+      spdlog::trace("Get github response body: {}", response->body);
+      check_http_response(response);
+
+      auto comment = nlohmann::json::parse(response->body);
+      throw_unless(comment.is_object(), "comment isn't object");
+
+      comment["id"].get_to(comment_id_);
+      spdlog::info(
+        "Successfully add new comment for pull-request {}, the new added comment id is {}",
+        ctx_.pr_number,
+        comment_id_);
     }
 
     [[nodiscard]] auto ctx() const -> const context& {
