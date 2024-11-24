@@ -9,14 +9,15 @@ namespace linter {
   struct context {
     bool use_on_local = false;
     std::string log_level;
+    bool enable_update_issue_comment = false;
+
     std::string repo_path;
     std::string repo;
     std::string token;
     std::string event_name;
     std::string target;
     std::string source;
-    std::int32_t pr_number           = -1;
-    bool enable_update_issue_comment = false;
+    std::int32_t pr_number = -1;
 
     clang_tidy::option clang_tidy_option{};
   };

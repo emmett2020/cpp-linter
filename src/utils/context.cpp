@@ -13,9 +13,12 @@ namespace linter {
     spdlog::info("Common Options:");
     spdlog::info("\tuse on local: {}", ctx.use_on_local);
     spdlog::info("\tlog level: {}", ctx.log_level);
+    spdlog::info("\tenable update issue comment: {}", ctx.enable_update_issue_comment);
     spdlog::info("Repository Options:");
     spdlog::info("\trepository path: {}", ctx.repo_path);
     spdlog::info("\trepository: {}", ctx.repo);
+    spdlog::info("\trepository token: {}", ctx.token);
+    spdlog::info("\trepository event_name: {}", ctx.event_name);
     spdlog::info("\trepository target: {}", ctx.target);
     spdlog::info("\trepository source: {}", ctx.source);
     spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
@@ -27,6 +30,7 @@ namespace linter {
     spdlog::info("\tallow no checks: {}", tidy_opt.allow_no_checks);
     spdlog::info("\tenable check profile: {}", tidy_opt.enable_check_profile);
     spdlog::info("\tclang tidy version: {}", tidy_opt.clang_tidy_version);
+    spdlog::info("\tclang tidy binary: {}", tidy_opt.clang_tidy_binary);
     spdlog::info("\tchecks: {}", tidy_opt.checks);
     spdlog::info("\tconfig: {}", tidy_opt.config);
     spdlog::info("\tconfig file: {}", tidy_opt.config_file);
