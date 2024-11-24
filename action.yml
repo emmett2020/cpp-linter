@@ -68,5 +68,6 @@ runs:
                                   --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
                                   --clang-tidy-database=${{ inputs.clang-tidy-database }}      \
                                   --target=${{ inputs.target }}
+        exit $?
 
 
