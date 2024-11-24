@@ -36,15 +36,4 @@ namespace linter {
     spdlog::info("");
   }
 
-  void check_context(const context &ctx) {
-    spdlog::debug("Start to check context");
-    throw_if(ctx.repo_path.empty(), "empty repository path");
-    throw_if(ctx.event_name.empty(), "empty event name");
-    throw_if(ctx.target.empty(), "empty target");
-    throw_if(ctx.source.empty(), "empty source");
-    if (std::ranges::contains(github_events_support_pr_number, ctx.event_name)) {
-      throw_if(ctx.pr_number < 0, "wrong pr number");
-    }
-  }
-
 } // namespace linter

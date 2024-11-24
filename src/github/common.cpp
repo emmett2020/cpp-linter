@@ -73,7 +73,7 @@ namespace linter {
     ctx.repo_path  = env.workspace;
     ctx.event_name = env.event_name;
     ctx.source     = env.github_sha;
-    if (std::ranges::contains(github_events_support_pr_number, ctx.event_name)) {
+    if (std::ranges::contains(github_events_with_pr_number, ctx.event_name)) {
       ctx.pr_number = parse_pr_number(env.github_ref);
     }
 

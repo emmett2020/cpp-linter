@@ -169,8 +169,9 @@ namespace linter {
 
       if (variables.contains(pr_number)) {
         throw_unless(
-          std::ranges::contains(github_events_support_pr_number, ctx.event_name),
+          std::ranges::contains(github_events_with_pr_number, ctx.event_name),
           std::format("event: {} doesn't support pull-request-number option", ctx.event_name));
+        ctx.pr_number = variables[pr_number].as<std::int32_t>();
       }
     }
 
