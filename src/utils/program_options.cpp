@@ -157,6 +157,8 @@ namespace linter {
       auto must_not_specify_option = {repo_path, repo, source, event_name, pr_number};
       must_not_specify("use cpp-linter on CI", variables, must_not_specify_option);
 
+      // Automatically enable step summary when on CI environment.
+      ctx.enable_step_summary = true;
       if (variables.contains(enable_step_summary)) {
         ctx.enable_step_summary = variables[enable_step_summary].as<bool>();
       }
