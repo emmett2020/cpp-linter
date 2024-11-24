@@ -9,8 +9,9 @@ namespace linter {
   struct context {
     bool use_on_local = false;
     std::string log_level;
-    bool enable_update_issue_comment = false;
     bool enable_step_summary         = false;
+    bool enable_update_issue_comment = false;
+    bool enable_pull_request_review  = false;
 
     std::string repo_path;
     std::string repo;

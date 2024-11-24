@@ -24,8 +24,9 @@ namespace linter {
     constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
     constexpr auto pr_number                       = "pr-number";
-    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
     constexpr auto enable_step_summary             = "enable-step_summary";
+    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
+    constexpr auto enable_pull_request_review      = "enable-pull-request-review";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
     constexpr auto clang_tidy_version              = "clang-tidy-version";
@@ -87,10 +88,6 @@ namespace linter {
       auto must_specify_option = {target};
       must_specify("use cpp-linter on local and CI", variables, must_specify_option);
       ctx.target = variables[target].as<std::string>();
-
-      if (variables.contains(enable_update_issue_comment)) {
-        ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
-      }
 
       // clang-tidy options
       {
@@ -166,6 +163,10 @@ namespace linter {
       if (variables.contains(enable_update_issue_comment)) {
         ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
       }
+
+      if (variables.contains(enable_pull_request_review)) {
+        ctx.enable_pull_request_review = variables[enable_pull_request_review].as<bool>();
+      }
     }
 
     void check_and_fill_context_on_local(const program_options::variables_map &variables,
@@ -180,13 +181,21 @@ namespace linter {
       throw_unless(std::ranges::contains(all_github_events, ctx.event_name),
                    std::format("unsupported event name: {}", ctx.event_name));
 
-      if (variables.contains(enable_update_issue_comment)) {
-        must_specify("use cpp-linter on local and enable update issue comment",
+      if (variables.contains(enable_update_issue_comment)
+          || variables.contains(enable_pull_request_review)) {
+        must_specify("use cpp-linter on local and enable interactive with GITHUB",
                      variables,
                      {token, repo});
+        ctx.token = variables[token].as<std::string>();
+        ctx.repo  = variables[repo].as<std::string>();
+      }
+
+      if (variables.contains(enable_update_issue_comment)) {
         ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
-        ctx.token                       = variables[token].as<std::string>();
-        ctx.repo                        = variables[repo].as<std::string>();
+      }
+
+      if (variables.contains(enable_pull_request_review)) {
+        ctx.enable_pull_request_review = variables[enable_pull_request_review].as<bool>();
       }
 
       if (variables.contains(pr_number)) {
@@ -196,7 +205,6 @@ namespace linter {
         ctx.pr_number = variables[pr_number].as<std::int32_t>();
       }
     }
-
 
   } // namespace
 
@@ -219,6 +227,7 @@ namespace linter {
       (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
       (pr_number,                       value<int32_t>(),  "Set the pull-request number of git repository.")
       (enable_update_issue_comment,     value<bool>(),     "Enable update issue comment. This will set http request to github")
+      (enable_pull_request_review,      value<bool>(),     "Enable pull request reivew. This will set http request to github")
       (enable_step_summary,             value<bool>(),     "Enable step summary.")
       (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
       (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."

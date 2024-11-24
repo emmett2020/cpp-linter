@@ -9,7 +9,9 @@ namespace linter {
     spdlog::info("Common Options:");
     spdlog::info("\tuse on local: {}", ctx.use_on_local);
     spdlog::info("\tlog level: {}", ctx.log_level);
+    spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
     spdlog::info("\tenable update issue comment: {}", ctx.enable_update_issue_comment);
+    spdlog::info("\tenable pull request review: {}", ctx.enable_pull_request_review);
     spdlog::info("Repository Options:");
     spdlog::info("\trepository path: {}", ctx.repo_path);
     spdlog::info("\trepository: {}", ctx.repo);
