@@ -192,7 +192,7 @@ auto main(int argc, char **argv) -> int {
   if (ctx.enable_update_issue_comment) {
     auto github_client = github_api_client{ctx};
     github_client.get_issue_comment_id();
-    github_client.add_or_update_comment(std::format(
+    github_client.add_or_update_issue_comment(std::format(
       "{} passed, failed: {}",
       clang_tidy_result.passed.size(),
       clang_tidy_result.failed.size()));
