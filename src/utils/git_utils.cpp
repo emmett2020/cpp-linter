@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cstring>
+#include <git2/buffer.h>
+#include <git2/patch.h>
 #include <string>
 
 #include "utils/git_error.h"
@@ -861,5 +863,54 @@ namespace linter::git {
     }
 
   } // namespace status
+
+  namespace patch {
+    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr {
+      auto *patch = patch_raw_ptr{nullptr};
+      auto ret    = ::git_patch_from_diff(&patch, diff, idx);
+      throw_if(ret);
+      return {patch, ::git_patch_free};
+    }
+
+    auto to_str(patch_raw_ptr patch) -> std::string {
+      auto buf = ::git_buf{};
+      auto ret = ::git_patch_to_buf(&buf, patch);
+      throw_if(ret);
+      auto data = std::string{buf.ptr, buf.size};
+      ::git_buf_dispose(&buf);
+      return data;
+    }
+
+    auto get_delta(patch_raw_cptr patch) -> diff_delta_raw_cptr {
+      return ::git_patch_get_delta(patch);
+    }
+
+    auto num_hunks(patch_raw_cptr patch) -> std::size_t {
+      return ::git_patch_num_hunks(patch);
+    }
+
+    auto get_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
+      auto hunk            = diff_hunk{};
+      const auto *hunk_ptr = diff_hunk_raw_cptr{&hunk};
+      auto line_num        = std::size_t{0};
+      auto ret             = ::git_patch_get_hunk(&hunk_ptr, &line_num, patch, hunk_idx);
+      throw_if(ret);
+      return {hunk, line_num};
+    }
+
+    auto num_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::size_t {
+      return ::git_patch_num_lines_in_hunk(patch, hunk_idx);
+    }
+
+    auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
+      -> diff_line {
+      auto line            = diff_line{};
+      const auto *line_ptr = &line;
+      auto ret             = ::git_patch_get_line_in_hunk(&line_ptr, patch, hunk_idx, line_idx);
+      throw_if(ret);
+      return line;
+    }
+
+  } // namespace patch
 
 } // namespace linter::git

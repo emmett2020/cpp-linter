@@ -175,44 +175,44 @@ namespace linter {
     }
 
     // TODO: support multiple pages.
-    void remove_old_pr_reviews() {
-      spdlog::info("Start to remove old pr reviews");
-      const auto path    = std::format("???", ctx_.repo, comment_id_);
-      const auto headers = httplib::Headers{
-        {"Accept", "application/vnd.github.use_diff"},
-        {"Authorization", std::format("token {}", ctx_.token)}
-      };
-      spdlog::info("Path: {}", path);
-
-      auto response = client.Get(path, headers);
-      spdlog::trace("Get github response body: {}", response->body);
-      check_http_response(response);
-
-      auto res_json = nlohmann::json::parse(response->body);
-      throw_if(!res_json.is_array(), "response body isn't array");
-      for (auto& review: res_json) {
-        if (review.contains("body") && review.contains("state")) {
-          auto body =  review["body"].get_ref<std::string&>();
-          if (!body.starts_with("Marker")) {
-            continue;
-          }
-          auto state =  review["state"].get_ref<std::string&>();
-          static const auto unsupported_states = {"PENDING", "DISMISSED"};
-          if (std::ranges::contains(unsupported_states, state)) {
-            continue;
-          }
-          throw_unless(review.contains("id"), "id not in review comment");
-          auto id = review["id"].get_ref<std::string&>();
-          auto dismiss_path = std::format("xxxx/{}/dismissals", id);
-          auto data = nlohmann::json{
-            {"message","outdated"},
-            {"event","DISMISS"}
-          };
-          auto response = client.Put(path, headers, data.dump());
-          check_http_response(response);
-        }
-      }
-    }
+    // void remove_old_pr_reviews() {
+    //   spdlog::info("Start to remove old pr reviews");
+    //   const auto path    = std::format("???", ctx_.repo, comment_id_);
+    //   const auto headers = httplib::Headers{
+    //     {"Accept", "application/vnd.github.use_diff"},
+    //     {"Authorization", std::format("token {}", ctx_.token)}
+    //   };
+    //   spdlog::info("Path: {}", path);
+    //
+    //   auto response = client.Get(path, headers);
+    //   spdlog::trace("Get github response body: {}", response->body);
+    //   check_http_response(response);
+    //
+    //   auto res_json = nlohmann::json::parse(response->body);
+    //   throw_if(!res_json.is_array(), "response body isn't array");
+    //   for (auto& review: res_json) {
+    //     if (review.contains("body") && review.contains("state")) {
+    //       auto body =  review["body"].get_ref<std::string&>();
+    //       if (!body.starts_with("Marker")) {
+    //         continue;
+    //       }
+    //       auto state =  review["state"].get_ref<std::string&>();
+    //       static const auto unsupported_states = {"PENDING", "DISMISSED"};
+    //       if (std::ranges::contains(unsupported_states, state)) {
+    //         continue;
+    //       }
+    //       throw_unless(review.contains("id"), "id not in review comment");
+    //       auto id = review["id"].get_ref<std::string&>();
+    //       auto dismiss_path = std::format("xxxx/{}/dismissals", id);
+    //       auto data = nlohmann::json{
+    //         {"message","outdated"},
+    //         {"event","DISMISS"}
+    //       };
+    //       auto response = client.Put(path, headers, data.dump());
+    //       check_http_response(response);
+    //     }
+    //   }
+    // }
 
     [[nodiscard]] auto ctx() const -> const context& {
       return ctx_;

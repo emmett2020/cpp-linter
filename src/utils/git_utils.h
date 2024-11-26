@@ -60,6 +60,7 @@ namespace linter::git {
   using object_ptr      = std::unique_ptr<git_object, decltype(::git_object_free) *>;
   using signature_ptr   = std::unique_ptr<git_signature, decltype(::git_signature_free) *>;
   using status_list_ptr = std::unique_ptr<git_status_list, decltype(::git_status_list_free) *>;
+  using patch_ptr       = std::unique_ptr<git_patch, decltype(::git_patch_free) *>;
 
   using repo_raw_ptr         = git_repository *;
   using config_raw_ptr       = git_config *;
@@ -79,6 +80,7 @@ namespace linter::git {
   using signature_raw_ptr    = git_signature *;
   using status_list_raw_ptr  = git_status_list *;
   using status_entry_raw_ptr = git_status_entry *;
+  using patch_raw_ptr        = git_patch *;
 
   using repo_raw_cptr         = const git_repository *;
   using config_raw_cptr       = const git_config *;
@@ -98,6 +100,7 @@ namespace linter::git {
   using signature_raw_cptr    = const git_signature *;
   using status_list_raw_cptr  = const git_status_list *;
   using status_entry_raw_cptr = const git_status_entry *;
+  using patch_raw_cptr        = const git_patch *;
 
   using status_t = ::git_status_t;
 
@@ -828,5 +831,39 @@ namespace linter::git {
     /// No need to free this pointer
     auto get_by_index(status_list_raw_ptr status_list, std::size_t idx) -> status_entry_raw_cptr;
   } // namespace status
+
+  namespace patch {
+    // Return a patch for an entry in the diff list.
+    // For an unchanged file or a binary file, no git_patch will be created,
+    // the output will be set to NULL, and the binary flag will be set true in the
+    // git_diff_delta structure.
+    // It is okay to pass NULL for either of the output parameters; if you pass
+    // NULL for the git_patch, then the text diff will not be calculated.
+    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr;
+
+    /// Get the content of a patch as a single diff text.
+    auto to_str(patch_raw_ptr patch) -> std::string;
+
+    /// Get the delta associated with a patch. This delta points to internal
+    /// data and you do not have to release it when you are done with it.
+    auto get_delta(patch_raw_cptr patch) -> diff_delta_raw_cptr;
+
+    // Get the number of hunks in a patch
+    auto num_hunks(patch_raw_cptr patch) -> std::size_t;
+
+    /// Get the information about a hunk in a patch
+    // Given a patch and a hunk index into the patch, this returns detailed
+    // information about that hunk.
+    auto get_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t>;
+
+    /// Get the number of lines in a hunk.
+    auto num_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::size_t;
+
+    /// Get data about a line in a hunk of a patch.
+    auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
+      -> diff_line;
+
+
+  } // namespace patch
 } // namespace linter::git
 
