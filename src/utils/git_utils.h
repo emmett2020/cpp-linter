@@ -600,6 +600,10 @@ namespace linter::git {
       tree_raw_ptr new_tree,
       diff_options_raw_cptr opts) -> diff_ptr;
 
+    /// Create a diff with the difference between two commits.
+    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr old_tree, commit_raw_ptr new_tree)
+      -> diff_ptr;
+
     /// Initialize diff options structure
     void init_option(diff_options_raw_ptr opts);
 
@@ -833,13 +837,8 @@ namespace linter::git {
   } // namespace status
 
   namespace patch {
-    // Return a patch for an entry in the diff list.
-    // For an unchanged file or a binary file, no git_patch will be created,
-    // the output will be set to NULL, and the binary flag will be set true in the
-    // git_diff_delta structure.
-    // It is okay to pass NULL for either of the output parameters; if you pass
-    // NULL for the git_patch, then the text diff will not be calculated.
-    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr;
+    // Return a patch for an entry in the diff.
+    auto create_from_diff(diff_raw_ptr diff) -> patch_ptr;
 
     /// Get the content of a patch as a single diff text.
     auto to_str(patch_raw_ptr patch) -> std::string;

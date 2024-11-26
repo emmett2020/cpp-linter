@@ -224,6 +224,31 @@ TEST_CASE("Push two commits and get diff files", "[git2][diff]") {
   RemoveRepoDir();
 }
 
+TEST_CASE("Simple use of patch ", "[git2][patch]") {
+  RefreshRepoDir();
+  const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
+  CreateTempFilesWithSameContent(files, "hello world");
+  auto repo                   = InitBasicRepo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+
+  auto head_commit = git::repo::head_commit(repo.get());
+  std::cout << git::commit::id_str(head_commit.get()) << "\n";
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
+
+  AppendToFile("file1.cpp", "hello world2");
+  auto [index_oid2, index2]   = git::index::add_files(repo.get(), {"file1.cpp"});
+  auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index2.get());
+  auto head_commit2           = git::repo::head_commit(repo.get());
+  REQUIRE(git::commit::id_str(head_commit2.get()) == git::commit::id_str(commit2.get()));
+
+  auto diff  = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
+  auto patch = git::patch::create_from_diff(diff.get());
+  std::cout << git::patch::to_str(patch.get());
+
+  RemoveRepoDir();
+}
+
 int main(int argc, char* argv[]) {
   git::setup();
   int result = Catch::Session().run(argc, argv);

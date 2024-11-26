@@ -496,6 +496,13 @@ namespace linter::git {
       return {ptr, ::git_diff_free};
     }
 
+    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr old_tree, commit_raw_ptr new_tree)
+      -> diff_ptr {
+      auto tree1 = commit::tree(old_tree);
+      auto tree2 = commit::tree(new_tree);
+      return tree_to_tree(repo, tree1.get(), tree2.get(), nullptr);
+    }
+
     void init_option(diff_options_raw_ptr opts) {
       auto ret = ::git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
       throw_if(ret);
@@ -865,9 +872,9 @@ namespace linter::git {
   } // namespace status
 
   namespace patch {
-    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr {
+    auto create_from_diff(diff_raw_ptr diff) -> patch_ptr {
       auto *patch = patch_raw_ptr{nullptr};
-      auto ret    = ::git_patch_from_diff(&patch, diff, idx);
+      auto ret    = ::git_patch_from_diff(&patch, diff, 0);
       throw_if(ret);
       return {patch, ::git_patch_free};
     }
