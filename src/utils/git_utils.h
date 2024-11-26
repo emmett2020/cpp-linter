@@ -861,8 +861,6 @@ namespace linter::git {
     /// Get data about a line in a hunk of a patch.
     auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
       -> diff_line;
-
-
   } // namespace patch
 } // namespace linter::git
 
