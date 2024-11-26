@@ -43,6 +43,7 @@ namespace linter::clang_tidy {
 
   struct result {
     bool pass = false;
+    std::string file;
     statistic stat;
     diagnostics diags;
     std::string origin_stderr;

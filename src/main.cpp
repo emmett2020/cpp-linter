@@ -105,10 +105,19 @@ namespace {
     return title + prefix + comment;
   }
 
-  auto make_pull_request_review(const context &ctx, const clang_tidy_all_files_result &result)
-    -> std::string {
-    //
-    //
+  bool clang_tidy_in_diff_hunk();
+
+  auto make_pull_request_review(
+    const context &ctx,
+    const clang_tidy_all_files_result &results,
+    const std::vector<git::diff_delta_detail> &deltas) -> std::string {
+    for (const auto &result: results.failed) {
+      const auto &cur_file = result.file;
+      for (const auto &delta: deltas) {
+        if (cur_file == delta.new_file.relative_path) {
+        }
+      }
+    }
   }
 
   void write_to_github_output([[maybe_unused]] const context &ctx,
@@ -199,6 +208,7 @@ auto main(int argc, char **argv) -> int {
   }
 
   if (ctx.enable_pull_request_review) {
+    auto deltas = git::diff::deltas(repo.get(), ctx.target, ctx.source);
   }
 
   // teardown

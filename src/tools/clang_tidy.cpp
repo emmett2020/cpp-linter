@@ -235,6 +235,7 @@ namespace linter::clang_tidy {
     res.pass          = ec == 0;
     res.diags         = clang_tidy::parse_stdout(std_out);
     res.origin_stderr = std::move(std_err);
+    res.file          = file;
 
     if (res.pass) {
       spdlog::info("The final result of ran clang-tidy on {} is: {}, detailed information:\n{}",
