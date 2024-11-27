@@ -4,6 +4,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -47,6 +48,7 @@ namespace linter::git {
   using index_entry    = git_index_entry;
   using status_options = git_status_options;
   using status_entry   = git_status_entry;
+  using diff_format_t  = git_diff_format_t;
 
   using repo_ptr        = std::unique_ptr<git_repository, decltype(::git_repository_free) *>;
   using config_ptr      = std::unique_ptr<git_config, decltype(::git_config_free) *>;
@@ -623,17 +625,25 @@ namespace linter::git {
       void *payload) -> int;
 
     /// A simple implmentation which uses for_each to get diff delta details.
-    auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail>;
+    // auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail>;
+    auto deltas(diff_raw_ptr diff) -> std::unordered_map<std::string, diff_delta>;
 
     /// A simple implmentation which compares ref1 with ref2's differences.
     auto deltas(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
-      -> std::vector<git::diff_delta_detail>;
+      -> std::unordered_map<std::string, diff_delta>;
 
     /// Get changed files between two specs. The spec could be a reference,
     /// branch, tag or commid id. return The modified and new added file names
     /// in source reference.
     auto changed_files(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
       -> std::vector<std::string>;
+
+    /// Get changed files by deltas.
+    auto changed_files(const std::unordered_map<std::string, git::diff_delta> &deltas)
+      -> std::vector<std::string>;
+
+    /// Produce the complete formatted text output from a diff into a buffer.
+    auto to_str(diff_raw_ptr diff, diff_format_t format) -> std::string;
 
   } // namespace diff
 
@@ -768,7 +778,7 @@ namespace linter::git {
 
   template <typename T>
   auto convert(object_ptr obj) -> T {
-     auto *raw = obj.release();
+    auto *raw = obj.release();
     if constexpr (std::same_as<T, commit_ptr>) {
       auto *ptr = convert<commit_raw_ptr>(raw);
       return {ptr, ::git_commit_free};
@@ -858,8 +868,15 @@ namespace linter::git {
   } // namespace status
 
   namespace patch {
-    // Return a patch for an entry in the diff.
-    auto create_from_diff(diff_raw_ptr diff) -> patch_ptr;
+    /// Return a specific patch for an entry in the diff.
+    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr;
+
+    /// Return all patches.
+    auto create_from_diff(diff_raw_ptr diff) -> std::unordered_map<std::string, patch_ptr>;
+
+    /// Get changed files.
+    auto changed_files(const std::unordered_map<std::string, patch_ptr> &patches)
+      -> std::vector<std::string>;
 
     /// Get the content of a patch as a single diff text.
     auto to_str(patch_raw_ptr patch) -> std::string;
@@ -882,6 +899,7 @@ namespace linter::git {
     /// Get data about a line in a hunk of a patch.
     auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
       -> diff_line;
+
   } // namespace patch
 } // namespace linter::git
 

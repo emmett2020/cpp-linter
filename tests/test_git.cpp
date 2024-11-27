@@ -243,7 +243,7 @@ TEST_CASE("Simple use of patch ", "[git2][patch]") {
   REQUIRE(git::commit::id_str(head_commit2.get()) == git::commit::id_str(commit2.get()));
 
   auto diff  = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
-  auto patch = git::patch::create_from_diff(diff.get());
+  auto patch = git::patch::create_from_diff(diff.get(), 0);
   std::cout << git::patch::to_str(patch.get());
 
   RemoveRepoDir();

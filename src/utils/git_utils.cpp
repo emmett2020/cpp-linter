@@ -5,6 +5,7 @@
 #include <cstring>
 #include <git2/buffer.h>
 #include <git2/patch.h>
+#include <iostream>
 #include <string>
 
 #include "utils/git_error.h"
@@ -526,77 +527,95 @@ namespace linter::git {
       return ::git_diff_foreach(diff, file_cb, binary_cb, hunk_cb, line_cb, payload);
     }
 
-    auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail> {
-      auto line_cb =
-        [](diff_delta_raw_cptr cur_delta,
-           diff_hunk_raw_cptr cur_hunk,
-           diff_line_raw_cptr cur_line,
-           void *payload) -> int {
-        assert(cur_delta && cur_hunk && cur_line && payload);
-        auto &deltas = *static_cast<std::vector<diff_delta_detail> *>(payload);
+    // auto deltas(diff_raw_ptr diff) -> std::vector<diff_delta_detail> {
+    //   auto line_cb =
+    //     [](diff_delta_raw_cptr cur_delta,
+    //        diff_hunk_raw_cptr cur_hunk,
+    //        diff_line_raw_cptr cur_line,
+    //        void *payload) -> int {
+    //     assert(cur_delta && cur_hunk && cur_line && payload);
+    //     auto &deltas = *static_cast<std::vector<diff_delta_detail> *>(payload);
+    //
+    //     auto cur_old_id = oid::to_str(cur_delta->old_file.id);
+    //     auto cur_new_id = oid::to_str(cur_delta->new_file.id);
+    //     auto delta_iter = std::ranges::find_if(deltas, [&](const diff_delta_detail &delta) {
+    //       return delta.old_file.oid == cur_old_id && delta.new_file.oid == cur_new_id;
+    //     });
+    //
+    //     std::cout << "STATUS: " << cur_delta->status << "\n";
+    //     if (cur_delta->status == git_delta_t::GIT_DELTA_ADDED) {
+    //       std::cout << "BINGO\n";
+    //       int n = 2;
+    //     }
+    //
+    //     if (delta_iter == deltas.end()) {
+    //       auto delta = diff_delta_detail{
+    //         .status     = convert_to_delta_status_t(cur_delta->status),
+    //         .flags      = cur_delta->flags,
+    //         .similarity = cur_delta->similarity,
+    //         .file_num   = cur_delta->nfiles,
+    //         .old_file   = {.oid           = cur_old_id,
+    //                        .relative_path = cur_delta->old_file.path,
+    //                        .size          = cur_delta->old_file.size,
+    //                        .flags         = cur_delta->old_file.flags,
+    //                        .mode          = convert_to_file_mode_t(cur_delta->old_file.mode)},
+    //         .new_file   = {.oid           = cur_new_id,
+    //                        .relative_path = cur_delta->new_file.path,
+    //                        .size          = cur_delta->new_file.size,
+    //                        .flags         = cur_delta->new_file.flags,
+    //                        .mode          = convert_to_file_mode_t(cur_delta->new_file.mode)},
+    //       };
+    //       deltas.emplace_back(std::move(delta));
+    //       delta_iter = --(deltas.end());
+    //     }
+    //
+    //     auto cur_hunk_header =
+    //       std::string{static_cast<const char *>(cur_hunk->header), cur_hunk->header_len};
+    //     auto hook_iter = std::ranges::find_if(delta_iter->hunks, [&](const diff_hunk_detail &hunk) {
+    //       return hunk.header == cur_hunk_header;
+    //     });
+    //     if (hook_iter == delta_iter->hunks.end()) {
+    //       auto hunk = diff_hunk_detail{
+    //         .header    = cur_hunk_header,
+    //         .old_start = cur_hunk->old_start,
+    //         .old_lines = cur_hunk->old_lines,
+    //         .new_start = cur_hunk->new_start,
+    //         .new_lines = cur_hunk->new_lines};
+    //       delta_iter->hunks.emplace_back(std::move(hunk));
+    //       hook_iter = --(delta_iter->hunks.end());
+    //     }
+    //
+    //     auto line = diff_line_detail{
+    //       .origin           = convert_to_diff_line_t(cur_line->origin),
+    //       .old_lineno       = cur_line->old_lineno,
+    //       .new_lineno       = cur_line->new_lineno,
+    //       .num_lines        = cur_line->num_lines,
+    //       .offset_in_origin = cur_line->content_offset,
+    //       .content          = make_str(cur_line->content, cur_line->content_len),
+    //     };
+    //     hook_iter->lines.emplace_back(std::move(line));
+    //     return 0;
+    //   };
+    //
+    //   auto deltas = std::vector<diff_delta_detail>{};
+    //   for_each(diff, nullptr, nullptr, nullptr, line_cb, &deltas);
+    //   // assert(deltas.size() == diff::num_deltas(diff));
+    //   return deltas;
+    // }
 
-        auto cur_old_id = oid::to_str(cur_delta->old_file.id);
-        auto cur_new_id = oid::to_str(cur_delta->new_file.id);
-        auto delta_iter = std::ranges::find_if(deltas, [&](const diff_delta_detail &delta) {
-          return delta.old_file.oid == cur_old_id && delta.new_file.oid == cur_new_id;
-        });
-
-        if (delta_iter == deltas.end()) {
-          auto delta = diff_delta_detail{
-            .status     = convert_to_delta_status_t(cur_delta->status),
-            .flags      = cur_delta->flags,
-            .similarity = cur_delta->similarity,
-            .file_num   = cur_delta->nfiles,
-            .old_file   = {.oid           = cur_old_id,
-                           .relative_path = cur_delta->old_file.path,
-                           .size          = cur_delta->old_file.size,
-                           .flags         = cur_delta->old_file.flags,
-                           .mode          = convert_to_file_mode_t(cur_delta->old_file.mode)},
-            .new_file   = {.oid           = cur_new_id,
-                           .relative_path = cur_delta->new_file.path,
-                           .size          = cur_delta->new_file.size,
-                           .flags         = cur_delta->new_file.flags,
-                           .mode          = convert_to_file_mode_t(cur_delta->new_file.mode)},
-          };
-          deltas.emplace_back(std::move(delta));
-          delta_iter = --(deltas.end());
-        }
-
-        auto cur_hunk_header =
-          std::string{static_cast<const char *>(cur_hunk->header), cur_hunk->header_len};
-        auto hook_iter = std::ranges::find_if(delta_iter->hunks, [&](const diff_hunk_detail &hunk) {
-          return hunk.header == cur_hunk_header;
-        });
-        if (hook_iter == delta_iter->hunks.end()) {
-          auto hunk = diff_hunk_detail{
-            .header    = cur_hunk_header,
-            .old_start = cur_hunk->old_start,
-            .old_lines = cur_hunk->old_lines,
-            .new_start = cur_hunk->new_start,
-            .new_lines = cur_hunk->new_lines};
-          delta_iter->hunks.emplace_back(std::move(hunk));
-          hook_iter = --(delta_iter->hunks.end());
-        }
-
-        auto line = diff_line_detail{
-          .origin           = convert_to_diff_line_t(cur_line->origin),
-          .old_lineno       = cur_line->old_lineno,
-          .new_lineno       = cur_line->new_lineno,
-          .num_lines        = cur_line->num_lines,
-          .offset_in_origin = cur_line->content_offset,
-          .content          = make_str(cur_line->content, cur_line->content_len),
-        };
-        hook_iter->lines.emplace_back(std::move(line));
-        return 0;
-      };
-
-      auto deltas = std::vector<diff_delta_detail>{};
-      for_each(diff, nullptr, nullptr, nullptr, line_cb, &deltas);
-      return deltas;
+    auto deltas(diff_raw_ptr diff) -> std::unordered_map<std::string, diff_delta> {
+      auto res        = std::unordered_map<std::string, diff_delta>{};
+      auto num_deltas = diff::num_deltas(diff);
+      for (int i = 0; i < num_deltas; ++i) {
+        const auto *ret = diff::get_delta(diff, i);
+        throw_if(ret == nullptr, "get delta failed since null pointer");
+        res[ret->new_file.path] = *ret;
+      }
+      return res;
     }
 
     auto deltas(repo_raw_ptr repo, const std::string &spec1, const std::string &spec2)
-      -> std::vector<git::diff_delta_detail> {
+      -> std::unordered_map<std::string, diff_delta> {
       auto obj1  = revparse::single(repo, spec1);
       auto obj2  = revparse::single(repo, spec2);
       auto type1 = object::type(obj1.get());
@@ -631,10 +650,28 @@ namespace linter::git {
       -> std::vector<std::string> {
       auto details = deltas(repo, spec1, spec2);
       auto res     = std::vector<std::string>{};
-      for (const auto &delta: details) {
-        res.emplace_back(delta.new_file.relative_path);
+      for (const auto &[file, delta]: details) {
+        res.emplace_back(file);
       }
       return res;
+    }
+
+    auto changed_files(const std::unordered_map<std::string, git::diff_delta> &deltas)
+      -> std::vector<std::string> {
+      auto ret = std::vector<std::string>{};
+      for (const auto &[file, delta]: deltas) {
+        ret.push_back(file);
+      }
+      return ret;
+    }
+
+    auto to_str(diff_raw_ptr diff, diff_format_t format) -> std::string {
+      auto buf = ::git_buf{};
+      auto ret = ::git_diff_to_buf(&buf, diff, format);
+      throw_if(ret);
+      auto data = std::string{buf.ptr, buf.size};
+      ::git_buf_dispose(&buf);
+      return data;
     }
 
   } // namespace diff
@@ -872,11 +909,32 @@ namespace linter::git {
   } // namespace status
 
   namespace patch {
-    auto create_from_diff(diff_raw_ptr diff) -> patch_ptr {
+    auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr {
       auto *patch = patch_raw_ptr{nullptr};
-      auto ret    = ::git_patch_from_diff(&patch, diff, 0);
+      auto ret    = ::git_patch_from_diff(&patch, diff, idx);
       throw_if(ret);
       return {patch, ::git_patch_free};
+    }
+
+    auto create_from_diff(diff_raw_ptr diff) -> std::unordered_map<std::string, patch_ptr> {
+      auto res        = std::unordered_map<std::string, patch_ptr>{};
+      auto num_deltas = git::diff::num_deltas(diff);
+      for (int i = 0; i < num_deltas; ++i) {
+        auto patch                = git::patch::create_from_diff(diff, i);
+        const auto *delta         = git::patch::get_delta(patch.get());
+        res[delta->new_file.path] = std::move(patch);
+      }
+
+      return res;
+    }
+
+    auto changed_files(const std::unordered_map<std::string, patch_ptr> &patches)
+      -> std::vector<std::string> {
+      auto ret = std::vector<std::string>{};
+      for (const auto &[file, patch]: patches) {
+        ret.push_back(file);
+      }
+      return ret;
     }
 
     auto to_str(patch_raw_ptr patch) -> std::string {

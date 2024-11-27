@@ -2,6 +2,7 @@
 #include <fstream>
 #include <git2/oid.h>
 #include <print>
+#include <ranges>
 #include <string>
 
 #include <spdlog/spdlog.h>
@@ -36,10 +37,10 @@ namespace {
     spdlog::set_level(log_level);
   }
 
-  auto print_changed_files(const std::unordered_map< std::string,  git::diff_delta_detail> &files) {
+  auto print_changed_files(const std::vector< std::string> &files) {
     spdlog::info("Got {} changed files", files.size());
-    for (const auto &[file, delta]: files) {
-      spdlog::info("File index, file path: {}", file);
+    for (const auto &[idx, file]: std::views::enumerate(files)) {
+      spdlog::info("File index: {}, file path: {}", idx, file);
     }
   }
 
@@ -60,7 +61,7 @@ namespace {
 
   struct cpp_linter_result {
     // Added or modified or renamed, not included in deleted file.
-    std::unordered_map<std::string, git::diff_delta_detail> total_changed_files;
+    std::unordered_map<std::string, git::patch_ptr> patches;
 
     // Ignored by clang-tidy iregex.
     std::vector<std::string> clang_tidy_ignored_files;
@@ -68,19 +69,17 @@ namespace {
     std::unordered_map<std::string, clang_tidy::result> clang_tidy_failed;
   };
 
-
-
   void print_clang_tidy_total_result(const cpp_linter_result &result) {
     spdlog::info(
-      "Total changed file number: {}. While {} files are igored by user, {} files check is passed, {} files check is failed",
-      result.total_changed_files.size(),
+      "Total changed file number: {}. While {} files are igored by user, {} files check "
+      "is passed, {} files check is failed",
+      result.patches.size(),
       result.clang_tidy_ignored_files.size(),
       result.clang_tidy_passed.size(),
       result.clang_tidy_failed.size());
   }
 
-  auto make_step_summary(const context &ctx, const cpp_linter_result &result)
-    -> std::string {
+  auto make_step_summary(const context &ctx, const cpp_linter_result &result) -> std::string {
     const auto title = "# The cpp-linter Result"s;
     auto prefix      = std::string{};
     auto comment     = std::string{};
@@ -109,19 +108,52 @@ namespace {
     return title + prefix + comment;
   }
 
+  // Some changes in file may not in the same hunk.
+  bool is_in_hunk(const git::diff_hunk &hunk, int row, [[maybe_unused]] int col) {
+    return row >= hunk.new_start && row <= hunk.new_start + hunk.new_lines;
+  }
 
-  // auto make_pull_request_review(
-  //   const context &ctx,
-  //   const clang_tidy_all_files_result &results,
-  //   const std::vector<git::diff_delta_detail> &deltas) -> std::string {
-  //   for (const auto &result: results.failed) {
-  //     const auto &cur_file = result.file;
-  //     for (const auto &delta: deltas) {
-  //       if (cur_file == delta.new_file.relative_path) {
-  //       }
-  //     }
-  //   }
-  // }
+  struct pr_review_comment {
+    std::string path;
+    int position;
+    std::string body;
+    int line;
+    std::string side;
+    int start_line;
+    std::string start_side;
+  };
+
+  auto make_pull_request_review(
+    [[maybe_unused]] const context &ctx,
+    const cpp_linter_result &results) -> std::vector<pr_review_comment> {
+    auto comments = std::vector<pr_review_comment>{};
+
+    for (const auto &[file, clang_tidy_result]: results.clang_tidy_failed) {
+      // Get the same file's delta and clang-tidy result
+      assert(clang_tidy_result.file == file);
+      assert(results.patches.contains(file));
+      const auto &patch = results.patches.at(file);
+
+      for (const auto &diag: clang_tidy_result.diags) {
+        const auto &header = diag.header;
+        auto row           = std::stoi(header.row_idx);
+        auto col           = std::stoi(header.col_idx);
+
+        // For all clang-tidy result, check is this in hunk.
+        auto num_hunk = git::patch::num_hunks(patch.get());
+        for (int i = 0; i < num_hunk; ++i) {
+          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
+          if (!is_in_hunk(hunk, row, col)) {
+            continue;
+          }
+          auto comment     = pr_review_comment{};
+          comment.path     = file;
+          comment.position = ;
+        }
+      }
+    }
+    return comments;
+  }
 
   void write_to_github_output([[maybe_unused]] const context &ctx,
                               const cpp_linter_result &result) {
@@ -133,10 +165,10 @@ namespace {
     file << std::format("clang_format_failed_number={}\n", 0);
   }
 
-  auto GetChangedFiles(const std::vector<git::diff_delta_detail>& deltas)
+  auto convert_deltas_to_map(const std::vector<git::diff_delta_detail> &deltas)
     -> std::unordered_map<std::string, git::diff_delta_detail> {
     auto res = std::unordered_map<std::string, git::diff_delta_detail>{};
-    for (const auto& delta : deltas) {
+    for (const auto &delta: deltas) {
       res[delta.new_file.relative_path] = delta;
     }
     return res;
@@ -145,6 +177,7 @@ namespace {
 } // namespace
 
 auto main(int argc, char **argv) -> int {
+  // Handle user inputs.
   auto desc    = make_program_options_desc();
   auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
@@ -161,6 +194,7 @@ auto main(int argc, char **argv) -> int {
   check_and_fill_context_by_program_options(options, ctx);
   set_log_level(ctx.log_level);
 
+  // Get some additional informations when on Github environment.
   if (!ctx.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
@@ -169,20 +203,19 @@ auto main(int argc, char **argv) -> int {
   }
   print_context(ctx);
 
-  // The final result.
-  auto linter_result = cpp_linter_result{};
-
+  // Open user's git repository.
   git::setup();
   auto repo          = git::repo::open(ctx.repo_path);
   auto target_commit = git::convert<git::commit_ptr>(git::revparse::single(repo.get(), ctx.target));
   auto source_commit = git::convert<git::commit_ptr>(git::revparse::single(repo.get(), ctx.source));
-  auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get() , source_commit.get());
-  auto deltas = git::diff::deltas(diff.get());
-  linter_result.total_changed_files = GetChangedFiles(deltas);
+  auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(), source_commit.get());
 
-  const auto& changed_files = linter_result.total_changed_files;
+  auto linter_result    = cpp_linter_result{};
+  linter_result.patches = git::patch::create_from_diff(diff.get());
+  auto changed_files    = git::patch::changed_files(linter_result.patches);
   print_changed_files(changed_files);
 
+  // Handle clang-tidy outputs.
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     const auto &opt = ctx.clang_tidy_option;
     for (const auto &file: changed_files) {
@@ -191,18 +224,20 @@ auto main(int argc, char **argv) -> int {
         spdlog::trace("file is ignored {}", file);
         continue;
       }
-      auto result_per_file = clang_tidy::run(opt, ctx.repo_path, file);
-      if (result_per_file.pass) {
-        spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
-        linter_result.clang_tidy_passed.emplace_back(std::move(result_per_file));
-        continue;
-      }
-      linter_result.clang_tidy_failed.emplace_back(std::move(result_per_file));
-      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
 
-      if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
-        spdlog::info("clang-tidy fastly exit");
-        return -1;
+      // Run clang-tidy then save result.
+      auto result = clang_tidy::run(opt, ctx.repo_path, file);
+      if (result.pass) {
+        spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
+        linter_result.clang_tidy_passed[file] = std::move(result);
+      } else {
+        spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
+        linter_result.clang_tidy_failed[file] = std::move(result);
+
+        if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
+          spdlog::info("clang-tidy fastly exit");
+          return -1;
+        }
       }
     }
     print_clang_tidy_total_result(linter_result);
@@ -226,16 +261,15 @@ auto main(int argc, char **argv) -> int {
   }
 
   if (ctx.enable_pull_request_review) {
-    auto deltas = git::diff::deltas(repo.get(), ctx.target, ctx.source);
+    std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
   }
 
-  // teardown
-  git::shutdown();
 
   if (!ctx.use_on_local) {
     write_to_github_output(ctx, linter_result);
   }
 
+  git::shutdown();
   auto all_passes = true;
   if (ctx.clang_tidy_option.enable_clang_tidy) {
     all_passes &= (linter_result.clang_tidy_failed.empty());
