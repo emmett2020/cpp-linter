@@ -601,7 +601,7 @@ namespace linter::git {
       diff_options_raw_cptr opts) -> diff_ptr;
 
     /// Create a diff with the difference between two commits.
-    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr old_tree, commit_raw_ptr new_tree)
+    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr commit1, commit_raw_ptr commit2)
       -> diff_ptr;
 
     /// Initialize diff options structure
@@ -764,6 +764,27 @@ namespace linter::git {
     }
     throw_unsupported();
     std::unreachable(); // Compiler can't well infer the above exception.
+  }
+
+  template <typename T>
+  auto convert(object_ptr obj) -> T {
+     auto *raw = obj.release();
+    if constexpr (std::same_as<T, commit_ptr>) {
+      auto *ptr = convert<commit_raw_ptr>(raw);
+      return {ptr, ::git_commit_free};
+    }
+    if constexpr (std::same_as<T, tree_ptr>) {
+      auto *ptr = convert<tree_raw_ptr>(raw);
+      return {ptr, ::git_tree_free};
+    }
+    if constexpr (std::same_as<T, blob_ptr>) {
+      auto *ptr = convert<blob_raw_ptr>(raw);
+      return {ptr, ::git_blob_free};
+    }
+    if constexpr (std::same_as<T, tag_ptr>) {
+      auto *ptr = convert<tag_raw_ptr>(raw);
+      return {ptr, ::git_tag_free};
+    }
   }
 
   namespace sig {

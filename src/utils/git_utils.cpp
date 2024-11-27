@@ -496,10 +496,10 @@ namespace linter::git {
       return {ptr, ::git_diff_free};
     }
 
-    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr old_tree, commit_raw_ptr new_tree)
+    auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr commit1, commit_raw_ptr commit2)
       -> diff_ptr {
-      auto tree1 = commit::tree(old_tree);
-      auto tree2 = commit::tree(new_tree);
+      auto tree1 = commit::tree(commit1);
+      auto tree2 = commit::tree(commit2);
       return tree_to_tree(repo, tree1.get(), tree2.get(), nullptr);
     }
 
