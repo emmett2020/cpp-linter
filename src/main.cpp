@@ -6,6 +6,7 @@
 
 #include <spdlog/spdlog.h>
 #include <boost/regex.hpp>
+#include <unordered_map>
 
 #include "github/api.h"
 #include "github/common.h"
@@ -35,10 +36,10 @@ namespace {
     spdlog::set_level(log_level);
   }
 
-  auto print_changed_files(const std::vector<std::string> &files) {
+  auto print_changed_files(const std::unordered_map< std::string,  git::diff_delta_detail> &files) {
     spdlog::info("Got {} changed files", files.size());
-    for (const auto &[idx, file]: std::views::enumerate(files)) {
-      spdlog::info("File index: {}, file path: {}", idx, file);
+    for (const auto &[file, delta]: files) {
+      spdlog::info("File index, file path: {}", file);
     }
   }
 
@@ -59,12 +60,12 @@ namespace {
 
   struct cpp_linter_result {
     // Added or modified or renamed, not included in deleted file.
-    std::vector<std::string> total_changed_files;
+    std::unordered_map<std::string, git::diff_delta_detail> total_changed_files;
 
     // Ignored by clang-tidy iregex.
     std::vector<std::string> clang_tidy_ignored_files;
-    std::vector<clang_tidy::result> clang_tidy_passed;
-    std::vector<clang_tidy::result> clang_tidy_failed;
+    std::unordered_map<std::string, clang_tidy::result> clang_tidy_passed;
+    std::unordered_map<std::string, clang_tidy::result> clang_tidy_failed;
   };
 
 
@@ -90,7 +91,7 @@ namespace {
       comment += std::format("<details><summary>{} reports: <strong>",
                              ctx.clang_tidy_option.clang_tidy_binary);
       comment += std::format("{} fails</strong></summary>\n\n", result.clang_tidy_failed.size());
-      for (const auto &failed: result.clang_tidy_failed) {
+      for (const auto &[name, failed]: result.clang_tidy_failed) {
         for (const auto &diag: failed.diags) {
           auto one = std::format(
             "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
@@ -133,10 +134,10 @@ namespace {
   }
 
   auto GetChangedFiles(const std::vector<git::diff_delta_detail>& deltas)
-    -> std::vector<std::string> {
-    auto res = std::vector<std::string>{};
+    -> std::unordered_map<std::string, git::diff_delta_detail> {
+    auto res = std::unordered_map<std::string, git::diff_delta_detail>{};
     for (const auto& delta : deltas) {
-      res.emplace_back(delta.new_file.relative_path);
+      res[delta.new_file.relative_path] = delta;
     }
     return res;
   }
@@ -178,8 +179,8 @@ auto main(int argc, char **argv) -> int {
   auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get() , source_commit.get());
   auto deltas = git::diff::deltas(diff.get());
   linter_result.total_changed_files = GetChangedFiles(deltas);
-  const auto& changed_files = linter_result.total_changed_files;
 
+  const auto& changed_files = linter_result.total_changed_files;
   print_changed_files(changed_files);
 
   if (ctx.clang_tidy_option.enable_clang_tidy) {
