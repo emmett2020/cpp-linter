@@ -140,7 +140,7 @@ namespace {
         auto col           = std::stoi(header.col_idx);
 
         // For all clang-tidy result, check is this in hunk.
-        auto pos      = std::size_t{1};
+        auto pos      = std::size_t{0};
         auto num_hunk = git::patch::num_hunks(patch.get());
         for (int i = 0; i < num_hunk; ++i) {
           auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
@@ -150,7 +150,7 @@ namespace {
           }
           auto comment     = pr_review_comment{};
           comment.path     = file;
-          comment.position = pos;
+          comment.position = pos + row - hunk.new_start + 1;
           comment.body =
             diag.details | std::views::join_with('\n') | std::ranges::to<std::string>();
           comments.emplace_back(std::move(comment));
@@ -274,7 +274,9 @@ auto main(int argc, char **argv) -> int {
   }
 
   if (ctx.enable_pull_request_review) {
-    // std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
+    std::cout << "DEBUG-----\n";
+    std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
+    std::cout << "DEBUG-----\n";
     auto comments      = make_pr_review_comment(ctx, linter_result);
     auto body          = make_pr_review_comment_str(comments);
     auto github_client = github_api_client{ctx};
