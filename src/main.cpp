@@ -115,15 +115,18 @@ namespace {
 
   struct pr_review_comment {
     std::string path;
-    int position;
+    std::size_t position;
     std::string body;
-    int line;
+    std::size_t line;
     std::string side;
-    int start_line;
+    std::size_t start_line;
     std::string start_side;
-  };
 
-  auto make_pull_request_review(
+  };
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(pr_review_comment, path, position, body)
+
+
+  auto make_pr_review_comment(
     [[maybe_unused]] const context &ctx,
     const cpp_linter_result &results) -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
@@ -140,19 +143,35 @@ namespace {
         auto col           = std::stoi(header.col_idx);
 
         // For all clang-tidy result, check is this in hunk.
+        auto pos = std::size_t{1};
         auto num_hunk = git::patch::num_hunks(patch.get());
         for (int i = 0; i < num_hunk; ++i) {
           auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
           if (!is_in_hunk(hunk, row, col)) {
+            pos += num_lines;
             continue;
           }
           auto comment     = pr_review_comment{};
           comment.path     = file;
-          comment.position = ;
+          comment.position = pos;
+          comment.body     = diag.details
+                           | std::views::join_with('\n')
+                           | std::ranges::to<std::string>();
+          comments.emplace_back(std::move(comment));
         }
       }
     }
     return comments;
+  }
+
+
+  auto make_pr_review_comment_str(const std::vector<pr_review_comment>& comments)
+    -> std::string {
+    auto res = nlohmann::json{};
+    res["body"] = "cpp-linter suggestion";
+    res["event"] = "COMMENT"; // TODO: DEBUG
+    res["comments"] = comments;
+    return res.dump();
   }
 
   void write_to_github_output([[maybe_unused]] const context &ctx,
