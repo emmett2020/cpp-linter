@@ -154,24 +154,14 @@ namespace linter {
       };
       spdlog::info("Path: {}", path);
 
-
       // debug
-      auto json_body    = nlohmann::json{};
-      json_body["body"] = body;
-      spdlog::trace("Body:\n{}", json_body.dump());
+      spdlog::trace("Body:\n{}", body);
 
-      auto response = client.Post(path, headers, json_body.dump(), "text/plain");
+      auto response = client.Post(path, headers, body, "text/plain");
       spdlog::trace("Get github response body: {}", response->body);
       check_http_response(response);
 
-      auto comment = nlohmann::json::parse(response->body);
-      throw_unless(comment.is_object(), "comment isn't object");
-
-      comment["id"].get_to(comment_id_);
-      spdlog::info(
-        "Successfully add new comment for pull-request {}, the new added comment id is {}",
-        ctx_.pr_number,
-        comment_id_);
+      spdlog::info("Successfully post pull_request_review for pull-request {}", ctx_.pr_number);
     }
 
     // TODO: support multiple pages.

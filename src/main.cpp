@@ -121,14 +121,11 @@ namespace {
     std::string side;
     std::size_t start_line;
     std::string start_side;
-
   };
   NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(pr_review_comment, path, position, body)
 
-
-  auto make_pr_review_comment(
-    [[maybe_unused]] const context &ctx,
-    const cpp_linter_result &results) -> std::vector<pr_review_comment> {
+  auto make_pr_review_comment([[maybe_unused]] const context &ctx, const cpp_linter_result &results)
+    -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
 
     for (const auto &[file, clang_tidy_result]: results.clang_tidy_failed) {
@@ -143,7 +140,7 @@ namespace {
         auto col           = std::stoi(header.col_idx);
 
         // For all clang-tidy result, check is this in hunk.
-        auto pos = std::size_t{1};
+        auto pos      = std::size_t{1};
         auto num_hunk = git::patch::num_hunks(patch.get());
         for (int i = 0; i < num_hunk; ++i) {
           auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
@@ -154,9 +151,8 @@ namespace {
           auto comment     = pr_review_comment{};
           comment.path     = file;
           comment.position = pos;
-          comment.body     = diag.details
-                           | std::views::join_with('\n')
-                           | std::ranges::to<std::string>();
+          comment.body =
+            diag.details | std::views::join_with('\n') | std::ranges::to<std::string>();
           comments.emplace_back(std::move(comment));
         }
       }
@@ -164,12 +160,10 @@ namespace {
     return comments;
   }
 
-
-  auto make_pr_review_comment_str(const std::vector<pr_review_comment>& comments)
-    -> std::string {
-    auto res = nlohmann::json{};
-    res["body"] = "cpp-linter suggestion";
-    res["event"] = "COMMENT"; // TODO: DEBUG
+  auto make_pr_review_comment_str(const std::vector<pr_review_comment> &comments) -> std::string {
+    auto res        = nlohmann::json{};
+    res["body"]     = "cpp-linter suggestion";
+    res["event"]    = "COMMENT"; // TODO: DEBUG
     res["comments"] = comments;
     return res.dump();
   }
@@ -280,7 +274,11 @@ auto main(int argc, char **argv) -> int {
   }
 
   if (ctx.enable_pull_request_review) {
-    std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
+    // std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
+    auto comments      = make_pr_review_comment(ctx, linter_result);
+    auto body          = make_pr_review_comment_str(comments);
+    auto github_client = github_api_client{ctx};
+    github_client.post_pull_request_review(body);
   }
 
 

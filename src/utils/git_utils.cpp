@@ -920,9 +920,9 @@ namespace linter::git {
       auto res        = std::unordered_map<std::string, patch_ptr>{};
       auto num_deltas = git::diff::num_deltas(diff);
       for (int i = 0; i < num_deltas; ++i) {
-        auto patch                = git::patch::create_from_diff(diff, i);
-        const auto *delta         = git::patch::get_delta(patch.get());
-        res[delta->new_file.path] = std::move(patch);
+        auto patch        = git::patch::create_from_diff(diff, i);
+        const auto *delta = git::patch::get_delta(patch.get());
+        res.insert({delta->new_file.path, std::move(patch)});
       }
 
       return res;
