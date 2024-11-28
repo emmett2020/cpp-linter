@@ -955,12 +955,11 @@ namespace linter::git {
     }
 
     auto get_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
-      auto hunk            = diff_hunk{};
-      const auto *hunk_ptr = diff_hunk_raw_cptr{&hunk};
+      const auto *hunk_ptr = diff_hunk_raw_ptr{nullptr};
       auto line_num        = std::size_t{0};
       auto ret             = ::git_patch_get_hunk(&hunk_ptr, &line_num, patch, hunk_idx);
       throw_if(ret);
-      return {hunk, line_num};
+      return {*hunk_ptr, line_num};
     }
 
     auto num_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::size_t {
@@ -969,11 +968,10 @@ namespace linter::git {
 
     auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
       -> diff_line {
-      auto line            = diff_line{};
-      const auto *line_ptr = &line;
+      const auto *line_ptr = diff_line_raw_ptr{nullptr};
       auto ret             = ::git_patch_get_line_in_hunk(&line_ptr, patch, hunk_idx, line_idx);
       throw_if(ret);
-      return line;
+      return *line_ptr;
     }
 
   } // namespace patch

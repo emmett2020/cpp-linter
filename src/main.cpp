@@ -281,7 +281,6 @@ auto main(int argc, char **argv) -> int {
     github_client.post_pull_request_review(body);
   }
 
-
   if (!ctx.use_on_local) {
     write_to_github_output(ctx, linter_result);
   }
