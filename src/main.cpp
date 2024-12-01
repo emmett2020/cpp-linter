@@ -124,6 +124,17 @@ namespace {
   };
   NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(pr_review_comment, path, position, body)
 
+  void print_pr_review_comment(const pr_review_comment &comment) {
+    spdlog::trace("comment: ");
+    spdlog::trace("path: {}", comment.path);
+    spdlog::trace("position: {}", comment.position);
+    spdlog::trace("body: {}", comment.body);
+    spdlog::trace("line: {}", comment.line);
+    spdlog::trace("side: {}", comment.side);
+    spdlog::trace("start_line: {}", comment.start_line);
+    spdlog::trace("start_side: {}", comment.start_side);
+  }
+
   auto make_pr_review_comment([[maybe_unused]] const context &ctx, const cpp_linter_result &results)
     -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
@@ -151,8 +162,7 @@ namespace {
           auto comment     = pr_review_comment{};
           comment.path     = file;
           comment.position = pos + row - hunk.new_start + 1;
-          comment.body =
-            diag.details | std::views::join_with('\n') | std::ranges::to<std::string>();
+          comment.body     = diag.header.brief + diag.header.diagnostic_type;
           comments.emplace_back(std::move(comment));
         }
       }
