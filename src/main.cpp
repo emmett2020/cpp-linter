@@ -284,9 +284,6 @@ auto main(int argc, char **argv) -> int {
   }
 
   if (ctx.enable_pull_request_review) {
-    std::cout << "DEBUG-----\n";
-    std::cout << git::diff::to_str(diff.get(), git::diff_format_t::GIT_DIFF_FORMAT_PATCH);
-    std::cout << "DEBUG-----\n";
     auto comments      = make_pr_review_comment(ctx, linter_result);
     auto body          = make_pr_review_comment_str(comments);
     auto github_client = github_api_client{ctx};
