@@ -29,7 +29,7 @@ inputs:
   target:
     description: Default branch which usually useds for non-pr related events
     type: string
-    default: master
+    required: true
 
 outputs:
   failed:
