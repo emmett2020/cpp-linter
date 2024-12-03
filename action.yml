@@ -50,7 +50,7 @@ runs:
       shell: bash
       run: |
         # release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
-        release_version=0.0.26
+        release_version=0.0.27
         echo "Current path: `pwd`, current version: ${release_version}"
         wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
         tar -xvf cpp-linter.tar.gz
@@ -67,15 +67,15 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        if [[ ${{ inputs.log-level }} == "trace" ]]; then
+        if [[ "${{ inputs.log-level }}" == "trace" ]]; then
           echo "The git repo details:"
           ls -lrthaR .git
         fi
-        /usr/local/bin/cpp-linter --log-level=${{ inputs.log-level }}                          \
-                                  --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
-                                  --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
-                                  --clang-tidy-database=${{ inputs.clang-tidy-database }}      \
-                                  --target=${{ inputs.target }}                                \
+        /usr/local/bin/cpp-linter --log-level="${{ inputs.log-level }}"                          \
+                                  --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"          \
+                                  --clang-tidy-version="${{ inputs.clang-tidy-version }}"        \
+                                  --clang-tidy-database="${{ inputs.clang-tidy-database }}"      \
+                                  --target="${{ inputs.target }}"                                \
                                   --enable-pull-request-review=true
         exit $?
 
