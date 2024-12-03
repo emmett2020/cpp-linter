@@ -50,7 +50,7 @@ runs:
       shell: bash
       run: |
         # release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
-        release_version=0.0.25
+        release_version=0.0.26
         echo "Current path: `pwd`, current version: ${release_version}"
         wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
         tar -xvf cpp-linter.tar.gz
