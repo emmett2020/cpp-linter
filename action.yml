@@ -74,7 +74,8 @@ runs:
                                   --enable-clang-tidy=${{ inputs.enable-clang-tidy }}          \
                                   --clang-tidy-version=${{ inputs.clang-tidy-version }}        \
                                   --clang-tidy-database=${{ inputs.clang-tidy-database }}      \
-                                  --target=${{ inputs.target }}
+                                  --target=${{ inputs.target }}                                \
+                                  --enable-pull-request-review=true
         exit $?
 
 
