@@ -29,12 +29,12 @@ namespace linter {
     github_event_pull_request,
     github_event_pull_request_target,
     github_event_workflow_dispatch};
-  constexpr auto github_events_with_additional_ref = {github_event_pull_request,
-                                                      github_event_pull_request_target};
-  constexpr auto github_events_with_pr_number      = {github_event_pull_request,
-                                                      github_event_pull_request_target};
-  constexpr auto github_events_support_comments    = {github_event_pull_request,
-                                                      github_event_pull_request_target};
+  // constexpr auto github_events_with_additional_ref = {github_event_pull_request,
+  //                                                     github_event_pull_request_target};
+  constexpr auto github_events_with_pr_number   = {github_event_pull_request,
+                                                   github_event_pull_request_target};
+  constexpr auto github_events_support_comments = {github_event_pull_request,
+                                                   github_event_pull_request_target};
 
   // Github Actions
   // https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables

@@ -36,10 +36,10 @@ namespace linter {
     throw_if(env.repository.empty(), "empty git repository, check env: GITHUB_REPOSITORY");
     throw_if(env.token.empty(), "empty token, check env: GITHUB_TOKEN");
     throw_if(env.event_name.empty(), "empty git event, check env: GITHUB_EVENT_NAME");
-    if (std::ranges::contains(github_events_with_additional_ref, env.event_name)) {
-      throw_if(env.base_ref.empty(), "empty base ref, check env: GITHUB_BASE_REF");
-      throw_if(env.head_ref.empty(), "empty head ref, check env: GITHUB_HEAD_REF");
-    }
+    // if (std::ranges::contains(github_events_with_additional_ref, env.event_name)) {
+    //   throw_if(env.base_ref.empty(), "empty base ref, check env: GITHUB_BASE_REF");
+    //   throw_if(env.head_ref.empty(), "empty head ref, check env: GITHUB_HEAD_REF");
+    // }
     throw_if(env.github_ref.empty(), "empty github ref, check env: GITHUB_REF");
     throw_if(env.github_sha.empty(), "empty github sha, check env: GITHUB_SHA");
     throw_if(env.github_ref_type.empty(), "empty git ref type, check env: GITHUB_REF_TYPE");
@@ -77,13 +77,13 @@ namespace linter {
       ctx.pr_number = parse_pr_number(env.github_ref);
     }
 
-    if (std::ranges::contains(github_events_with_additional_ref, ctx.event_name)) {
-      spdlog::debug("Github event is {}, so automatically use {} instead of {} as base ref",
-                    env.event_name,
-                    ctx.target,
-                    env.base_ref);
-      ctx.target = env.base_ref;
-    }
+    // if (std::ranges::contains(github_events_with_additional_ref, ctx.event_name)) {
+    //   spdlog::debug("Github event is {}, so automatically use {} instead of {} as base ref",
+    //                 env.event_name,
+    //                 ctx.target,
+    //                 env.base_ref);
+    //   ctx.target = env.base_ref;
+    // }
   }
 
 
