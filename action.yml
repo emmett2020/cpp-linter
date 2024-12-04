@@ -58,7 +58,7 @@ runs:
         cd cpp-linter-dist && ls -lrth && ./install.sh
 
 
-    - name: Run cpp-linter On Linux
+    - name: Run cpp-linter on Linux
       id: cpp_linter_on_linux
       if: runner.os == 'Linux'
       shell: bash
