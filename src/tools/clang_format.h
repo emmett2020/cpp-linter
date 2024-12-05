@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstdint>
-#include <optional>
 #include <string>
 #include <vector>
 
@@ -10,14 +9,12 @@ namespace linter::clang_format {
   struct option {
     bool enable_clang_format             = true;
     bool enable_clang_format_fastly_exit = false;
-    bool enable_warning_as_error = false;
+    bool enable_warning_as_error         = false;
+    bool enable_inplace_edit             = false;
     std::uint16_t clang_format_version   = -1;
     std::string clang_format_binary;
     std::string source_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
-    std::string no_error;
-    std::optional<std::string> fallback_style;
-    std::optional<uint32_t> error_limit;
-    std::optional<std::vector<std::string>> files;
+    std::vector<std::string> files;
   };
 
   /// Each diagnostic hase a header line.

@@ -24,6 +24,7 @@ Checks: '
   -misc-non-private-member-variables-in-classes,
 
   -bugprone-easily-swappable-parameters,
+  -bugprone-suspicious-stringview-data-usage,
 '
 WarningsAsErrors: '*'
 
