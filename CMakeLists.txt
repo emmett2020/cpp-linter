@@ -30,6 +30,7 @@ set(SRC_FILE
   src/utils/git_utils.cpp
   src/utils/context.cpp
   src/tools/clang_tidy.cpp
+  src/tools/clang_format.cpp
   src/github/api.cpp
   src/github/common.cpp
 )

@@ -40,6 +40,11 @@ namespace linter {
     constexpr auto clang_tidy_header_filter        = "clang-tidy-header-filter";
     constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
     constexpr auto clang_tidy_iregex               = "clang-tidy-iregex";
+    constexpr auto enable_clang_format             = "enable-clang-format";
+    constexpr auto enable_clang_format_fastly_exit = "enable-clang-format-fastly-exit";
+    constexpr auto clang_format_version            = "clang-format-version";
+    constexpr auto clang_format_binary             = "clang-format-binary";
+    constexpr auto clang_format_iregex             = "clang-format-iregex";
 
     // Find the full executable path of clang tools with specific version.
     auto find_clang_tool(std::string_view tool, std::uint16_t version) -> std::string {
@@ -102,13 +107,13 @@ namespace linter {
         if (variables.contains(clang_tidy_version)) {
           tidy_opt.clang_tidy_version = variables[clang_tidy_version].as<std::uint16_t>();
           throw_if(variables.contains(clang_tidy_binary),
-                   "specify both clang-tidy-binary and clang-tidy-version will be ambiguous");
+                   "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
           tidy_opt.clang_tidy_binary =
             find_clang_tool("clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
         }
         if (variables.contains(clang_tidy_binary)) {
           throw_if(variables.contains(clang_tidy_version),
-                   "specify both clang-tidy-binary and clang-tidy-version will be ambiguous");
+                   "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
           tidy_opt.clang_tidy_binary = variables[clang_tidy_binary].as<std::string>();
           if (tidy_opt.enable_clang_tidy) {
             auto [ec, stdout, stderr] = shell::which(tidy_opt.clang_tidy_binary);
@@ -145,6 +150,39 @@ namespace linter {
         if (variables.contains(clang_tidy_iregex)) {
           tidy_opt.source_iregex = variables[clang_tidy_iregex].as<std::string>();
         }
+      }
+
+
+      // clang-format options
+      {
+        auto &opt = ctx.clang_format_option;
+        if (variables.contains(enable_clang_format)) {
+          opt.enable_clang_format = variables[enable_clang_format].as<bool>();
+        }
+        if (variables.contains(enable_clang_format_fastly_exit)) {
+          opt.enable_clang_format_fastly_exit =
+            variables[enable_clang_format_fastly_exit].as<bool>();
+        }
+        if (variables.contains(clang_format_version)) {
+          opt.clang_format_version = variables[clang_format_version].as<std::uint16_t>();
+          throw_if(variables.contains(clang_format_binary),
+                   "specify both clang-format-binary and clang-format-version is ambiguous");
+          opt.clang_format_binary =
+            find_clang_tool("clang-format", ctx.clang_format_option.clang_format_version);
+        }
+        if (variables.contains(clang_format_binary)) {
+          throw_if(variables.contains(clang_format_version),
+                   "specify both clang-format-binary and clang-format-version is ambiguous");
+          opt.clang_format_binary = variables[clang_format_binary].as<std::string>();
+          if (opt.enable_clang_format) {
+            auto [ec, stdout, stderr] = shell::which(opt.clang_format_binary);
+            throw_unless(
+              ec == 0,
+              std::format("can't find given clang_format_binary: {}", opt.clang_format_binary));
+          }
+        }
+        spdlog::info("The clang-format executable path: {}",
+                     ctx.clang_format_option.clang_format_binary);
       }
     }
 
@@ -218,32 +256,39 @@ namespace linter {
   desc.add_options()
       (help,    "produce help message")
       (version, "print current version")
-      (log_level,                       value<string>(),   "Set the log level of cpp-linter")
-      (repo_path,                       value<string>(),   "Set the full path of git repository")
-      (repo,                            value<string>(),   "Set the owner/repo of git repository")
-      (token,                           value<string>(),   "Set github token of git repository")
-      (target,                          value<string>(),   "Set the target reference/commit of git repository")
-      (source,                          value<string>(),   "Set the source reference/commit of git repository.")
-      (event_name,                      value<string>(),   "Set the event name of git repository. Such as: push, pull_request")
-      (pr_number,                       value<int32_t>(),  "Set the pull-request number of git repository.")
-      (enable_update_issue_comment,     value<bool>(),     "Enable update issue comment. This will set http request to github")
-      (enable_pull_request_review,      value<bool>(),     "Enable pull request reivew. This will set http request to github")
-      (enable_step_summary,             value<bool>(),     "Enable step summary.")
-      (enable_clang_tidy,               value<bool>(),     "Enabel clang-tidy check")
-      (enable_clang_tidy_fastly_exit,   value<bool>(),     "Enabel clang-tidy fastly exit."
-                                                           "This means cpp-linter will stop all clang-tidy"
-                                                           "checks as soon as possible when an error occurs")
-      (clang_tidy_version,              value<uint16_t>(), "The version of clang-tidy to be used")
-      (clang_tidy_binary,               value<string>(),   "The binary of clang-tidy to be used. You are't allowed to specify"
-                                                           "both this option and clang-tidy-version to reduce ambiguous.")
-      (clang_tidy_allow_no_checks,      value<bool>(),     "Enabel clang-tidy allow_no_check option")
-      (clang_tidy_enable_check_profile, value<bool>(),     "Enabel clang-tidy enable_check_profile option")
-      (clang_tidy_checks,               value<string>(),   "Same as clang-tidy checks option")
-      (clang_tidy_config,               value<string>(),   "Same as clang-tidy config option")
-      (clang_tidy_config_file,          value<string>(),   "Same as clang-tidy config_file option")
-      (clang_tidy_database,             value<string>(),   "Same as clang-tidy -p option")
-      (clang_tidy_header_filter,        value<string>(),   "Same as clang-tidy header_filter option")
-      (clang_tidy_line_filter,          value<string>(),   "Same as clang-tidy line_filter option")
+      (log_level,                        value<string>(),    "Set the log level of cpp-linter")
+      (repo_path,                        value<string>(),    "Set the full path of git repository")
+      (repo,                             value<string>(),    "Set the owner/repo of git repository")
+      (token,                            value<string>(),    "Set github token of git repository")
+      (target,                           value<string>(),    "Set the target reference/commit of git repository")
+      (source,                           value<string>(),    "Set the source reference/commit of git repository.")
+      (event_name,                       value<string>(),    "Set the event name of git repository. Such as: push, pull_request")
+      (pr_number,                        value<int32_t>(),   "Set the pull-request number of git repository.")
+      (enable_update_issue_comment,      value<bool>(),      "Enable update issue comment. This will set http request to github")
+      (enable_pull_request_review,       value<bool>(),      "Enable pull request reivew. This will set http request to github")
+      (enable_step_summary,              value<bool>(),      "Enable step summary.")
+      (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
+      (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit."
+                                                             "This means cpp-linter will stop all clang-tidy"
+                                                             "checks as soon as first error occurs")
+      (clang_tidy_version,               value<uint16_t>(),  "The version of clang-tidy to be used")
+      (clang_tidy_binary,                value<string>(),    "The binary of clang-tidy to be used. You are't allowed to specify"
+                                                             "both this option and clang-tidy-version to avoid ambiguous.")
+      (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
+      (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
+      (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
+      (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
+      (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
+      (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
+      (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
+      (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
+      (enable_clang_format,              value<bool>(),      "Enabel clang-format check")
+      (enable_clang_format_fastly_exit,  value<bool>(),      "Enabel clang-format fastly exit."
+                                                             "This means cpp-linter will stop all clang-format"
+                                                             "checks as soon as first error occurs")
+      (clang_format_version,             value<uint16_t>(),  "The version of clang-format to be used")
+      (clang_format_binary,              value<string>(),    "The binary of clang-format to be used. You are't allowed to specify"
+                                                             "both this option and clang-format-version to avoid ambiguous.")
     ;
     // clang-format on
     return desc;

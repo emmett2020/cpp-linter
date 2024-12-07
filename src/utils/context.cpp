@@ -36,6 +36,15 @@ namespace linter {
     spdlog::info("\theader filter: {}", tidy_opt.header_filter);
     spdlog::info("\tline filter: {}", tidy_opt.line_filter);
     spdlog::info("\tsource file iregex: {}", tidy_opt.source_iregex);
+
+    const auto &format_opt = ctx.clang_format_option;
+    spdlog::info("Options of clang-tidy:");
+    spdlog::info("\tenable clang format: {}", format_opt.enable_clang_format);
+    spdlog::info("\tenable clang format fastly exit: {}",
+                 format_opt.enable_clang_format_fastly_exit);
+    spdlog::info("\tclang format version: {}", format_opt.clang_format_version);
+    spdlog::info("\tclang format binary: {}", format_opt.clang_format_binary);
+    spdlog::info("\tclang format source file iregex: {}", format_opt.source_iregex);
     spdlog::info("");
   }
 
