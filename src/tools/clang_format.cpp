@@ -80,7 +80,7 @@ namespace linter::clang_format {
         auto replacement = replacement_type{};
         replacement_ele->QueryIntAttribute(offset_str, &replacement.offset);
         replacement_ele->QueryIntAttribute(length_str, &replacement.length);
-        const auto *text = replacements_ele->GetText();
+        const auto *text = replacement_ele->GetText();
         if (text != nullptr) {
           replacement.data = text;
         }
@@ -88,7 +88,7 @@ namespace linter::clang_format {
         print_replacement(replacement);
         replacements.emplace_back(std::move(replacement));
 
-        replacement_ele = replacements_ele->NextSiblingElement(replacement_str);
+        replacement_ele = replacement_ele->NextSiblingElement(replacement_str);
       }
       return replacements;
     }
