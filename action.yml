@@ -11,6 +11,14 @@ inputs:
   log-level:
     description: Set log level for cpp-linter
     default: info
+  clang-format-version:
+    description: Choose which clang-format version you want to use
+    required: true
+    default: 18
+  enable-clang-format:
+    description: Enable clang-format check
+    type: boolean
+    default: true
   clang-tidy-version:
     description: Choose which clang-tidy version you want to use
     required: true
@@ -50,7 +58,7 @@ runs:
       shell: bash
       run: |
         # release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
-        release_version=0.0.30
+        release_version=0.0.31
         echo "Current path: `pwd`, current version: ${release_version}"
         wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
         tar -xvf cpp-linter.tar.gz
@@ -68,6 +76,8 @@ runs:
           ls -lrthaR .git
         fi
         /usr/local/bin/cpp-linter --log-level="${{ inputs.log-level }}"                          \
+                                  --enable-clang-format="${{ inputs.enable-clang-format }}"      \
+                                  --clang-format-version="${{ inputs.clang-format-version }}"    \
                                   --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"          \
                                   --clang-tidy-version="${{ inputs.clang-tidy-version }}"        \
                                   --clang-tidy-database="${{ inputs.clang-tidy-database }}"      \
