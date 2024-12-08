@@ -122,7 +122,7 @@ namespace {
     return details;
   }
 
-  auto make_step_summary(const context &ctx, const cpp_linter_result &result) -> std::string {
+  auto make_brief_result(const context &ctx, const cpp_linter_result &result) -> std::string {
     static const auto title     = "# The cpp-linter Result"s;
     static const auto hint_pass = ":rocket: All checks on all file passed."s;
     static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
@@ -349,18 +349,14 @@ auto main(int argc, char **argv) -> int {
   if (ctx.enable_step_summary) {
     auto summary_file = env::get(github_step_summary);
     auto file         = std::fstream{summary_file, std::ios::app};
-    throw_unless(file.is_open(), "error to open step summary file to write");
-    auto step_summary = make_step_summary(ctx, linter_result);
-    file << step_summary;
+    throw_unless(file.is_open(), "failed to open step summary file to write");
+    file << make_brief_result(ctx, linter_result);
   }
 
   if (ctx.enable_comment_on_issue) {
     auto github_client = github_api_client{ctx};
     github_client.get_issue_comment_id();
-    github_client.add_or_update_issue_comment(std::format(
-      "{} passed, failed: {}",
-      linter_result.clang_tidy_passed.size(),
-      linter_result.clang_tidy_failed.size()));
+    github_client.add_or_update_issue_comment(make_brief_result(ctx, linter_result));
   }
 
   if (ctx.enable_pull_request_review) {
