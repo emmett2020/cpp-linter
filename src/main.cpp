@@ -20,6 +20,7 @@
 
 using namespace linter; // NOLINT
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 
 namespace {
   /// This must be called before any spdlog use.
@@ -85,19 +86,22 @@ namespace {
   }
 
   auto make_step_summary(const context &ctx, const cpp_linter_result &result) -> std::string {
-    const auto title = "# The cpp-linter Result"s;
-    auto prefix      = std::string{};
-    auto comment     = std::string{};
-    if (result.clang_tidy_failed.empty()) {
-      prefix = ":rocket: All checks passed.";
-      return title + prefix;
+    static const auto title     = "# The cpp-linter Result"s;
+    static const auto hint_pass = ":rocket: All checks on all file passed."s;
+    static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
+
+    auto clang_tidy_passed   = result.clang_tidy_failed.empty();
+    auto clang_format_passed = result.clang_format_failed.empty();
+    auto all_check_passes    = clang_tidy_passed && clang_format_passed;
+    if (all_check_passes) {
+      return title + hint_pass;
     }
 
-    prefix = ":warning: Some files didn't pass the cpp-linter checks\n";
-    {
-      comment += std::format("<details><summary>{} reports: <strong>",
-                             ctx.clang_tidy_option.clang_tidy_binary);
-      comment += std::format("{} fails</strong></summary>\n\n", result.clang_tidy_failed.size());
+    auto details = std::string{};
+    if (!clang_tidy_passed) {
+      details += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
+                             ctx.clang_tidy_option.clang_tidy_binary,
+                             result.clang_tidy_failed.size());
       for (const auto &[name, failed]: result.clang_tidy_failed) {
         for (const auto &diag: failed.diags) {
           auto one = std::format(
@@ -108,22 +112,23 @@ namespace {
             diag.header.serverity,
             diag.header.diagnostic_type,
             diag.header.brief);
-          comment += one;
+          details += one;
         }
       }
-      comment += "\n</details>";
-    }
-    {
-      comment += std::format("<details><summary>{} reports: <strong>",
-                             ctx.clang_format_option.clang_format_binary);
-      comment += std::format("{} fails</strong></summary>\n\n", result.clang_format_failed.size());
-      for (const auto &[name, failed]: result.clang_format_failed) {
-        comment += std::format("- {}\n", name);
-      }
-      comment += "\n</details>";
+      details += "\n</details>";
     }
 
-    return title + prefix + comment;
+    if (!clang_format_passed) {
+      details += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
+                             ctx.clang_format_option.clang_format_binary,
+                             result.clang_format_failed.size());
+      for (const auto &[name, failed]: result.clang_format_failed) {
+        details += std::format("- {}\n", name);
+      }
+      details += "\n</details>";
+    }
+
+    return title + hint_fail + details;
   }
 
   // Some changes in file may not in the same hunk.
@@ -274,7 +279,7 @@ auto main(int argc, char **argv) -> int {
         continue;
       }
 
-      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
+      spdlog::error("file: {} doesn't pass {} check.", file, opt.clang_tidy_binary);
       linter_result.clang_tidy_failed[file] = std::move(result);
       if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
@@ -300,7 +305,7 @@ auto main(int argc, char **argv) -> int {
         continue;
       }
 
-      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_format_binary);
+      spdlog::error("file: {} doesn't pass {} check.", file, opt.clang_format_binary);
       linter_result.clang_format_failed[file] = std::move(result);
       if (ctx.clang_format_option.enable_clang_format_fastly_exit) {
         spdlog::info("clang-format fastly exit");
@@ -309,7 +314,7 @@ auto main(int argc, char **argv) -> int {
     }
   }
 
-  if (ctx.enable_step_summary) {
+  if (ctx.enable_step_summary) { // for DEBUG
     auto summary_file = env::get(github_step_summary);
     auto file         = std::fstream{summary_file, std::ios::app};
     throw_unless(file.is_open(), "error to open step summary file to write");
