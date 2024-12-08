@@ -327,7 +327,7 @@ auto main(int argc, char **argv) -> int {
     file << step_summary;
   }
 
-  if (ctx.enable_update_issue_comment) {
+  if (ctx.enable_comment_on_issue) {
     auto github_client = github_api_client{ctx};
     github_client.get_issue_comment_id();
     github_client.add_or_update_issue_comment(std::format(

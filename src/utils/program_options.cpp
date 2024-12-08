@@ -4,7 +4,6 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <initializer_list>
-#include <stdexcept>
 
 #include "utils/shell.h"
 #include "utils/util.h"
@@ -25,7 +24,7 @@ namespace linter {
     constexpr auto event_name                      = "event-name";
     constexpr auto pr_number                       = "pr-number";
     constexpr auto enable_step_summary             = "enable-step-summary";
-    constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
+    constexpr auto enable_comment_on_issue         = "enable-comment-on-issue";
     constexpr auto enable_pull_request_review      = "enable-pull-request-review";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
     constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
@@ -198,8 +197,8 @@ namespace linter {
         ctx.enable_step_summary = variables[enable_step_summary].as<bool>();
       }
 
-      if (variables.contains(enable_update_issue_comment)) {
-        ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
+      if (variables.contains(enable_comment_on_issue)) {
+        ctx.enable_comment_on_issue = variables[enable_comment_on_issue].as<bool>();
       }
 
       if (variables.contains(enable_pull_request_review)) {
@@ -222,7 +221,7 @@ namespace linter {
       throw_unless(std::ranges::contains(all_github_events, ctx.event_name),
                    std::format("unsupported event name: {}", ctx.event_name));
 
-      if (variables.contains(enable_update_issue_comment)
+      if (variables.contains(enable_comment_on_issue)
           || variables.contains(enable_pull_request_review)) {
         must_specify("use cpp-linter on local and enable interactive with GITHUB",
                      variables,
@@ -231,8 +230,8 @@ namespace linter {
         ctx.repo  = variables[repo].as<std::string>();
       }
 
-      if (variables.contains(enable_update_issue_comment)) {
-        ctx.enable_update_issue_comment = variables[enable_update_issue_comment].as<bool>();
+      if (variables.contains(enable_comment_on_issue)) {
+        ctx.enable_comment_on_issue = variables[enable_comment_on_issue].as<bool>();
       }
 
       if (variables.contains(enable_pull_request_review)) {
@@ -267,7 +266,7 @@ namespace linter {
       (source,                           value<string>(),    "Set the source reference/commit of git repository.")
       (event_name,                       value<string>(),    "Set the event name of git repository. Such as: push, pull_request")
       (pr_number,                        value<int32_t>(),   "Set the pull-request number of git repository.")
-      (enable_update_issue_comment,      value<bool>(),      "Enable update issue comment. This will set http request to github")
+      (enable_comment_on_issue,          value<bool>(),      "Enable comment on issue. This will set http request to github")
       (enable_pull_request_review,       value<bool>(),      "Enable pull request reivew. This will set http request to github")
       (enable_step_summary,              value<bool>(),      "Enable step summary.")
       (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
