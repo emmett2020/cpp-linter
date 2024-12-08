@@ -206,9 +206,14 @@ namespace {
     auto output = env::get(github_output);
     auto file   = std::fstream{output, std::ios::app};
     throw_unless(file.is_open(), "error to open output file to write");
-    file << std::format("total_failed={}\n", result.clang_tidy_failed.size());
-    file << std::format("clang_tidy_failed_number={}\n", result.clang_tidy_failed.size());
-    file << std::format("clang_format_failed_number={}\n", 0);
+
+    const auto clang_tidy_failed   = result.clang_tidy_failed.size();
+    const auto clang_format_failed = result.clang_format_failed.size();
+    const auto total_failed        = clang_tidy_failed + clang_format_failed;
+
+    file << std::format("total_failed={}\n", total_failed);
+    file << std::format("clang_tidy_failed_number={}\n", clang_tidy_failed);
+    file << std::format("clang_format_failed_number={}\n", clang_format_failed);
   }
 
   auto convert_deltas_to_map(const std::vector<git::diff_delta_detail> &deltas)
