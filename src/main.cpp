@@ -90,8 +90,11 @@ namespace {
     auto comment     = std::string{};
     if (result.clang_tidy_failed.empty()) {
       prefix = ":rocket: All checks passed.";
-    } else {
-      prefix   = ":warning: Some files didn't pass the cpp-linter checks\n";
+      return title + prefix;
+    }
+
+    prefix = ":warning: Some files didn't pass the cpp-linter checks\n";
+    {
       comment += std::format("<details><summary>{} reports: <strong>",
                              ctx.clang_tidy_option.clang_tidy_binary);
       comment += std::format("{} fails</strong></summary>\n\n", result.clang_tidy_failed.size());
@@ -110,6 +113,16 @@ namespace {
       }
       comment += "\n</details>";
     }
+    {
+      comment += std::format("<details><summary>{} reports: <strong>",
+                             ctx.clang_format_option.clang_format_binary);
+      comment += std::format("{} fails</strong></summary>\n\n", result.clang_format_failed.size());
+      for (const auto &[name, failed]: result.clang_format_failed) {
+        comment += std::format("- {}\n", name);
+      }
+      comment += "\n</details>";
+    }
+
     return title + prefix + comment;
   }
 
@@ -258,14 +271,14 @@ auto main(int argc, char **argv) -> int {
       if (result.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
         linter_result.clang_tidy_passed[file] = std::move(result);
-      } else {
-        spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
-        linter_result.clang_tidy_failed[file] = std::move(result);
+        continue;
+      }
 
-        if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
-          spdlog::info("clang-tidy fastly exit");
-          return -1;
-        }
+      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_tidy_binary);
+      linter_result.clang_tidy_failed[file] = std::move(result);
+      if (ctx.clang_tidy_option.enable_clang_tidy_fastly_exit) {
+        spdlog::info("clang-tidy fastly exit");
+        return -1;
       }
     }
     print_clang_tidy_total_result(linter_result);
@@ -280,19 +293,18 @@ auto main(int argc, char **argv) -> int {
         continue;
       }
 
-      // Run clang-tidy then save result.
       auto result = clang_format::run(opt, ctx.repo_path, file);
       if (result.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_format_binary);
         linter_result.clang_format_passed[file] = std::move(result);
-      } else {
-        spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_format_binary);
-        linter_result.clang_format_failed[file] = std::move(result);
+        continue;
+      }
 
-        if (ctx.clang_format_option.enable_clang_format_fastly_exit) {
-          spdlog::info("clang-format fastly exit");
-          return -1;
-        }
+      spdlog::error("file: {} doesn't passes {} check.", file, opt.clang_format_binary);
+      linter_result.clang_format_failed[file] = std::move(result);
+      if (ctx.clang_format_option.enable_clang_format_fastly_exit) {
+        spdlog::info("clang-format fastly exit");
+        return -1;
       }
     }
   }

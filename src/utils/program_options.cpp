@@ -24,7 +24,7 @@ namespace linter {
     constexpr auto source                          = "source";
     constexpr auto event_name                      = "event-name";
     constexpr auto pr_number                       = "pr-number";
-    constexpr auto enable_step_summary             = "enable-step_summary";
+    constexpr auto enable_step_summary             = "enable-step-summary";
     constexpr auto enable_update_issue_comment     = "enable-update-issue-comment";
     constexpr auto enable_pull_request_review      = "enable-pull-request-review";
     constexpr auto enable_clang_tidy               = "enable-clang-tidy";
@@ -212,6 +212,9 @@ namespace linter {
       spdlog::trace("check_and_fill_context_on_local");
       auto must_specify_option = {repo_path, source, event_name};
       must_specify("use cpp-linter on local", variables, must_specify_option);
+
+      auto must_not_specify_option = {enable_step_summary};
+      must_not_specify("use cpp-linter on local", variables, must_not_specify_option);
 
       ctx.repo_path  = variables[repo_path].as<std::string>();
       ctx.source     = variables[source].as<std::string>();
