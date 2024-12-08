@@ -15,18 +15,20 @@ namespace linter::clang_format {
     std::string source_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
   };
 
-  struct replacement {
-    std::size_t offset;
-    std::size_t length;
+  struct replacement_type {
+    int offset;
+    int length;
     std::string data;
   };
 
-  using replacements = std::vector<replacement>;
+  void print_replacement(const replacement_type &replace);
+
+  using replacements_type = std::vector<replacement_type>;
 
   struct result {
     bool pass = false;
     std::string file;
-    replacements replaces;
+    replacements_type replacements;
     std::string origin_stderr;
   };
 

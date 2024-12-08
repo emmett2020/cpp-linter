@@ -12,6 +12,7 @@ include(${linter_root}/cmake/FetchRangeV3.cmake)
 include(${linter_root}/cmake/FetchHttpLib.cmake)
 include(${linter_root}/cmake/FetchNlohmannJson.cmake)
 include(${linter_root}/cmake/FetchMagicEnum.cmake)
+include(${linter_root}/cmake/FetchTinyXML2.cmake)
 
 OPTION (ENABLE_COVERAGE "Enable coverage" OFF)
 IF(ENABLE_COVERAGE)
@@ -43,6 +44,7 @@ target_link_libraries(cpp-linter ${Boost_LIBRARIES}
                                  range-v3
                                  httplib
                                  nlohmann_json
+                                 tinyxml2
                                  git2)
 
 
