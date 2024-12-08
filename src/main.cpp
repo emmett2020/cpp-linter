@@ -319,7 +319,7 @@ auto main(int argc, char **argv) -> int {
     }
   }
 
-  if (ctx.enable_step_summary) { // for DEBUG
+  if (ctx.enable_step_summary) {
     auto summary_file = env::get(github_step_summary);
     auto file         = std::fstream{summary_file, std::ios::app};
     throw_unless(file.is_open(), "error to open step summary file to write");
