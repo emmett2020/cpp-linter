@@ -5,8 +5,9 @@
 #include <vector>
 
 namespace linter::clang_format {
+
   /// The option to be passed into clang-format executable.
-  struct option {
+  struct user_option {
     bool enable_clang_format             = false;
     bool enable_clang_format_fastly_exit = false;
     bool enable_warning_as_error         = false;
@@ -21,7 +22,7 @@ namespace linter::clang_format {
     std::string data;
   };
 
-  void print_replacement(const replacement_type &replace);
+  void trace_replacement(const replacement_type &replacement);
 
   using replacements_type = std::vector<replacement_type>;
 
@@ -30,9 +31,14 @@ namespace linter::clang_format {
     std::string file;
     replacements_type replacements;
     std::string origin_stderr;
+    std::string formatted_source_code;
   };
 
-  /// Run clang tidy on one file.
-  auto run(const option &option, const std::string &repo, const std::string &file) -> result;
+  /// Apply clang format on one file.
+  auto apply_on_single_file(
+    const user_option &user_opt,
+    bool needs_formatted_source_code,
+    const std::string &repo,
+    const std::string &file) -> result;
 
 } // namespace linter::clang_format

@@ -23,7 +23,7 @@ namespace linter {
     std::int32_t pr_number = -1;
 
     clang_tidy::option clang_tidy_option{};
-    clang_format::option clang_format_option{};
+    clang_format::user_option clang_format_option{};
   };
 
   void print_context(const context &ctx);

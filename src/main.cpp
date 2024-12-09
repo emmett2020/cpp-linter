@@ -251,7 +251,9 @@ namespace {
         continue;
       }
 
-      auto result = clang_format::run(opt, ctx.repo_path, file);
+      const bool needs_formatted_source_code = ctx.enable_pull_request_review;
+      auto result =
+        clang_format::apply_on_single_file(opt, needs_formatted_source_code, ctx.repo_path, file);
       if (result.pass) {
         spdlog::info("file: {} passes {} check.", file, opt.clang_format_binary);
         linter_result.clang_format_passed[file] = std::move(result);
