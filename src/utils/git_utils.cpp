@@ -1009,6 +1009,16 @@ namespace linter::git {
       return *line_ptr;
     }
 
+    auto get_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::vector<std::string> {
+      auto ret         = std::vector<std::string>{};
+      size_t num_lines = patch::num_lines_in_hunk(patch, hunk_idx);
+      for (size_t i = 0; i < num_lines; i++) {
+        auto line = get_line_in_hunk(patch, hunk_idx, i);
+        ret.emplace_back(line.content, line.content_len);
+      }
+      return ret;
+    }
+
   } // namespace patch
 
   namespace blob {

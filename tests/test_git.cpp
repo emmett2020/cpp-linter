@@ -9,6 +9,7 @@
 #include <catch2/catch_all.hpp>
 #include <spdlog/spdlog.h>
 
+#include "catch2/catch_test_macros.hpp"
 #include "utils/git_utils.h"
 
 using namespace linter;
@@ -269,6 +270,29 @@ TEST_CASE("Get file content from a specific commit", "[git2][blob]") {
   auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
   auto content                = git::blob::get_raw_content(repo.get(), commit1.get(), "file1.cpp");
   REQUIRE(content == "hello world");
+
+  RemoveRepoDir();
+}
+
+TEST_CASE("Get lines in a hunk", "[git2][patch]") {
+  RefreshRepoDir();
+  const auto files = std::vector<std::string>{"file1.cpp"};
+  CreateTempFilesWithSameContent(files, "hello world\nhello world2\n");
+  auto repo                   = InitBasicRepo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+
+  AppendToFile("file1.cpp", "hello world3");
+  auto [index_oid2, index2]   = git::index::add_files(repo.get(), {"file1.cpp"});
+  auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index2.get());
+  auto head_commit2           = git::repo::head_commit(repo.get());
+
+  auto diff     = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
+  auto patch    = git::patch::create_from_diff(diff.get(), 0);
+  auto contents = git::patch::get_lines_in_hunk(patch.get(), 0);
+  REQUIRE(contents[0] == "hello world\n");
+  REQUIRE(contents[1] == "hello world2\n");
+  REQUIRE(contents[2] == "hello world3");
 
   RemoveRepoDir();
 }

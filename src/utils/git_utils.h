@@ -918,6 +918,9 @@ namespace linter::git {
     auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
       -> diff_line;
 
+    /// A utility to get all lines in a hunk.
+    auto get_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::vector<std::string>;
+
   } // namespace patch
 
   namespace blob {
