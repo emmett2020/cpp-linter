@@ -876,11 +876,11 @@ namespace linter::git {
 
     /// Directly generate a patch from the difference between two buffers.
     auto create_from_buffers(
-      std::string old_buffer,
-      std::string old_as_path,
-      std::string new_buffer,
-      std::string new_as_path,
-      diff_options opts) -> patch_ptr;
+      const std::string &old_buffer,
+      const std::string &old_as_path,
+      const std::string &new_buffer,
+      const std::string &new_as_path,
+      const diff_options &opts) -> patch_ptr;
 
     /// Get changed files.
     auto changed_files(const std::unordered_map<std::string, patch_ptr> &patches)

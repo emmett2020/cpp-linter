@@ -172,12 +172,26 @@ namespace {
     spdlog::trace("start_side: {}", comment.start_side);
   }
 
-  auto make_clang_format_pr_review_comment(const context &ctx, const cpp_linter_result &results)
-    -> std::vector<pr_review_comment> {
+  auto make_clang_format_pr_review_comment(
+    [[maybe_unused]] const context &ctx,
+    const cpp_linter_result &results) -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
 
     for (const auto &[file, result]: results.clang_format_failed) {
-      //
+      auto file_full_path = std::format("{}/{}", ctx.repo_path, file);
+      auto fs             = std::ifstream{file_full_path};
+      throw_unless(fs.is_open(), std::format("Can't open {}", file));
+      std::cout << "handling : " << file_full_path << '\n';
+
+      auto old_buffer = std::string{};
+      fs >> old_buffer;
+
+      auto opts = git::diff_options{};
+      git::diff::init_option(&opts);
+
+      auto patch =
+        git::patch::create_from_buffers(old_buffer, file, result.formatted_source_code, file, opts);
+      spdlog::error(git::patch::to_str(patch.get()));
     }
 
     return comments;
@@ -372,6 +386,7 @@ auto main(int argc, char **argv) -> int {
     github_client.add_or_update_issue_comment(make_brief_result(ctx, linter_result));
   }
 
+  make_clang_format_pr_review_comment(ctx, linter_result); // DEBUG
   if (ctx.enable_pull_request_review) {
     auto comments      = make_pr_review_comment(ctx, linter_result);
     auto body          = make_pr_review_comment_str(comments);
