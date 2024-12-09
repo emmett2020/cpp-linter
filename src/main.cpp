@@ -2,8 +2,9 @@
 #include <fstream>
 #include <git2/oid.h>
 #include <print>
-#include <ranges>
+#include <vector>
 #include <string>
+#include <ranges>
 
 #include <boost/regex.hpp>
 #include <spdlog/spdlog.h>
@@ -196,8 +197,8 @@ namespace {
 
         auto pos      = std::size_t{0};
         auto num_hunk = git::patch::num_hunks(patch.get());
-        for (int i = 0; i < num_hunk; ++i) {
-          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
+        for (int j = 0; j < num_hunk; ++j) {
+          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), j);
           if (!is_in_hunk(hunk, row)) {
             pos += num_lines;
             continue;
@@ -205,17 +206,26 @@ namespace {
           auto comment     = pr_review_comment{};
           comment.path     = file;
           comment.position = pos + row - hunk.new_start + 1;
-          // comment.body     = format_hunk.;
+
+          comment.body = git::patch::get_lines_in_hunk(patch.get(), i)
+                       | std::views::join_with(' ')
+                       | std::ranges::to<std::string>();
           comments.emplace_back(std::move(comment));
         }
       }
     }
 
+    spdlog::error("Comments XXX:");
+    for (const auto &comment: comments) {
+      print_pr_review_comment(comment);
+    }
+
     return comments;
   }
 
-  auto make_pr_review_comment([[maybe_unused]] const context &ctx, const cpp_linter_result &results)
-    -> std::vector<pr_review_comment> {
+  auto make_clang_tidy_pr_review_comment(
+    [[maybe_unused]] const context &ctx,
+    const cpp_linter_result &results) -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
 
     for (const auto &[file, clang_tidy_result]: results.clang_tidy_failed) {
@@ -403,9 +413,12 @@ auto main(int argc, char **argv) -> int {
     github_client.add_or_update_issue_comment(make_brief_result(ctx, linter_result));
   }
 
-  make_clang_format_pr_review_comment(ctx, linter_result, repo.get(), source_commit.get()); // DEBUG
   if (ctx.enable_pull_request_review) {
-    auto comments      = make_pr_review_comment(ctx, linter_result);
+    // TODO: merge
+    auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);
+    auto clang_format_comments =
+      make_clang_format_pr_review_comment(ctx, linter_result, repo.get(), source_commit.get());
+    comments.insert(comments.end(), clang_format_comments.begin(), clang_format_comments.end());
     auto body          = make_pr_review_comment_str(comments);
     auto github_client = github_api_client{ctx};
     github_client.post_pull_request_review(body);
