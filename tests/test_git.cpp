@@ -1,6 +1,7 @@
 #include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <git2/diff.h>
 #include <ios>
 #include <iostream>
 #include <print>
@@ -247,6 +248,16 @@ TEST_CASE("Simple use of patch ", "[git2][patch]") {
   std::cout << git::patch::to_str(patch.get());
 
   RemoveRepoDir();
+}
+
+TEST_CASE("Create patch from buffers", "[git2][patch]") {
+  auto old_content = "int n = 2;"s;
+  auto new_content = "double n = 2;"s;
+  auto opt         = git_diff_options{};
+  git::diff::init_option(&opt);
+  auto patch =
+    git::patch::create_from_buffers(old_content, "temp.cpp", new_content, "temp.cpp", opt);
+  std::cout << git::patch::to_str(patch.get());
 }
 
 int main(int argc, char* argv[]) {

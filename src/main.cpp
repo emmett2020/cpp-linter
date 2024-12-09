@@ -172,6 +172,17 @@ namespace {
     spdlog::trace("start_side: {}", comment.start_side);
   }
 
+  auto make_clang_format_pr_review_comment(const context &ctx, const cpp_linter_result &results)
+    -> std::vector<pr_review_comment> {
+    auto comments = std::vector<pr_review_comment>{};
+
+    for (const auto &[file, result]: results.clang_format_failed) {
+      //
+    }
+
+    return comments;
+  }
+
   auto make_pr_review_comment([[maybe_unused]] const context &ctx, const cpp_linter_result &results)
     -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};

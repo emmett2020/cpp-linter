@@ -928,6 +928,26 @@ namespace linter::git {
       return res;
     }
 
+    auto create_from_buffers(
+      std::string old_buffer,
+      std::string old_as_path,
+      std::string new_buffer,
+      std::string new_as_path,
+      diff_options opts) -> patch_ptr {
+      auto *patch = patch_raw_ptr{nullptr};
+      auto ret    = ::git_patch_from_buffers(
+        &patch,
+        old_buffer.data(),
+        old_buffer.size(),
+        old_as_path.data(),
+        new_buffer.data(),
+        new_buffer.size(),
+        new_as_path.data(),
+        &opts);
+      throw_if(ret);
+      return {patch, ::git_patch_free};
+    }
+
     auto changed_files(const std::unordered_map<std::string, patch_ptr> &patches)
       -> std::vector<std::string> {
       auto ret = std::vector<std::string>{};
