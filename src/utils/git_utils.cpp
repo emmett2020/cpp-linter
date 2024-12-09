@@ -5,6 +5,7 @@
 #include <cstring>
 #include <git2/buffer.h>
 #include <git2/patch.h>
+#include <git2/tree.h>
 #include <iostream>
 #include <string>
 
@@ -871,13 +872,27 @@ namespace linter::git {
   } // namespace index
 
   namespace tree {
-    /// Lookup a tree object from the repository.
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> tree_ptr {
       auto *tree = tree_raw_ptr{nullptr};
       auto ret   = ::git_tree_lookup(&tree, repo, oid);
       throw_if(ret);
       return {tree, git_tree_free};
     }
+
+    auto entry_id(tree_entry_raw_cptr entry) -> oid_raw_cptr {
+      return ::git_tree_entry_id(entry);
+    }
+
+    auto entry_byname(tree_raw_cptr tree, const std::string &filename)
+      -> std::tuple<oid_raw_cptr, tree_entry_raw_cptr> {
+      const auto *entry = ::git_tree_entry_byname(tree, filename.c_str());
+      if (entry == nullptr) {
+        return {nullptr, nullptr};
+      }
+      const auto *oid = ::git_tree_entry_id(entry);
+      return {oid, entry};
+    }
+
 
   } // namespace tree
 
@@ -995,5 +1010,39 @@ namespace linter::git {
     }
 
   } // namespace patch
+
+  namespace blob {
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> blob_ptr {
+      auto *blob = blob_raw_ptr{nullptr};
+      auto ret   = ::git_blob_lookup(&blob, repo, oid);
+      throw_if(ret);
+      return {blob, ::git_blob_free};
+    }
+
+    auto get_raw_content(blob_raw_cptr blob) -> std::string {
+      const auto *ret = ::git_blob_rawcontent(blob);
+      throw_if(ret == nullptr, "get raw content by blob error");
+      return static_cast<const char *>(ret);
+    }
+
+    auto get_raw_content(repo_raw_ptr repo, tree_raw_cptr tree, const std::string &file_name)
+      -> std::string {
+      throw_if(tree == nullptr, "failed to get raw content sicne tree is a null pointer");
+      throw_if(file_name.empty(), "failed to get raw content sicne file name is empty");
+      auto [entry_id, entry] = tree::entry_byname(tree, file_name);
+      if (entry == nullptr) {
+        return "";
+      }
+      auto blob = lookup(repo, entry_id);
+      return get_raw_content(blob.get());
+    }
+
+    auto get_raw_content(repo_raw_ptr repo, commit_raw_cptr commit, const std::string &file_name)
+      -> std::string {
+      auto tree = commit::tree(commit);
+      return get_raw_content(repo, tree.get(), file_name);
+    }
+
+  } // namespace blob
 
 } // namespace linter::git

@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <git2/types.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -71,6 +72,7 @@ namespace linter::git {
   using diff_raw_ptr         = git_diff *;
   using diff_options_raw_ptr = git_diff_options *;
   using tree_raw_ptr         = git_tree *;
+  using tree_entry_raw_ptr   = git_tree_entry *;
   using index_raw_ptr        = git_index *;
   using blob_raw_ptr         = git_blob *;
   using tag_raw_ptr          = git_tag *;
@@ -91,8 +93,9 @@ namespace linter::git {
   using diff_raw_cptr         = const git_diff *;
   using diff_options_raw_cptr = const git_diff_options *;
   using tree_raw_cptr         = const git_tree *;
+  using tree_entry_raw_cptr   = const git_tree_entry *;
   using index_raw_cptr        = const git_index *;
-  using blob_raw_cptr         = const blob_raw_ptr *;
+  using blob_raw_cptr         = const git_blob *;
   using tag_raw_cptr          = const git_tag *;
   using diff_delta_raw_cptr   = const git_diff_delta *;
   using diff_hunk_raw_cptr    = const git_diff_hunk *;
@@ -844,6 +847,13 @@ namespace linter::git {
     /// Lookup a tree object from the repository.
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> tree_ptr;
 
+    /// Get the id of the object pointed by the entry
+    auto entry_id(tree_entry_raw_cptr entry) -> oid_raw_cptr;
+
+    /// Lookup a tree entry by its filename. Return nullptr if not found.
+    auto entry_byname(tree_raw_cptr tree, const std::string &filename)
+      -> std::tuple<oid_raw_cptr, tree_entry_raw_cptr>;
+
   } // namespace tree
 
   namespace status {
@@ -909,5 +919,22 @@ namespace linter::git {
       -> diff_line;
 
   } // namespace patch
+
+  namespace blob {
+    /// Lookup a blob object from a repository.
+    auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> blob_ptr;
+
+    /// Get a buffer with the raw content of a blob.
+    auto get_raw_content(blob_raw_cptr blob) -> std::string;
+
+    /// A utility to get raw content by file name. Return empty if file not found.
+    auto get_raw_content(repo_raw_ptr repo, tree_raw_cptr tree, const std::string &file_name)
+      -> std::string;
+
+    /// A utility to get raw content by file name. Return empty if file not found.
+    auto get_raw_content(repo_raw_ptr repo, commit_raw_cptr commit, const std::string &file_name)
+      -> std::string;
+
+  } // namespace blob
 } // namespace linter::git
 

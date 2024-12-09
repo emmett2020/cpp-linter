@@ -260,6 +260,19 @@ TEST_CASE("Create patch from buffers", "[git2][patch]") {
   std::cout << git::patch::to_str(patch.get());
 }
 
+TEST_CASE("Get file content from a specific commit", "[git2][blob]") {
+  RefreshRepoDir();
+  const auto files = std::vector<std::string>{"file1.cpp"};
+  CreateTempFilesWithSameContent(files, "hello world");
+  auto repo                   = InitBasicRepo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+  auto content                = git::blob::get_raw_content(repo.get(), commit1.get(), "file1.cpp");
+  REQUIRE(content == "hello world");
+
+  RemoveRepoDir();
+}
+
 int main(int argc, char* argv[]) {
   git::setup();
   int result = Catch::Session().run(argc, argv);
