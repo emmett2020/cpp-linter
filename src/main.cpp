@@ -10,6 +10,7 @@
 #include <spdlog/spdlog.h>
 #include <unordered_map>
 
+#include "configs/version.h"
 #include "github/api.h"
 #include "github/common.h"
 #include "tools/clang_tidy.h"
@@ -346,7 +347,7 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
   if (options.contains("version")) {
-    std::print("{}", "0.0.1");
+    std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR, cpp_linter_VERSION_PATCH);
     return 0;
   }
 

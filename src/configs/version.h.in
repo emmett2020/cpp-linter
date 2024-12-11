@@ -1,0 +1,3 @@
+#define cpp_linter_VERSION_MAJOR @cpp_linter_VERSION_MAJOR@
+#define cpp_linter_VERSION_MINOR @cpp_linter_VERSION_MINOR@
+#define cpp_linter_VERSION_PATCH @cpp_linter_VERSION_PATCH@
