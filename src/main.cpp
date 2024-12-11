@@ -13,6 +13,7 @@
 #include "configs/version.h"
 #include "github/api.h"
 #include "github/common.h"
+#include "result.h"
 #include "tools/clang_tidy.h"
 #include "utils/context.h"
 #include "utils/env_manager.h"
@@ -46,48 +47,7 @@ namespace {
     spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
   }
 
-  struct cpp_linter_result {
-    // Added or modified or renamed, not included in deleted file.
-    std::unordered_map<std::string, git::patch_ptr> patches;
-
-    // Ignored by clang-tidy iregex.
-    std::vector<std::string> clang_tidy_ignored_files;
-    std::unordered_map<std::string, clang_tidy::result> clang_tidy_passed;
-    std::unordered_map<std::string, clang_tidy::result> clang_tidy_failed;
-    bool clang_tidy_fastly_exit = false;
-
-    std::vector<std::string> clang_format_ignored_files;
-    std::unordered_map<std::string, clang_format::result> clang_format_passed;
-    std::unordered_map<std::string, clang_format::result> clang_format_failed;
-    bool clang_format_fastly_exit = false;
-  };
-
-  void print_clang_tidy_total_result(const cpp_linter_result &result) {
-    spdlog::info(
-      "Total changed file number: {}. While {} files are igored by "
-      "user, {} files check "
-      "is passed, {} files check is failed",
-      result.patches.size(),
-      result.clang_tidy_ignored_files.size(),
-      result.clang_tidy_passed.size(),
-      result.clang_tidy_failed.size());
-  }
-
-  auto make_clang_format_result_str(const context &ctx, const cpp_linter_result &result)
-    -> std::string {
-    auto details = std::string{};
-    details += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
-                           ctx.clang_format_option.clang_format_binary,
-                           result.clang_format_failed.size());
-    for (const auto &[name, failed]: result.clang_format_failed) {
-      details += std::format("- {}\n", name);
-    }
-    details += "\n</details>";
-    return details;
-  }
-
-  auto make_clang_tidy_result_str(const context &ctx, const cpp_linter_result &result)
-    -> std::string {
+  auto make_clang_tidy_result_str(const context &ctx, const total_result &result) -> std::string {
     auto details = std::string{};
     details += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
                            ctx.clang_tidy_option.clang_tidy_binary,
@@ -108,7 +68,7 @@ namespace {
     return details;
   }
 
-  auto make_brief_result(const context &ctx, const cpp_linter_result &result) -> std::string {
+  auto make_brief_result(const context &ctx, const total_result &result) -> std::string {
     static const auto title     = "# The cpp-linter Result"s;
     static const auto hint_pass = ":rocket: All checks on all file passed."s;
     static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
@@ -160,7 +120,7 @@ namespace {
 
   auto make_clang_format_pr_review_comment(
     const context &ctx,
-    const cpp_linter_result &results,
+    const total_result &results,
     git::repo_raw_ptr repo,
     git::commit_raw_cptr commit) -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
@@ -210,7 +170,7 @@ namespace {
 
   auto make_clang_tidy_pr_review_comment(
     [[maybe_unused]] const context &ctx,
-    const cpp_linter_result &results) -> std::vector<pr_review_comment> {
+    const total_result &results) -> std::vector<pr_review_comment> {
     auto comments = std::vector<pr_review_comment>{};
 
     for (const auto &[file, clang_tidy_result]: results.clang_tidy_failed) {
@@ -252,8 +212,7 @@ namespace {
     return res.dump();
   }
 
-  void write_to_github_output([[maybe_unused]] const context &ctx,
-                              const cpp_linter_result &result) {
+  void write_to_github_output([[maybe_unused]] const context &ctx, const total_result &result) {
     auto output = env::get(github_output);
     auto file   = std::fstream{output, std::ios::app};
     throw_unless(file.is_open(), "error to open output file to write");
@@ -279,7 +238,7 @@ namespace {
   void apply_clang_format_on_files(
     const context &ctx,
     const std::vector<std::string> &changed_files,
-    cpp_linter_result &linter_result) {
+    total_result &linter_result) {
     const auto &opt = ctx.clang_format_option;
     for (const auto &file: changed_files) {
       if (filter_file(opt.source_iregex, file)) {
@@ -301,7 +260,7 @@ namespace {
       linter_result.clang_format_failed[file] = std::move(result);
       if (opt.enable_clang_format_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
-        linter_result.clang_tidy_fastly_exit = true;
+        linter_result.clang_tidy_fastly_exited = true;
         return;
       }
     }
@@ -310,7 +269,7 @@ namespace {
   void apply_clang_tidy_on_files(
     const context &ctx,
     const std::vector<std::string> &changed_files,
-    cpp_linter_result &linter_result) {
+    total_result &linter_result) {
     const auto &opt = ctx.clang_tidy_option;
     for (const auto &file: changed_files) {
       if (filter_file(opt.source_iregex, file)) {
@@ -331,7 +290,7 @@ namespace {
       linter_result.clang_tidy_failed[file] = std::move(result);
       if (opt.enable_clang_tidy_fastly_exit) {
         spdlog::info("clang-tidy fastly exit");
-        linter_result.clang_tidy_fastly_exit = true;
+        linter_result.clang_tidy_fastly_exited = true;
         return;
       }
     }
@@ -376,7 +335,7 @@ auto main(int argc, char **argv) -> int {
   auto source_commit = git::convert<git::commit_ptr>(git::revparse::single(repo.get(), ctx.source));
   auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(), source_commit.get());
 
-  auto linter_result    = cpp_linter_result{};
+  auto linter_result    = total_result{};
   linter_result.patches = git::patch::create_from_diff(diff.get());
   auto changed_files    = git::patch::changed_files(linter_result.patches);
   print_changed_files(changed_files);
