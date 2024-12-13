@@ -24,6 +24,18 @@
 
 namespace linter {
 
+struct per_file_base_result {
+  virtual ~per_file_base_result() = default;
+  virtual explicit operator std::string() = 0;
+
+  bool passed = false;
+  std::string file_path;
+  std::string tool_stdout;
+  std::string tool_stderr;
+};
+
+using per_file_base_result_ptr = std::unique_ptr<per_file_base_result>;
+
 struct base_result {
   virtual ~base_result() = default;
 
@@ -32,10 +44,13 @@ struct base_result {
   virtual auto make_step_summary() -> std::optional<std::string> = 0;
   virtual auto make_pr_review_comment() -> std::optional<std::string> = 0;
 
-  bool passed = false;
+  bool final_passed = false;
   bool fastly_exited = false;
   std::unordered_map<std::string, git::patch_ptr> patches;
   std::vector<std::string> ignored_files;
+
+  std::unordered_map<std::string, per_file_base_result_ptr> passes;
+  std::unordered_map<std::string, per_file_base_result_ptr> fails;
 };
 
 } // namespace linter

@@ -14,17 +14,12 @@
  * limitations under the License.
  */
 #pragma once
+#include "base.h"
 
-#include <string>
+namespace linter::clang_format {
 
-struct base_user_option {
-  virtual ~base_user_option() = default;
-  virtual explicit operator std::string() = 0;
-
-  bool enabled = false;
-  bool enabled_fastly_exit = false;
-  std::string version;
-  std::string binary;
-  std::string source_filter_iregex =
-      R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
+struct clang_format_v18 : base_clang_format {
+  constexpr auto version() -> std::string_view override { return "18.0.1"; }
 };
+
+} // namespace linter::clang_format
