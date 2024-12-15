@@ -24,32 +24,62 @@
 #include "tools/base_result.h"
 #include "tools/base_tool.h"
 
-namespace linter::clang_format {
+namespace linter::clang_tidy {
   struct user_option : user_option_base {
-    bool enable_warning_as_error     = false;
-    bool needs_formatted_source_code = false;
+    bool allow_no_checks      = false;
+    bool enable_check_profile = false;
+    std::string checks;
+    std::string config;
+    std::string config_file;
+    std::string database;
+    std::string header_filter;
+    std::string line_filter;
   };
 
-  struct replacement_t {
-    int offset;
-    int length;
-    std::string data;
+  /// Represents statistics outputed by clang-tidy. It's usually the stderr
+  /// messages of clang-tidy.
+  struct statistic {
+    std::uint32_t warnings                   = 0;
+    std::uint32_t errors                     = 0;
+    std::uint32_t warnings_treated_as_errors = 0;
+    std::uint32_t total_suppressed_warnings  = 0;
+    std::uint32_t non_user_code_warnings     = 0;
+    std::uint32_t no_lint_warnings           = 0;
   };
 
-  using replacements_t = std::vector<replacement_t>;
+  /// Each diagnostic hase a header line.
+  struct diagnostic_header {
+    std::string file_name;
+    std::string row_idx;
+    std::string col_idx;
+    std::string serverity;
+    std::string brief;
+    std::string diagnostic_type;
+  };
+
+  /// Represents one diagnostic which outputed by clang-tidy.
+  /// Generally, each diagnostic has a header line and several details line
+  /// which give a further detailed explanation.
+  struct diagnostic {
+    diagnostic_header header;
+    std::string details;
+  };
+
+  /// Represents all diagnostics which outputed by clang-tidy.
+  using diagnostics = std::vector<diagnostic>;
 
   struct per_file_result : per_file_result_base {
-    replacements_t replacements;
-    std::string formatted_source_code;
+    statistic stat;
+    diagnostics diags;
   };
 
-  struct base_clang_format : tool_base<user_option, per_file_result> {
+  struct base_clang_tidy : tool_base<user_option, per_file_result> {
     bool is_supported(operating_system_t system, arch_t arch) override {
       return system == operating_system_t::linux && arch == arch_t::x86_64;
     }
 
     constexpr auto name() -> std::string_view override {
-      return "clang_format";
+      return "clang_tidy";
     }
 
     auto apply_to_single_file(
@@ -71,5 +101,5 @@ namespace linter::clang_format {
     }
   };
 
-  using clang_format_ptr = base_tool_ptr<user_option, per_file_result>;
-} // namespace linter::clang_format
+  using clang_tidy_ptr = base_tool_ptr<user_option, per_file_result>;
+} // namespace linter::clang_tidy
