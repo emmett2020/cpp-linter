@@ -18,8 +18,10 @@
 
 namespace linter::clang_format {
 
-struct clang_format_v18 : base_clang_format {
-  constexpr auto version() -> std::string_view override { return "18.0.1"; }
-};
+  struct clang_format_v18 : base_clang_format {
+    constexpr auto version() -> std::string_view override {
+      return "18.0.1";
+    }
+  };
 
 } // namespace linter::clang_format

@@ -17,4 +17,4 @@
 #include "base.h"
 #include "v18.h"
 
-namespace linter::clang_format {} // namespace linter::clang_format
+namespace linter::clang_format { } // namespace linter::clang_format

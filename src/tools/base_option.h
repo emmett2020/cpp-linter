@@ -18,13 +18,12 @@
 #include <string>
 
 struct base_user_option {
-  virtual ~base_user_option() = default;
+  virtual ~base_user_option()             = default;
   virtual explicit operator std::string() = 0;
 
-  bool enabled = false;
+  bool enabled             = false;
   bool enabled_fastly_exit = false;
   std::string version;
   std::string binary;
-  std::string source_filter_iregex =
-      R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
+  std::string source_filter_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
 };

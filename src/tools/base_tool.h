@@ -22,46 +22,46 @@
 
 namespace linter {
 
-enum class system_t {
-  none = 0,
-  windows = 1 << 0,
-  macos = 1 << 1,
-  linux = 1 << 2,
-};
+  enum class system_t {
+    none    = 0,
+    windows = 1 << 0,
+    macos   = 1 << 1,
+    linux   = 1 << 2,
+  };
 
-/// We don't consider 32-bit architectures.
-enum class arch_t {
-  none,
-  all,
-  x64_64,
-  arm64,
-};
+  /// We don't consider 32-bit architectures.
+  enum class arch_t {
+    none,
+    all,
+    x64_64,
+    arm64,
+  };
 
-/// This is a base class represents linter tools. All specified tools should be
-/// derived from this.
-class base_tool {
-public:
-  virtual ~base_tool() = default;
-  virtual auto supported_system() -> uint64_t = 0;
-  virtual auto supported_arch(system_t system) -> arch_t = 0;
-  virtual constexpr auto name() -> std::string_view = 0;
-  virtual constexpr auto version() -> std::string_view = 0;
+  /// This is a base class represents linter tools. All specified tools should be
+  /// derived from this.
+  class base_tool {
+  public:
+    virtual ~base_tool()                                   = default;
+    virtual auto supported_system() -> uint64_t            = 0;
+    virtual auto supported_arch(system_t system) -> arch_t = 0;
+    virtual constexpr auto name() -> std::string_view      = 0;
+    virtual constexpr auto version() -> std::string_view   = 0;
 
-  virtual auto
-  apply_to_single_file(const base_user_option &option,
-                       const std::string &repo, //
-                       const std::string &file) -> per_file_base_result_ptr = 0;
+    virtual auto apply_to_single_file(
+      const base_user_option &option,
+      const std::string &repo, //
+      const std::string &file) -> per_file_base_result_ptr = 0;
 
-  auto run(const base_user_option &option, const std::string &repo,
-           const std::vector<std::string> &files) -> base_result;
-};
+    auto run(const base_user_option &option,
+             const std::string &repo,
+             const std::vector<std::string> &files) -> base_result;
+  };
 
-using base_tool_ptr = std::unique_ptr<base_tool>;
+  using base_tool_ptr = std::unique_ptr<base_tool>;
 
-struct tool_creator {
-  virtual ~tool_creator() = default;
-  virtual auto create_instance(system_t cur_system,
-                               arch_t cur_arch) -> base_tool_ptr = 0;
-};
+  struct tool_creator {
+    virtual ~tool_creator()                                                             = default;
+    virtual auto create_instance(system_t cur_system, arch_t cur_arch) -> base_tool_ptr = 0;
+  };
 
 } // namespace linter
