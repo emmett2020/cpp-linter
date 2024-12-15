@@ -24,7 +24,7 @@
 #include "tools/base_result.h"
 #include "tools/base_tool.h"
 
-namespace linter::clang_format {
+namespace linter::tool::clang_format {
   struct user_option : user_option_base {
     bool enable_warning_as_error     = false;
     bool needs_formatted_source_code = false;
@@ -69,4 +69,4 @@ namespace linter::clang_format {
   };
 
   using clang_format_ptr = base_tool_ptr<user_option, per_file_result>;
-} // namespace linter::clang_format
+} // namespace linter::tool::clang_format

@@ -21,7 +21,7 @@
 
 #include "utils/git_utils.h"
 
-namespace linter {
+namespace linter::tool {
 
   struct per_file_result_base {
     bool passed = false;
@@ -43,4 +43,4 @@ namespace linter {
     std::unordered_map<std::string, PerFileResult> fails;
   };
 
-} // namespace linter
+} // namespace linter::tool

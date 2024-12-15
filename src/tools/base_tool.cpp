@@ -15,16 +15,8 @@
  */
 #pragma once
 
-#include "tools/base_tool.h"
-#include "tools/clang_format/base.h"
-#include "tools/clang_format/version_18.h"
+#include "base_tool.h"
 
-namespace linter::tool::clang_format {
-  constexpr auto supported_version = {version_18_1_0, version_18_1_3};
+namespace linter::tool { } // namespace linter::tool
 
-  auto create_option() -> user_option;
 
-  auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
-    -> clang_format_ptr;
-
-} // namespace linter::tool::clang_format

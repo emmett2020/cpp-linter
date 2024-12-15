@@ -16,12 +16,12 @@
 #pragma once
 
 #include <string>
+#include <spdlog/spdlog.h>
 
-#include "base_option.h"
 #include "base_result.h"
 #include "github/review_comment.h"
 
-namespace linter {
+namespace linter::tool {
   /// The operating system type.
   enum class operating_system_t : std::uint8_t {
     windows,
@@ -63,9 +63,38 @@ namespace linter {
     virtual auto make_pr_review_comment(const user_option_t &option, const final_result_t &result)
       -> github::pull_request::review_comments = 0;
 
-    auto run(const user_option_base &option,
+    auto run(const user_option_t &opt,
              const std::string &repo,
              const std::vector<std::string> &files) -> final_result_t {
+      auto result = final_result_t{};
+
+      for (const auto &file: files) {
+        if (filter_file(opt.source_iregex, file)) {
+          result.ignored_files.push_back(file);
+          spdlog::trace("file is ignored {} by {}", file, opt.binary);
+          continue;
+        }
+
+        auto per_file_result = apply_to_single_file(opt, repo, file);
+        if (per_file_result.passed) {
+          spdlog::info("file: {} passes {} check.", file, opt.binary);
+          result.passes[file] = std::move(per_file_result);
+          continue;
+        }
+
+        spdlog::error("file: {} doesn't pass {} check.", file, opt.binary);
+        result.fails[file] = std::move(per_file_result);
+
+        if (opt.enabled_fastly_exit) {
+          spdlog::info("{} fastly exit since check failed", opt.binary);
+          result.final_passed  = false;
+          result.fastly_exited = true;
+          return per_file_result;
+        }
+      }
+
+      result.final_passed = true;
+      return result;
     }
   };
 
@@ -73,4 +102,4 @@ namespace linter {
   template <class Option, class PerFileResult>
   using base_tool_ptr = std::unique_ptr<tool_base<Option, PerFileResult>>;
 
-} // namespace linter
+} // namespace linter::tool

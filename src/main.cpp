@@ -139,42 +139,6 @@ namespace {
     return comments;
   }
 
-  auto make_clang_tidy_pr_review_comment(
-    [[maybe_unused]] const context &ctx,
-    const total_result &results) -> std::vector<pr_review_comment> {
-    auto comments = std::vector<pr_review_comment>{};
-
-    for (const auto &[file, clang_tidy_result]: results.clang_tidy_failed) {
-      // Get the same file's delta and clang-tidy result
-      assert(clang_tidy_result.file == file);
-      assert(results.patches.contains(file));
-      const auto &patch = results.patches.at(file);
-
-      for (const auto &diag: clang_tidy_result.diags) {
-        const auto &header = diag.header;
-        auto row           = std::stoi(header.row_idx);
-        auto col           = std::stoi(header.col_idx);
-
-        // For all clang-tidy result, check is this in hunk.
-        auto pos      = std::size_t{0};
-        auto num_hunk = git::patch::num_hunks(patch.get());
-        for (int i = 0; i < num_hunk; ++i) {
-          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
-          if (!is_in_hunk(hunk, row)) {
-            pos += num_lines;
-            continue;
-          }
-          auto comment     = pr_review_comment{};
-          comment.path     = file;
-          comment.position = pos + row - hunk.new_start + 1;
-          comment.body     = diag.header.brief + diag.header.diagnostic_type;
-          comments.emplace_back(std::move(comment));
-        }
-      }
-    }
-    return comments;
-  }
-
   void write_to_github_output([[maybe_unused]] const context &ctx, const total_result &result) {
     auto output = env::get(github_output);
     auto file   = std::fstream{output, std::ios::app};
@@ -196,67 +160,6 @@ namespace {
       res[delta.new_file.relative_path] = delta;
     }
     return res;
-  }
-
-  void apply_clang_format_on_files(
-    const context &ctx,
-    const std::vector<std::string> &changed_files,
-    total_result &linter_result) {
-    const auto &opt = ctx.clang_format_option;
-    for (const auto &file: changed_files) {
-      if (filter_file(opt.source_iregex, file)) {
-        linter_result.clang_format_ignored_files.push_back(file);
-        spdlog::trace("file is ignored {} by clang-format", file);
-        continue;
-      }
-
-      const bool needs_formatted_source_code = ctx.enable_pull_request_review;
-      auto result =
-        clang_format::apply_on_single_file(opt, needs_formatted_source_code, ctx.repo_path, file);
-      if (result.pass) {
-        spdlog::info("file: {} passes {} check.", file, opt.clang_format_binary);
-        linter_result.clang_format_passed[file] = std::move(result);
-        continue;
-      }
-
-      spdlog::error("file: {} doesn't pass {} check.", file, opt.clang_format_binary);
-      linter_result.clang_format_failed[file] = std::move(result);
-      if (opt.enable_clang_format_fastly_exit) {
-        spdlog::info("clang-tidy fastly exit");
-        linter_result.clang_tidy_fastly_exited = true;
-        return;
-      }
-    }
-  }
-
-  void apply_clang_tidy_on_files(
-    const context &ctx,
-    const std::vector<std::string> &changed_files,
-    total_result &linter_result) {
-    const auto &opt = ctx.clang_tidy_option;
-    for (const auto &file: changed_files) {
-      if (filter_file(opt.source_iregex, file)) {
-        linter_result.clang_tidy_ignored_files.push_back(file);
-        spdlog::trace("file is ignored {} by clang-tidy", file);
-        continue;
-      }
-
-      // Run clang-tidy then save result.
-      auto result = clang_tidy::run(opt, ctx.repo_path, file);
-      if (result.pass) {
-        spdlog::info("file: {} passes {} check.", file, opt.clang_tidy_binary);
-        linter_result.clang_tidy_passed[file] = std::move(result);
-        continue;
-      }
-
-      spdlog::error("file: {} doesn't pass {} check.", file, opt.clang_tidy_binary);
-      linter_result.clang_tidy_failed[file] = std::move(result);
-      if (opt.enable_clang_tidy_fastly_exit) {
-        spdlog::info("clang-tidy fastly exit");
-        linter_result.clang_tidy_fastly_exited = true;
-        return;
-      }
-    }
   }
 
 } // namespace

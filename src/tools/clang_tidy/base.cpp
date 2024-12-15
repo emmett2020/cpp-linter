@@ -34,7 +34,7 @@
 #include "utils/util.h"
 #include "github/review_comment.h"
 
-namespace linter::clang_tidy {
+namespace linter::tool::clang_tidy {
   using namespace std::string_view_literals;
 
   namespace {
@@ -338,4 +338,4 @@ namespace linter::clang_tidy {
   }
 
 
-} // namespace linter::clang_tidy
+} // namespace linter::tool::clang_tidy

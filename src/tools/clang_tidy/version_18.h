@@ -17,7 +17,7 @@
 
 #include "tools/clang_tidy/base.h"
 
-namespace linter::clang_tidy {
+namespace linter::tool::clang_tidy {
   using namespace std::string_view_literals;
 
   constexpr auto version_18_1_0 = "18.1.0"sv;
@@ -36,4 +36,4 @@ namespace linter::clang_tidy {
   };
 
 
-} // namespace linter::clang_tidy
+} // namespace linter::tool::clang_tidy

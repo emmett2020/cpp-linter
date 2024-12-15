@@ -19,7 +19,7 @@
 #include "tools/clang_tidy/base.h"
 #include "tools/clang_tidy/version_18.h"
 
-namespace linter::clang_tidy {
+namespace linter::tool::clang_tidy {
   constexpr auto supported_version = {version_18_1_0, version_18_1_3};
 
   auto create_option() -> user_option;
@@ -27,4 +27,4 @@ namespace linter::clang_tidy {
   auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
     -> clang_tidy_ptr;
 
-} // namespace linter::clang_tidy
+} // namespace linter::tool::clang_tidy

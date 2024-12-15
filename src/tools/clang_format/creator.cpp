@@ -22,7 +22,7 @@
 #include "tools/clang_format/version_18.h"
 #include "utils/util.h"
 
-namespace linter::clang_format {
+namespace linter::tool::clang_format {
   auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
     -> clang_format_ptr {
     throw_if(std::ranges::contains(supported_version, version),
@@ -45,4 +45,4 @@ namespace linter::clang_format {
   }
 
 
-} // namespace linter::clang_format
+} // namespace linter::tool::clang_format

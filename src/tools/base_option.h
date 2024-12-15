@@ -17,10 +17,12 @@
 
 #include <string>
 
-struct user_option_base {
-  bool enabled             = false;
-  bool enabled_fastly_exit = false;
-  std::string version;
-  std::string binary;
-  std::string source_filter_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
-};
+namespace linter::tool {
+  struct user_option_base {
+    bool enabled             = false;
+    bool enabled_fastly_exit = false;
+    std::string version;
+    std::string binary;
+    std::string source_filter_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
+  };
+} // namespace linter::tool

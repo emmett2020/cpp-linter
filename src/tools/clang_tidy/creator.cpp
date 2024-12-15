@@ -22,7 +22,7 @@
 #include "tools/clang_tidy/version_18.h"
 #include "utils/util.h"
 
-namespace linter::clang_tidy {
+namespace linter::tool::clang_tidy {
   auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
     -> clang_tidy_ptr {
     throw_if(std::ranges::contains(supported_version, version),
@@ -45,4 +45,4 @@ namespace linter::clang_tidy {
   }
 
 
-} // namespace linter::clang_tidy
+} // namespace linter::tool::clang_tidy

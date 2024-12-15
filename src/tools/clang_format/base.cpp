@@ -30,7 +30,7 @@
 #include "utils/shell.h"
 #include "utils/util.h"
 
-namespace linter::clang_format {
+namespace linter::tool::clang_format {
   namespace {
     void trace_replacement(const replacement_t &replacement) {
       spdlog::trace("replacement: offset: {}, length: {}, data: {}",
@@ -208,4 +208,4 @@ namespace linter::clang_format {
   }
 
 
-} // namespace linter::clang_format
+} // namespace linter::tool::clang_format
