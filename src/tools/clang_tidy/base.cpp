@@ -29,9 +29,11 @@
 #include <spdlog/spdlog.h>
 #include <tinyxml2.h>
 
-#include "github/utils.h"
+#include "utils/env_manager.h"
 #include "utils/shell.h"
 #include "utils/util.h"
+#include "github/common.h"
+#include "github/utils.h"
 #include "github/review_comment.h"
 
 namespace linter::tool::clang_tidy {
@@ -335,6 +337,21 @@ namespace linter::tool::clang_tidy {
       }
     }
     return comments;
+  }
+
+  auto base_clang_tidy::write_to_action_output() -> void {
+    //
+    auto output = env::get(github_output);
+    auto file   = std::fstream{output, std::ios::app};
+    throw_unless(file.is_open(), "error to open output file to write");
+
+    const auto clang_tidy_failed   = result.clang_tidy_failed.size();
+    const auto clang_format_failed = result.clang_format_failed.size();
+    const auto total_failed        = clang_tidy_failed + clang_format_failed;
+
+    file << std::format("total_failed={}\n", total_failed);
+    file << std::format("clang_tidy_failed_number={}\n", clang_tidy_failed);
+    file << std::format("clang_format_failed_number={}\n", clang_format_failed);
   }
 
 

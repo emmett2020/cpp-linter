@@ -20,6 +20,7 @@
 
 #include "base_result.h"
 #include "github/review_comment.h"
+#include "utils/context.h"
 
 namespace linter::tool {
   /// The operating system type.
@@ -40,9 +41,13 @@ namespace linter::tool {
   template <class UserOption, class PerFileResult>
   class tool_base {
   public:
-    using per_file_result_t = PerFileResult;
     using user_option_t     = UserOption;
+    using per_file_result_t = PerFileResult;
     using final_result_t    = final_result<PerFileResult>;
+
+    explicit tool_base(const context_t &ctx)
+      : ctx_{ctx} {
+    }
 
     virtual ~tool_base()                                              = default;
     virtual bool is_supported(operating_system_t system, arch_t arch) = 0;
@@ -55,13 +60,16 @@ namespace linter::tool {
       const std::string &file) -> per_file_result_t = 0;
 
     virtual auto make_issue_comment(const user_option_t &user_opt, const final_result_t &result)
-      -> std::string = 0;
+      -> std::string {}
 
     virtual auto
-    make_step_summary(const user_option_t &option, const final_result_t &result) -> std::string = 0;
+    make_step_summary(const user_option_t &option, const final_result_t &result) -> std::string {}
 
-    virtual auto make_pr_review_comment(const user_option_t &option, const final_result_t &result)
-      -> github::pull_request::review_comments = 0;
+    virtual auto make_review_comment(const user_option_t &option, const final_result_t &result)
+      -> github::review_comments {}
+
+    virtual auto
+    write_to_action_output(const user_option_t &option, const final_result_t &result) -> void {}
 
     auto run(const user_option_t &opt,
              const std::string &repo,
@@ -96,6 +104,9 @@ namespace linter::tool {
       result.final_passed = true;
       return result;
     }
+
+  protected:
+    const context_t &ctx_; // NOLINT
   };
 
   /// An unique pointer for base tool.

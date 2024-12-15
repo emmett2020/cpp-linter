@@ -63,7 +63,7 @@ namespace linter {
 
   // This function will be called after `check_and_fill_context_by_program_options`.
   // The confliction check is already done in that function.
-  void fill_context_by_env(const github_env &env, context &ctx) {
+  void fill_context_by_env(const github_env &env, context_t &ctx) {
     spdlog::trace("Fill context by Github environment variables");
     throw_if(ctx.use_on_local,
              "The `fill_context_by_env` function must be called only on Github CI environment.");

@@ -9,7 +9,7 @@ namespace linter {
 
   /// The base_ref is the default branch all most events
   /// execept for some events which is the real base reference.
-  struct context {
+  struct context_t {
     bool use_on_local = false;
     std::string log_level;
     bool enable_step_summary        = false;
@@ -28,5 +28,5 @@ namespace linter {
     // clang_format::user_option clang_format_option{};
   };
 
-  void print_context(const context &ctx);
+  void print_context(const context_t &ctx);
 } // namespace linter

@@ -20,6 +20,7 @@
 
 #include <spdlog/spdlog.h>
 
+#include "github/github.h"
 #include "tools/base_option.h"
 #include "tools/base_result.h"
 #include "tools/base_tool.h"
@@ -65,7 +66,7 @@ namespace linter::tool::clang_format {
       -> std::string override;
 
     auto make_pr_review_comment(const user_option &option, const final_result_t &result)
-      -> std::string override;
+      -> github::pull_request::review_comments override;
   };
 
   using clang_format_ptr = base_tool_ptr<user_option, per_file_result>;

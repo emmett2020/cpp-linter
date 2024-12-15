@@ -15,8 +15,7 @@
  */
 #include "review_comment.h"
 
-namespace linter::github::pull_request {
-
+namespace linter::github {
   auto make_review_str(const review_comments &comments) -> std::string {
     auto res        = nlohmann::json{};
     res["body"]     = "cpp-linter suggestion";
@@ -25,4 +24,4 @@ namespace linter::github::pull_request {
     return res.dump();
   }
 
-} // namespace linter::github::pull_request
+} // namespace linter::github

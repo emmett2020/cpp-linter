@@ -45,27 +45,6 @@ namespace {
     spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
   }
 
-  auto make_clang_tidy_result_str(const context &ctx, const total_result &result) -> std::string {
-    auto details = std::string{};
-    details += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
-                           ctx.clang_tidy_option.clang_tidy_binary,
-                           result.clang_tidy_failed.size());
-    for (const auto &[name, failed]: result.clang_tidy_failed) {
-      for (const auto &diag: failed.diags) {
-        auto one = std::format(
-          "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
-          diag.header.file_name,
-          diag.header.row_idx,
-          diag.header.col_idx,
-          diag.header.serverity,
-          diag.header.diagnostic_type,
-          diag.header.brief);
-        details += one;
-      }
-    }
-    return details;
-  }
-
   auto make_brief_result(const context &ctx, const total_result &result) -> std::string {
     static const auto title     = "# The cpp-linter Result"s;
     static const auto hint_pass = ":rocket: All checks on all file passed."s;
@@ -89,79 +68,6 @@ namespace {
     return title + hint_fail + details;
   }
 
-  auto make_clang_format_pr_review_comment(
-    const context &ctx,
-    const total_result &results,
-    git::repo_raw_ptr repo,
-    git::commit_raw_cptr commit) -> std::vector<pr_review_comment> {
-    auto comments = std::vector<pr_review_comment>{};
-
-    for (const auto &[file, result]: results.clang_format_failed) {
-      auto old_buffer = git::blob::get_raw_content(repo, commit, file);
-      auto opts       = git::diff_options{};
-      git::diff::init_option(&opts);
-      auto format_source_patch =
-        git::patch::create_from_buffers(old_buffer, file, result.formatted_source_code, file, opts);
-      spdlog::error(git::patch::to_str(format_source_patch.get()));
-
-      const auto &patch = results.patches.at(file);
-
-      auto format_num_hunk = git::patch::num_hunks(format_source_patch.get());
-      for (int i = 0; i < format_num_hunk; ++i) {
-        auto [format_hunk, format_num_lines] = git::patch::get_hunk(format_source_patch.get(), i);
-        auto row                             = format_hunk.old_start;
-
-        auto pos      = std::size_t{0};
-        auto num_hunk = git::patch::num_hunks(patch.get());
-        for (int j = 0; j < num_hunk; ++j) {
-          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), j);
-          if (!is_in_hunk(hunk, row)) {
-            pos += num_lines;
-            continue;
-          }
-          auto comment     = pr_review_comment{};
-          comment.path     = file;
-          comment.position = pos + row - hunk.new_start + 1;
-
-          comment.body = git::patch::get_lines_in_hunk(patch.get(), i)
-                       | std::views::join_with(' ')
-                       | std::ranges::to<std::string>();
-          comments.emplace_back(std::move(comment));
-        }
-      }
-    }
-
-    spdlog::error("Comments XXX:");
-    for (const auto &comment: comments) {
-      print_pr_review_comment(comment);
-    }
-
-    return comments;
-  }
-
-  void write_to_github_output([[maybe_unused]] const context &ctx, const total_result &result) {
-    auto output = env::get(github_output);
-    auto file   = std::fstream{output, std::ios::app};
-    throw_unless(file.is_open(), "error to open output file to write");
-
-    const auto clang_tidy_failed   = result.clang_tidy_failed.size();
-    const auto clang_format_failed = result.clang_format_failed.size();
-    const auto total_failed        = clang_tidy_failed + clang_format_failed;
-
-    file << std::format("total_failed={}\n", total_failed);
-    file << std::format("clang_tidy_failed_number={}\n", clang_tidy_failed);
-    file << std::format("clang_format_failed_number={}\n", clang_format_failed);
-  }
-
-  auto convert_deltas_to_map(const std::vector<git::diff_delta_detail> &deltas)
-    -> std::unordered_map<std::string, git::diff_delta_detail> {
-    auto res = std::unordered_map<std::string, git::diff_delta_detail>{};
-    for (const auto &delta: deltas) {
-      res[delta.new_file.relative_path] = delta;
-    }
-    return res;
-  }
-
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -180,7 +86,7 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  auto ctx         = context{};
+  auto ctx         = context_t{};
   ctx.use_on_local = env::get(github_actions) != "true";
   check_and_fill_context_by_program_options(options, ctx);
   set_log_level(ctx.log_level);

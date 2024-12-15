@@ -20,7 +20,7 @@ namespace linter {
 
   class github_api_client {
   public:
-    explicit github_api_client(context ctx)
+    explicit github_api_client(context_t ctx)
       : ctx_(std::move(ctx)) {
     }
 
@@ -204,12 +204,12 @@ namespace linter {
     //   }
     // }
 
-    [[nodiscard]] auto ctx() const -> const context& {
+    [[nodiscard]] auto ctx() const -> const context_t& {
       return ctx_;
     }
 
   private:
-    context ctx_;
+    context_t ctx_;
     std::uint32_t comment_id_ = -1;
     httplib::Client client{github_api};
   };
