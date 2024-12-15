@@ -57,18 +57,15 @@ namespace linter::clang_format {
       const std::string &repo,
       const std::string &file) -> per_file_result override;
 
-    auto make_issue_comment([[maybe_unused]] const final_result &result) -> std::string override {
-      return "";
-    }
 
-    auto make_step_summary([[maybe_unused]] const final_result &result) -> std::string override {
-      return {};
-    }
+    auto make_issue_comment(const user_option &option, const final_result_t &result)
+      -> std::string override;
 
-    auto make_pr_review_comment([[maybe_unused]] const final_result &result)
-      -> std::string override {
-      return {};
-    }
+    auto make_step_summary(const user_option &option, const final_result_t &result)
+      -> std::string override;
+
+    auto make_pr_review_comment(const user_option &option, const final_result_t &result)
+      -> std::string override;
   };
 
   using clang_format_ptr = base_tool_ptr<user_option, per_file_result>;

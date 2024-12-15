@@ -192,4 +192,37 @@ namespace linter::clang_format {
     return result;
   }
 
+  auto base_clang_tidy::make_issue_comment(const user_option &option, const final_result_t &result)
+    -> std::string {
+    auto res  = std::string{};
+    res      += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
+                       option.binary,
+                       result.fails.size());
+    for (const auto &[name, failed]: result.fails) {
+      for (const auto &diag: failed.diags) {
+        auto one = std::format(
+          "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
+          diag.header.file_name,
+          diag.header.row_idx,
+          diag.header.col_idx,
+          diag.header.serverity,
+          diag.header.diagnostic_type,
+          diag.header.brief);
+        res += one;
+      }
+    }
+    return res;
+  }
+
+  auto base_clang_tidy::make_step_summary(const user_option &option, const final_result_t &result)
+    -> std::string {
+    return {};
+  }
+
+  auto base_clang_tidy::make_pr_review_comment(const user_option &option,
+                                               const final_result_t &result) -> std::string {
+    return {};
+  }
+
+
 } // namespace linter::clang_format

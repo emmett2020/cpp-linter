@@ -32,14 +32,15 @@ namespace linter {
 
   using per_file_result_base_ptr = std::unique_ptr<per_file_result_base>;
 
+  template <class PerFileResult>
   struct final_result {
     bool final_passed  = false;
     bool fastly_exited = false;
     std::unordered_map<std::string, git::patch_ptr> patches;
     std::vector<std::string> ignored_files;
 
-    std::unordered_map<std::string, per_file_result_base_ptr> passes;
-    std::unordered_map<std::string, per_file_result_base_ptr> fails;
+    std::unordered_map<std::string, PerFileResult> passes;
+    std::unordered_map<std::string, PerFileResult> fails;
   };
 
 } // namespace linter

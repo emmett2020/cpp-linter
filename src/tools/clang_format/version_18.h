@@ -18,6 +18,7 @@
 #include "tools/clang_format/base.h"
 
 namespace linter::clang_format {
+  using namespace std::string_view_literals;
   constexpr auto version_18_1_0 = "18.1.0"sv;
   constexpr auto version_18_1_3 = "18.1.3"sv;
 

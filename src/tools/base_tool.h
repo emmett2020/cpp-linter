@@ -41,6 +41,7 @@ namespace linter {
   public:
     using per_file_result_t = PerFileResult;
     using user_option_t     = UserOption;
+    using final_result_t    = final_result<PerFileResult>;
 
     virtual ~tool_base()                                              = default;
     virtual bool is_supported(operating_system_t system, arch_t arch) = 0;
@@ -52,13 +53,18 @@ namespace linter {
       const std::string &repo,
       const std::string &file) -> per_file_result_t = 0;
 
-    virtual auto make_issue_comment(const final_result &result) -> std::string     = 0;
-    virtual auto make_step_summary(const final_result &result) -> std::string      = 0;
-    virtual auto make_pr_review_comment(const final_result &result) -> std::string = 0;
+    virtual auto make_issue_comment(const user_option_t &user_opt, const final_result_t &result)
+      -> std::string = 0;
+
+    virtual auto
+    make_step_summary(const user_option_t &option, const final_result_t &result) -> std::string = 0;
+
+    virtual auto make_pr_review_comment(const user_option_t &option, const final_result_t &result)
+      -> std::string = 0;
 
     auto run(const user_option_base &option,
              const std::string &repo,
-             const std::vector<std::string> &files) -> final_result {
+             const std::vector<std::string> &files) -> final_result_t {
     }
   };
 

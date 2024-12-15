@@ -1,4 +1,4 @@
-#include "clang_tidy.h"
+#include "deprecated_clang_tidy.h"
 
 #include <algorithm>
 #include <cctype>
