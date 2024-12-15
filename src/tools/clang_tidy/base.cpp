@@ -29,8 +29,10 @@
 #include <spdlog/spdlog.h>
 #include <tinyxml2.h>
 
+#include "github/utils.h"
 #include "utils/shell.h"
 #include "utils/util.h"
+#include "github/review_comment.h"
 
 namespace linter::clang_tidy {
   using namespace std::string_view_literals;
@@ -298,9 +300,41 @@ namespace linter::clang_tidy {
     return {};
   }
 
-  auto base_clang_tidy::make_pr_review_comment(const user_option& option,
-                                               const final_result_t& result) -> std::string {
-    return {};
+  auto base_clang_tidy::make_pr_review_comment(
+    [[maybe_unused]] const user_option& option,
+    const final_result_t& result) -> github::pull_request::review_comments {
+    auto comments = github::pull_request::review_comments{};
+
+    for (const auto& [file, per_file_result]: result.fails) {
+      // Get the same file's delta and clang-tidy result
+      assert(per_file_result.file_path == file);
+      assert(result.patches.contains(file));
+
+      const auto& patch = result.patches.at(file);
+
+      for (const auto& diag: per_file_result.diags) {
+        const auto& header = diag.header;
+        auto row           = std::stoi(header.row_idx);
+        auto col           = std::stoi(header.col_idx);
+
+        // For all clang-tidy result, check is this in hunk.
+        auto pos      = std::size_t{0};
+        auto num_hunk = git::patch::num_hunks(patch.get());
+        for (int i = 0; i < num_hunk; ++i) {
+          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
+          if (!github::is_row_in_hunk(hunk, row)) {
+            pos += num_lines;
+            continue;
+          }
+          auto comment     = github::pull_request::review_comment{};
+          comment.path     = file;
+          comment.position = pos + row - hunk.new_start + 1;
+          comment.body     = diag.header.brief + diag.header.diagnostic_type;
+          comments.emplace_back(std::move(comment));
+        }
+      }
+    }
+    return comments;
   }
 
 

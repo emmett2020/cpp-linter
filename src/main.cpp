@@ -89,33 +89,6 @@ namespace {
     return title + hint_fail + details;
   }
 
-  // Some changes in file may not in the same hunk.
-  bool is_in_hunk(const git::diff_hunk &hunk, int row) {
-    return row >= hunk.new_start && row <= hunk.new_start + hunk.new_lines;
-  }
-
-  struct pr_review_comment {
-    std::string path;
-    std::size_t position;
-    std::string body;
-    std::size_t line;
-    std::string side;
-    std::size_t start_line;
-    std::string start_side;
-  };
-  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(pr_review_comment, path, position, body)
-
-  void print_pr_review_comment(const pr_review_comment &comment) {
-    spdlog::trace("comment: ");
-    spdlog::trace("path: {}", comment.path);
-    spdlog::trace("position: {}", comment.position);
-    spdlog::trace("body: {}", comment.body);
-    spdlog::trace("line: {}", comment.line);
-    spdlog::trace("side: {}", comment.side);
-    spdlog::trace("start_line: {}", comment.start_line);
-    spdlog::trace("start_side: {}", comment.start_side);
-  }
-
   auto make_clang_format_pr_review_comment(
     const context &ctx,
     const total_result &results,
@@ -200,14 +173,6 @@ namespace {
       }
     }
     return comments;
-  }
-
-  auto make_pr_review_comment_str(const std::vector<pr_review_comment> &comments) -> std::string {
-    auto res        = nlohmann::json{};
-    res["body"]     = "cpp-linter suggestion";
-    res["event"]    = "COMMENT"; // TODO: DEBUG
-    res["comments"] = comments;
-    return res.dump();
   }
 
   void write_to_github_output([[maybe_unused]] const context &ctx, const total_result &result) {

@@ -94,7 +94,7 @@ namespace linter::clang_tidy {
       -> std::string override;
 
     auto make_pr_review_comment(const user_option &option, const final_result_t &result)
-      -> std::string override;
+      -> github::pull_request::review_comments override;
   };
 
   using clang_tidy_ptr = base_tool_ptr<user_option, per_file_result>;

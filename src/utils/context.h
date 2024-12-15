@@ -1,7 +1,9 @@
 #pragma once
 
-#include "tools/clang_format.h"
-#include "tools/clang_tidy.h"
+// #include "tools/clang_format.h"
+// #include "tools/clang_tidy.h"
+#include <string>
+#include <cstdint>
 
 namespace linter {
 
@@ -22,8 +24,8 @@ namespace linter {
     std::string source;
     std::int32_t pr_number = -1;
 
-    clang_tidy::option clang_tidy_option{};
-    clang_format::user_option clang_format_option{};
+    // clang_tidy::option clang_tidy_option{};
+    // clang_format::user_option clang_format_option{};
   };
 
   void print_context(const context &ctx);

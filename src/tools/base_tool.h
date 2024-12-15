@@ -19,6 +19,7 @@
 
 #include "base_option.h"
 #include "base_result.h"
+#include "github/review_comment.h"
 
 namespace linter {
   /// The operating system type.
@@ -60,7 +61,7 @@ namespace linter {
     make_step_summary(const user_option_t &option, const final_result_t &result) -> std::string = 0;
 
     virtual auto make_pr_review_comment(const user_option_t &option, const final_result_t &result)
-      -> std::string = 0;
+      -> github::pull_request::review_comments = 0;
 
     auto run(const user_option_base &option,
              const std::string &repo,
