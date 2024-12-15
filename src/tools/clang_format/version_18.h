@@ -15,16 +15,23 @@
  */
 #pragma once
 
-#include "tools/base_tool.h"
 #include "tools/clang_format/base.h"
-#include "tools/clang_format/version_18.h"
 
 namespace linter::clang_format {
-  constexpr auto supported_version = {version_18_1_0, version_18_1_3};
+  constexpr auto version_18_1_0 = "18.1.0"sv;
+  constexpr auto version_18_1_3 = "18.1.3"sv;
 
-  auto create_option() -> user_option;
+  struct clang_format_v18_1_0 : base_clang_format {
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_0;
+    }
+  };
 
-  auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
-    -> clang_format_ptr;
+  struct clang_format_v18_1_3 : base_clang_format {
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_3;
+    }
+  };
+
 
 } // namespace linter::clang_format

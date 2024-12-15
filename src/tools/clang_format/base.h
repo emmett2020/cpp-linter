@@ -18,13 +18,18 @@
 #include <string>
 #include <vector>
 
+#include <spdlog/spdlog.h>
+
 #include "tools/base_option.h"
 #include "tools/base_result.h"
 #include "tools/base_tool.h"
 
 namespace linter::clang_format {
-  struct user_option : base_user_option {
-    bool enable_warning_as_error = false;
+  using namespace std::string_view_literals;
+
+  struct user_option : user_option_base {
+    bool enable_warning_as_error     = false;
+    bool needs_formatted_source_code = false;
   };
 
   struct replacement_t {
@@ -34,27 +39,38 @@ namespace linter::clang_format {
   };
 
   using replacements_t = std::vector<replacement_t>;
-  void trace_replacement(const replacement_t &replacement);
 
-  struct per_file_result : per_file_base_result {
+  struct per_file_result : per_file_result_base {
     replacements_t replacements;
     std::string formatted_source_code;
   };
 
-  struct base_clang_format : base_tool {
-    auto supported_system() -> uint64_t override {
-      return static_cast<uint64_t>(system_t::linux);
-    }
-
-    auto supported_arch(system_t system) -> arch_t override {
-      if (system == system_t::linux) {
-        return arch_t::all;
-      }
-      return arch_t::none;
+  struct base_clang_format : tool_base<user_option, per_file_result> {
+    bool is_supported(operating_system_t system, arch_t arch) override {
+      return system == operating_system_t::linux && arch == arch_t::x86_64;
     }
 
     constexpr auto name() -> std::string_view override {
       return "clang_format";
     }
+
+    auto apply_to_single_file(
+      const user_option &user_opt,
+      const std::string &repo,
+      const std::string &file) -> per_file_result override;
+
+    auto make_issue_comment(const final_result &result) -> std::string override {
+      return "";
+    }
+
+    auto make_step_summary(const final_result &result) -> std::string override {
+      return {};
+    }
+
+    auto make_pr_review_comment(const final_result &result) -> std::string override {
+      return {};
+    }
   };
+
+  using clang_format_ptr = base_tool_ptr<user_option, per_file_result>;
 } // namespace linter::clang_format

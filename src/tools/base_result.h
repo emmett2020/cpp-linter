@@ -15,7 +15,6 @@
  */
 #pragma once
 
-#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -24,33 +23,23 @@
 
 namespace linter {
 
-  struct per_file_base_result {
-    virtual ~per_file_base_result()         = default;
-    virtual explicit operator std::string() = 0;
-
+  struct per_file_result_base {
     bool passed = false;
     std::string file_path;
     std::string tool_stdout;
     std::string tool_stderr;
   };
 
-  using per_file_base_result_ptr = std::unique_ptr<per_file_base_result>;
+  using per_file_result_base_ptr = std::unique_ptr<per_file_result_base>;
 
-  struct base_result {
-    virtual ~base_result() = default;
-
-    virtual explicit operator std::string()                             = 0;
-    virtual auto make_issue_comment() -> std::optional<std::string>     = 0;
-    virtual auto make_step_summary() -> std::optional<std::string>      = 0;
-    virtual auto make_pr_review_comment() -> std::optional<std::string> = 0;
-
+  struct final_result {
     bool final_passed  = false;
     bool fastly_exited = false;
     std::unordered_map<std::string, git::patch_ptr> patches;
     std::vector<std::string> ignored_files;
 
-    std::unordered_map<std::string, per_file_base_result_ptr> passes;
-    std::unordered_map<std::string, per_file_base_result_ptr> fails;
+    std::unordered_map<std::string, per_file_result_base_ptr> passes;
+    std::unordered_map<std::string, per_file_result_base_ptr> fails;
   };
 
 } // namespace linter

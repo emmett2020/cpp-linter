@@ -17,10 +17,7 @@
 
 #include <string>
 
-struct base_user_option {
-  virtual ~base_user_option()             = default;
-  virtual explicit operator std::string() = 0;
-
+struct user_option_base {
   bool enabled             = false;
   bool enabled_fastly_exit = false;
   std::string version;

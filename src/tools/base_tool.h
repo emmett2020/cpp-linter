@@ -21,47 +21,49 @@
 #include "base_result.h"
 
 namespace linter {
-
-  enum class system_t {
-    none    = 0,
-    windows = 1 << 0,
-    macos   = 1 << 1,
-    linux   = 1 << 2,
+  /// The operating system type.
+  enum class operating_system_t : std::uint8_t {
+    windows,
+    macos,
+    linux,
   };
 
-  /// We don't consider 32-bit architectures.
-  enum class arch_t {
-    none,
-    all,
-    x64_64,
+  /// The archecture type.
+  enum class arch_t : std::uint8_t {
+    x86_64,
     arm64,
   };
 
   /// This is a base class represents linter tools. All specified tools should be
   /// derived from this.
-  class base_tool {
+  template <class UserOption, class PerFileResult>
+  class tool_base {
   public:
-    virtual ~base_tool()                                   = default;
-    virtual auto supported_system() -> uint64_t            = 0;
-    virtual auto supported_arch(system_t system) -> arch_t = 0;
-    virtual constexpr auto name() -> std::string_view      = 0;
-    virtual constexpr auto version() -> std::string_view   = 0;
+    using per_file_result_t = PerFileResult;
+    using user_option_t     = UserOption;
+
+    virtual ~tool_base()                                              = default;
+    virtual bool is_supported(operating_system_t system, arch_t arch) = 0;
+    virtual constexpr auto name() -> std::string_view                 = 0;
+    virtual constexpr auto version() -> std::string_view              = 0;
 
     virtual auto apply_to_single_file(
-      const base_user_option &option,
-      const std::string &repo, //
-      const std::string &file) -> per_file_base_result_ptr = 0;
+      const user_option_t &option,
+      const std::string &repo,
+      const std::string &file) -> per_file_result_t = 0;
 
-    auto run(const base_user_option &option,
+    virtual auto make_issue_comment(const final_result &result) -> std::string     = 0;
+    virtual auto make_step_summary(const final_result &result) -> std::string      = 0;
+    virtual auto make_pr_review_comment(const final_result &result) -> std::string = 0;
+
+    auto run(const user_option_base &option,
              const std::string &repo,
-             const std::vector<std::string> &files) -> base_result;
+             const std::vector<std::string> &files) -> final_result {
+    }
   };
 
-  using base_tool_ptr = std::unique_ptr<base_tool>;
-
-  struct tool_creator {
-    virtual ~tool_creator()                                                             = default;
-    virtual auto create_instance(system_t cur_system, arch_t cur_arch) -> base_tool_ptr = 0;
-  };
+  /// An unique pointer for base tool.
+  template <class Option, class PerFileResult>
+  using base_tool_ptr = std::unique_ptr<tool_base<Option, PerFileResult>>;
 
 } // namespace linter

@@ -13,7 +13,6 @@
 #include "configs/version.h"
 #include "github/api.h"
 #include "github/common.h"
-#include "result.h"
 #include "tools/clang_tidy.h"
 #include "utils/context.h"
 #include "utils/env_manager.h"

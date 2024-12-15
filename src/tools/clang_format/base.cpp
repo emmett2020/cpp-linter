@@ -1,14 +1,27 @@
-#include "clang_format.h"
+/*
+ * Copyright (c) 2024 Emmett Zhang
+ *
+ * Licensed under the Apache License Version 2.0 with LLVM Exceptions
+ * (the "License"); you may not use this file except in compliance with
+ * the License. You may obtain a copy of the License at
+ *
+ *   https://llvm.org/LICENSE.txt
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "tools/clang_format/base.h"
 
-#include <algorithm>
-#include <cctype>
-#include <cstdint>
-#include <format>
-#include <fstream>
-#include <ranges>
-#include <string>
 #include <string_view>
 #include <vector>
+#include <fstream>
+#include <cctype>
+#include <cstdint>
+#include <ranges>
+#include <string>
 
 #include <boost/regex.hpp>
 #include <spdlog/spdlog.h>
@@ -18,43 +31,32 @@
 #include "utils/util.h"
 
 namespace linter::clang_format {
-  using namespace std::string_view_literals;
-
   namespace {
+    void trace_replacement(const replacement_t &replacement) {
+      spdlog::trace("replacement: offset: {}, length: {}, data: {}",
+                    replacement.offset,
+                    replacement.length,
+                    replacement.data);
+    }
+
+    // Read a file and get this
     auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
-      spdlog::trace("Enter clang_format::get_position() with file_path:{}", file_path);
+      spdlog::trace("Enter clang_format::get_line_lens()");
+      constexpr auto line_feed_len = 1;
+
       auto lines = std::vector<uint32_t>{};
       auto file  = std::ifstream{file_path.data()};
-
-      auto temp = std::string{};
+      auto temp  = std::string{};
       while (std::getline(file, temp)) {
-        // LF
-        lines.emplace_back(temp.size() + 1);
+        lines.emplace_back(temp.size() + line_feed_len);
       }
       return lines;
-    }
-
-    void trace_vector(const std::vector<uint32_t> &vec) {
-      for (auto v: vec) {
-        spdlog::trace("{}", v);
-      }
-    }
-
-    template <class T>
-    auto stringify_vector(const std::vector<T> &vec) -> std::string {
-      auto ret = std::string{};
-      for (auto v: vec) {
-        ret += std::to_string(v) + ",";
-      }
-      return ret;
     }
 
     // offset starts from 0 while row/col starts from 1
     auto get_position(const std::vector<uint32_t> &lens, int offset)
       -> std::tuple<int32_t, int32_t> {
-      spdlog::trace("Enter clang_format::get_position() with offset:{}, lens:{}",
-                    offset,
-                    stringify_vector(lens));
+      spdlog::trace("Enter clang_format::get_position()");
 
       auto cur = uint32_t{0};
       for (int row = 0; row < lens.size(); ++row) {
@@ -77,8 +79,8 @@ namespace linter::clang_format {
       return err != tinyxml2::XMLError::XML_SUCCESS;
     }
 
-    auto parse_replacements_xml(std::string_view data) -> replacements_type {
-      spdlog::trace("Enter clang_format::parse_replacements_xml() with data:{}", data);
+    auto parse_replacements_xml(std::string_view data) -> replacements_t {
+      spdlog::trace("Enter clang_format::parse_replacements_xml()");
 
       // Names in replacements xml file.
       static constexpr auto offset_str       = "offset";
@@ -98,12 +100,12 @@ namespace linter::clang_format {
       auto *replacements_ele = doc.FirstChildElement(replacements_str);
       throw_if(replacements_ele == nullptr,
                "Parse replacements xml failed since no child names 'replacements'");
-      auto replacements = replacements_type{};
+      auto replacements = replacements_t{};
 
       // Empty replacement node is allowd here.
       auto *replacement_ele = replacements_ele->FirstChildElement(replacement_str);
       while (replacement_ele != nullptr) {
-        auto replacement = replacement_type{};
+        auto replacement = replacement_t{};
         replacement_ele->QueryIntAttribute(offset_str, &replacement.offset);
         replacement_ele->QueryIntAttribute(length_str, &replacement.length);
         const auto *text = replacement_ele->GetText();
@@ -119,14 +121,13 @@ namespace linter::clang_format {
       return replacements;
     }
 
-
     enum class output_style_t : std::uint8_t {
       formatted_source_code,
       replacement_xml
     };
 
     auto make_replacements_options(std::string_view file) -> std::vector<std::string> {
-      spdlog::trace("Enter clang_format::make_replacements_options() with file:{}", file);
+      spdlog::trace("Enter clang_format::make_replacements_options()");
       auto tool_opt = std::vector<std::string>{};
       tool_opt.emplace_back("--output-replacements-xml");
       tool_opt.emplace_back(file);
@@ -134,7 +135,7 @@ namespace linter::clang_format {
     }
 
     auto make_source_code_options(std::string_view file) -> std::vector<std::string> {
-      spdlog::trace("Enter clang_format::make_source_code_options() with file:{}", file);
+      spdlog::trace("Enter clang_format::make_source_code_options()");
       auto tool_opt = std::vector<std::string>{};
       tool_opt.emplace_back(file);
       return tool_opt;
@@ -144,73 +145,51 @@ namespace linter::clang_format {
                  output_style_t output_style,
                  std::string_view repo,
                  std::string_view file) -> shell::result {
-      spdlog::trace("Enter clang_format::execute() with output_style:{}, repo:{}, file:{}",
-                    static_cast<int>(output_style),
-                    repo,
-                    file);
+      spdlog::trace("Enter clang_format::execute()");
 
       auto tool_opt     = output_style == output_style_t::formatted_source_code
                           ? make_source_code_options(file)
                           : make_replacements_options(file);
       auto tool_opt_str = tool_opt | std::views::join_with(' ') | std::ranges::to<std::string>();
-      spdlog::info("Running command: {} {}", user_opt.clang_format_binary, tool_opt_str);
+      spdlog::info("Running command: {} {}", user_opt.binary, tool_opt_str);
 
-      return shell::execute(user_opt.clang_format_binary, tool_opt, repo);
+      return shell::execute(user_opt.binary, tool_opt, repo);
     }
-
-    void trace_shell_result(const shell::result &result) {
-      spdlog::trace("The original result of clang-format:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
-                    result.exit_code,
-                    result.std_out,
-                    result.std_err);
-    }
-
 
   } // namespace
 
-  void trace_replacement(const replacement_type &replacement) {
-    spdlog::trace("offset: {}, length: {}, data: {}",
-                  replacement.offset,
-                  replacement.length,
-                  replacement.data);
-  }
-
-  auto apply_on_single_file(
+  auto base_clang_format::apply_to_single_file(
     const user_option &user_opt,
-    bool needs_formatted_source_code,
     const std::string &repo,
-    const std::string &file) -> result {
-    spdlog::trace(
-      "Enter clang_format::apply_on_single_file() with needs_formatted_source_code:{}, "
-      "repo:{}, file:{}",
-      needs_formatted_source_code,
-      repo,
-      file);
+    const std::string &file) -> per_file_result {
+    spdlog::trace("Enter base_clang_format::apply_on_single_file()");
 
-    auto xml_res = execute(user_opt, output_style_t::replacement_xml, repo, file);
-    trace_shell_result(xml_res);
+    auto xml_res       = execute(user_opt, output_style_t::replacement_xml, repo, file);
+    auto result        = per_file_result{};
+    result.file_path   = file;
+    result.tool_stdout = xml_res.std_out;
+    result.tool_stderr = xml_res.std_err;
     if (xml_res.exit_code != 0) {
-      return {.pass = false, .file = file, .replacements = {}, .origin_stderr = xml_res.std_err};
+      result.passed = false;
+      return result;
     }
 
-    auto replacements = parse_replacements_xml(xml_res.std_out);
+    auto replacements   = parse_replacements_xml(xml_res.std_out);
+    result.replacements = std::move(replacements);
 
-    auto res = result{.pass          = replacements.empty(),
-                      .file          = file,
-                      .replacements  = std::move(replacements),
-                      .origin_stderr = xml_res.std_err};
-
-    if (needs_formatted_source_code) {
+    if (user_opt.needs_formatted_source_code) {
       spdlog::debug("Execute clang-format again to get formatted source code.");
-      auto code_res = execute(user_opt, output_style_t::formatted_source_code, repo, file);
-      trace_shell_result(code_res);
+      auto code_res       = execute(user_opt, output_style_t::formatted_source_code, repo, file);
+      result.tool_stdout += "\n" + code_res.std_out;
+      result.tool_stderr += "\n" + code_res.std_err;
       if (code_res.exit_code != 0) {
-        return {.pass = false, .file = file, .replacements = {}, .origin_stderr = code_res.std_err};
+        result.passed = false;
+        return result;
       }
-      res.formatted_source_code = code_res.std_out;
+      result.formatted_source_code = code_res.std_out;
     }
 
-    return res;
+    return result;
   }
 
 } // namespace linter::clang_format
