@@ -15,22 +15,11 @@
  */
 #pragma once
 
-#include <string>
 #include <vector>
 
-#include <spdlog/spdlog.h>
-
-#include "github/github.h"
-#include "tools/base_option.h"
 #include "tools/base_result.h"
-#include "tools/base_tool.h"
 
 namespace linter::tool::clang_format {
-struct user_option : option_base {
-  bool enable_warning_as_error = false;
-  bool needs_formatted_source_code = false;
-};
-
 struct replacement_t {
   int offset;
   int length;
@@ -44,17 +33,5 @@ struct per_file_result : per_file_result_base {
   std::string formatted_source_code;
 };
 
-struct base_clang_format : tool_base<user_option, per_file_result> {
-  bool is_supported(operating_system_t system, arch_t arch) override {
-    return system == operating_system_t::linux && arch == arch_t::x86_64;
-  }
-
-  constexpr auto name() -> std::string_view override { return "clang_format"; }
-
-  auto
-  apply_to_single_file(const user_option &user_opt, const std::string &repo,
-                       const std::string &file) -> per_file_result override;
-};
-
-using clang_format_ptr = tool_base_ptr<user_option, per_file_result>;
+using result_t = multi_files_result_base<per_file_result>;
 } // namespace linter::tool::clang_format

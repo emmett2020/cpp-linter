@@ -17,6 +17,9 @@
 
 #include <cstdint>
 #include <string>
+#include <unordered_map>
+
+#include "utils/git_utils.h"
 
 namespace linter {
 
@@ -36,6 +39,8 @@ struct context_t {
   std::string target;
   std::string source;
   std::int32_t pr_number = -1;
+
+  std::unordered_map<std::string, git::patch_ptr> patches;
 };
 
 void print_context(const context_t &ctx);

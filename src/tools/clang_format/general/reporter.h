@@ -16,26 +16,25 @@
  */
 #pragma once
 
+#include <utility>
+
+#include "context.h"
+#include "github/utils.h"
 #include "tools/base_reporter.h"
-#include "tools/clang_format/base_impl.h"
+#include "tools/clang_format/general/option.h"
+#include "tools/clang_format/general/result.h"
 
 namespace linter::tool::clang_format {
-//
 
-struct reporter : tool_base<user_option, per_file_result> {
-  auto make_issue_comment(const user_option &option,
-                          const final_result_t &result) -> std::string {
-    return "";
-  }
+struct reporter_t : reporter_base {
+  reporter_t(option_t opt, result_t res)
+      : option(std::move(opt)), result(std::move(res)) {}
 
-  auto make_step_summary(const user_option &option,
-                         const final_result_t &result) -> std::string {
-    return {};
-  }
+  auto make_issue_comment(context_t ctx) -> std::string override { return ""; }
 
-  auto make_pr_review_comment([[maybe_unused]] const user_option &option,
-                              const final_result_t &result)
-      -> github::review_comments {
+  auto make_step_summary(context_t ctx) -> std::string override { return {}; }
+
+  auto make_review_comment(context_t ctx) -> github::review_comments override {
     auto comments = github::review_comments{};
 
     for (const auto &[file, per_file_result] : result.fails) {
@@ -47,7 +46,7 @@ struct reporter : tool_base<user_option, per_file_result> {
           old_buffer, file, per_file_result.formatted_source_code, file, opts);
       spdlog::error(git::patch::to_str(format_source_patch.get()));
 
-      const auto &patch = result.patches.at(file);
+      const auto &patch = context.patches.at(file);
 
       auto format_num_hunk = git::patch::num_hunks(format_source_patch.get());
       for (int i = 0; i < format_num_hunk; ++i) {
@@ -81,6 +80,12 @@ struct reporter : tool_base<user_option, per_file_result> {
 
     return comments;
   }
+
+  void write_to_action_output(context_t ctx) override {}
+
+  context_t context;
+  option_t option;
+  result_t result;
 };
 
 } // namespace linter::tool::clang_format

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_tidy/base_impl.h"
+#include "tools/clang_tidy/general/impl.h"
 
 #include <algorithm>
 #include <cctype>
@@ -32,6 +32,7 @@
 #include "github/common.h"
 #include "github/review_comment.h"
 #include "github/utils.h"
+#include "tools/clang_tidy/general/reporter.h"
 #include "utils/env_manager.h"
 #include "utils/shell.h"
 #include "utils/util.h"
@@ -86,7 +87,7 @@ auto parse_diagnostic_header(std::string_view line)
   return header;
 }
 
-auto execute(const user_option &option, std::string_view repo,
+auto execute(const option_t &option, std::string_view repo,
              std::string_view file) -> shell::result {
   auto opts = std::vector<std::string>{};
   if (!option.database.empty()) {
@@ -239,11 +240,11 @@ void print_statistic(const statistic &stat) {
 
 } // namespace
 
-auto base_clang_tidy::apply_to_single_file(
-    const user_option &user_opt, const std::string &repo,
-    const std::string &file) -> per_file_result {
+auto clang_tidy_general::check_single_file(
+    [[maybe_unused]] const context_t &context, const std::string &root_dir,
+    const std::string &file) const -> per_file_result {
   spdlog::info("Start to run clang-tidy");
-  auto [ec, std_out, std_err] = execute(user_opt, repo, file);
+  auto [ec, std_out, std_err] = execute(option, root_dir, file);
   spdlog::trace(
       "clang-tidy original output:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
       ec, std_out, std_err);
@@ -267,6 +268,41 @@ auto base_clang_tidy::apply_to_single_file(
                   file, "FAIL", result.tool_stderr);
   }
   return result;
+}
+
+void clang_tidy_general::check(const context_t &context,
+                               const std::string &root_dir,
+                               const std::vector<std::string> &files) {
+  for (const auto &file : files) {
+    if (filter_file(option.source_filter_iregex, file)) {
+      result.ignored_files.push_back(file);
+      spdlog::trace("file is ignored {} by {}", file, option.binary);
+      continue;
+    }
+
+    auto per_file_result = check_single_file(context, root_dir, file);
+    if (per_file_result.passed) {
+      spdlog::info("file: {} passes {} check.", file, option.binary);
+      result.passes[file] = std::move(per_file_result);
+      continue;
+    }
+
+    spdlog::error("file: {} doesn't pass {} check.", file, option.binary);
+    result.fails[file] = std::move(per_file_result);
+
+    if (option.enabled_fastly_exit) {
+      spdlog::info("{} fastly exit since check failed", option.binary);
+      result.final_passed = false;
+      result.fastly_exited = true;
+      return;
+    }
+  }
+
+  result.final_passed = true;
+}
+
+auto clang_tidy_general::get_reporter() -> reporter_base_ptr {
+  return std::make_unique<reporter_t>(option, result);
 }
 
 } // namespace linter::tool::clang_tidy

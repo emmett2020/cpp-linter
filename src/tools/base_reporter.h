@@ -20,54 +20,44 @@
 
 #include "base_option.h"
 #include "base_result.h"
+#include "context.h"
 #include "github/review_comment.h"
 
 namespace linter::tool {
 using namespace std::string_literals;
 
-template <class UserOption, class PerFileResult> struct reporter_interface {
-  using user_option_t = UserOption;
-  using per_file_result_t = PerFileResult;
-  using final_result_t = final_result<PerFileResult>;
+struct reporter_base {
+  virtual ~reporter_base() = default;
 
-  virtual auto make_issue_comment(const user_option_t &user_opt,
-                                  const final_result_t &result) -> std::string {
-  }
+  virtual auto make_issue_comment(context_t ctx) -> std::string = 0;
 
-  virtual auto make_step_summary(const user_option_t &option,
-                                 const final_result_t &result) -> std::string {}
+  virtual auto make_step_summary(context_t ctx) -> std::string = 0;
 
   virtual auto
-  make_review_comment(const user_option_t &option,
-                      const final_result_t &result) -> github::review_comments {
-  }
+  make_review_comment(context_t ctx) -> github::review_comments = 0;
 
-  virtual auto write_to_action_output(const user_option_t &option,
-                                      const final_result_t &result) -> void {}
+  virtual void write_to_action_output(context_t ctx) = 0;
 };
 
-template <class UserOption, class Result>
-struct reporter_base : reporter_interface<UserOption, Result> {
-  UserOption opt;
-  Result result;
-};
+using reporter_base_ptr = std ::unique_ptr<reporter_base>;
 
-template <class... Reporter>
-auto make_step_summary(Reporter &&...reporters) -> std::string {
+inline auto
+make_step_summary(const std::vector<reporter_base> &reporters) -> std::string {
   static const auto title = "# The cpp-linter Result"s;
   static const auto hint_pass = ":rocket: All checks on all file passed."s;
   static const auto hint_fail =
       ":warning: Some files didn't pass the cpp-linter checks\n"s;
 
-  constexpr auto reporter_total_size = sizeof...(reporters);
-  auto all_passed = ((reporters.final_passed & ...));
-  if (all_passed) {
-    return title + hint_pass;
-  }
-
-  auto summary = std::string{};
-  summary += ((reporters.make_step_summary() + "\n"), ...);
-  return title + hint_fail + summary;
+  // constexpr auto reporter_total_size = sizeof...(reporters);
+  // auto all_passed = ((reporters.final_passed & ...));
+  // if (all_passed) {
+  //   return title + hint_pass;
+  // }
+  //
+  // auto summary = std::string{};
+  // summary += ((reporters.make_step_summary() + "\n"), ...);
+  // return title + hint_fail + summary;
+  return "";
 }
 
 } // namespace linter::tool

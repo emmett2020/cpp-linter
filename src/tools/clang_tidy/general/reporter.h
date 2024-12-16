@@ -16,20 +16,24 @@
  */
 #pragma once
 
+#include "context.h"
 #include "github/common.h"
 #include "github/utils.h"
 #include "tools/base_reporter.h"
-#include "tools/clang_tidy/base_impl.h"
+#include "tools/clang_tidy/general/option.h"
+#include "tools/clang_tidy/general/result.h"
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
 namespace linter::tool::clang_tidy {
 
-struct reporter : reporter_base<user_option, per_file_result> {
-  virtual ~reporter() = default;
-  auto
-  make_issue_comment(const user_option &option,
-                     const final_result_t &result) -> std::string override {
+struct reporter_t : reporter_base {
+  ~reporter_t() override = default;
+
+  reporter_t(option_t opt, result_t res)
+      : option(std::move(opt)), result(std::move(res)) {}
+
+  auto make_issue_comment(context_t ctx) -> std::string override {
     auto res = std::string{};
     res += std::format(
         "<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
@@ -46,23 +50,18 @@ struct reporter : reporter_base<user_option, per_file_result> {
     return res;
   }
 
-  auto
-  make_step_summary(const user_option & /*option*/,
-                    const final_result_t & /*result*/) -> std::string override {
-    return {};
-  }
+  auto make_step_summary(context_t ctx) -> std::string override { return {}; }
 
-  auto make_pr_review_comment([[maybe_unused]] const user_option &option,
-                              const final_result_t &result)
-      -> github::review_comments {
+  auto
+  make_review_comment(context_t context) -> github::review_comments override {
     auto comments = github::review_comments{};
 
     for (const auto &[file, per_file_result] : result.fails) {
       // Get the same file's delta and clang-tidy result
       assert(per_file_result.file_path == file);
-      assert(result.patches.contains(file));
+      assert(context.patches.contains(file));
 
-      const auto &patch = result.patches.at(file);
+      const auto &patch = context.patches.at(file);
 
       for (const auto &diag : per_file_result.diags) {
         const auto &header = diag.header;
@@ -89,19 +88,23 @@ struct reporter : reporter_base<user_option, per_file_result> {
     return comments;
   }
 
-  auto write_to_action_output() -> void {
+  auto write_to_action_output(context_t ctx) -> void override {
     auto output = env::get(github_output);
     auto file = std::fstream{output, std::ios::app};
     throw_unless(file.is_open(), "error to open output file to write");
 
-    const auto clang_tidy_failed = result.clang_tidy_failed.size();
-    const auto clang_format_failed = result.clang_format_failed.size();
-    const auto total_failed = clang_tidy_failed + clang_format_failed;
-
-    file << std::format("total_failed={}\n", total_failed);
-    file << std::format("clang_tidy_failed_number={}\n", clang_tidy_failed);
-    file << std::format("clang_format_failed_number={}\n", clang_format_failed);
+    // const auto clang_tidy_failed = result.clang_tidy_failed.size();
+    // const auto clang_format_failed = result.clang_format_failed.size();
+    // const auto total_failed = clang_tidy_failed + clang_format_failed;
+    //
+    // file << std::format("total_failed={}\n", total_failed);
+    // file << std::format("clang_tidy_failed_number={}\n", clang_tidy_failed);
+    // file << std::format("clang_format_failed_number={}\n",
+    // clang_format_failed);
   }
+
+  option_t option;
+  result_t result;
 };
 
 } // namespace linter::tool::clang_tidy

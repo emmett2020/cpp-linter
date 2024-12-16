@@ -13,6 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_tidy/creator.h"
-#include "tools/clang_tidy/general/impl.h"
-#include "tools/clang_tidy/version/v18.h"
+#pragma once
+
+#include "tools/base_option.h"
+
+namespace linter::tool::clang_tidy {
+struct option_t : option_base {
+  bool allow_no_checks = false;
+  bool enable_check_profile = false;
+  std::string checks;
+  std::string config;
+  std::string config_file;
+  std::string database;
+  std::string header_filter;
+  std::string line_filter;
+};
+
+} // namespace linter::tool::clang_tidy

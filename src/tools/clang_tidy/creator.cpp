@@ -16,27 +16,110 @@
 
 #include "creator.h"
 
-#include <utility>
-
 #include <boost/program_options.hpp>
 
-#include "tools/clang_tidy/base_impl.h"
-#include "tools/clang_tidy/version_18.h"
+#include "tools/clang_tidy/general/option.h"
+#include "tools/clang_tidy/version/v18.h"
+#include "tools/util.h"
 #include "utils/util.h"
 
 namespace linter::tool::clang_tidy {
-auto create_instance(operating_system_t cur_system, arch_t cur_arch,
-                     const std::string &version) -> clang_tidy_ptr {
-  throw_if(std::ranges::contains(supported_version, version),
-           "Create clang-tidy instance failed since unsupported version.");
+void creator::register_option(
+    program_options::options_description &desc) const {
+  using namespace program_options; // NOLINT
+  using std::string;
 
-  auto tool = clang_tidy_ptr{};
+  // clang-format off
+    desc.add_options()
+          (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
+          (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit."
+                                                                 "This means cpp-linter will stop all clang-tidy"
+                                                                 "checks as soon as first error occurs")
+          (clang_tidy_version,               value<uint16_t>(),  "The version of clang-tidy to be used")
+          (clang_tidy_binary,                value<string>(),    "The binary of clang-tidy to be used. You are't allowed to specify"
+                                                                 "both this option and clang-tidy-version to avoid ambiguous.")
+          (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
+          (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
+          (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
+          (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
+          (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
+          (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
+          (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
+          (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
+       ;
+  // clang-format on
+}
+
+void creator::create_option(const program_options::variables_map &variables) {
+  if (variables.contains(enable_clang_tidy)) {
+    option.enabled = variables[enable_clang_tidy].as<bool>();
+  }
+  if (variables.contains(enable_clang_tidy_fastly_exit)) {
+    option.enabled_fastly_exit =
+        variables[enable_clang_tidy_fastly_exit].as<bool>();
+  }
+  if (variables.contains(clang_tidy_version)) {
+    option.version = variables[clang_tidy_version].as<std::string>();
+    throw_if(
+        variables.contains(clang_tidy_binary),
+        "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
+    option.binary = find_clang_tool("clang-tidy", option.version);
+  }
+  if (variables.contains(clang_tidy_binary)) {
+    throw_if(
+        variables.contains(clang_tidy_version),
+        "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
+    option.binary = variables[clang_tidy_binary].as<std::string>();
+    if (option.enabled) {
+      auto [ec, stdout, stderr] = shell::which(option.binary);
+      throw_unless(
+          ec == 0,
+          std::format("can't find given clang_tidy_binary: {}", option.binary));
+    }
+  }
+  spdlog::info("The clang-tidy executable path: {}", option.binary);
+  if (variables.contains(clang_tidy_allow_no_checks)) {
+    option.allow_no_checks = variables[clang_tidy_allow_no_checks].as<bool>();
+  }
+  if (variables.contains(clang_tidy_enable_check_profile)) {
+    option.enable_check_profile =
+        variables[clang_tidy_enable_check_profile].as<bool>();
+  }
+  if (variables.contains(clang_tidy_checks)) {
+    option.checks = variables[clang_tidy_checks].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_config)) {
+    option.config = variables[clang_tidy_config].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_config_file)) {
+    option.config_file = variables[clang_tidy_config_file].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_database)) {
+    option.database = variables[clang_tidy_database].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_header_filter)) {
+    option.header_filter =
+        variables[clang_tidy_header_filter].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_line_filter)) {
+    option.line_filter = variables[clang_tidy_line_filter].as<std::string>();
+  }
+  if (variables.contains(clang_tidy_iregex)) {
+    option.source_filter_iregex =
+        variables[clang_tidy_iregex].as<std::string>();
+  }
+}
+
+auto creator::create_tool(operating_system_t cur_system,
+                          arch_t cur_arch) -> tool_base_ptr {
+  auto version = option.version;
+  auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {
     tool = std::make_unique<clang_tidy_v18_1_3>();
   } else if (version == version_18_1_0) {
     tool = std::make_unique<clang_tidy_v18_1_0>();
   } else {
-    std::unreachable();
+    tool = std::make_unique<clang_tidy_general>();
   }
 
   throw_unless(tool->is_supported(cur_system, cur_arch),

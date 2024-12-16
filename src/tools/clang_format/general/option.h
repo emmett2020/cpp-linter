@@ -15,23 +15,12 @@
  */
 #pragma once
 
-#include "tools/clang_format/base_impl.h"
+#include "tools/base_option.h"
 
 namespace linter::tool::clang_format {
-using namespace std::string_view_literals;
-constexpr auto version_18_1_0 = "18.1.0"sv;
-constexpr auto version_18_1_3 = "18.1.3"sv;
-
-struct clang_format_v18_1_0 : base_clang_format {
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_0;
-  }
-};
-
-struct clang_format_v18_1_3 : base_clang_format {
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_3;
-  }
+struct option_t : option_base {
+  bool enable_warning_as_error = false;
+  bool needs_formatted_source_code = false;
 };
 
 } // namespace linter::tool::clang_format

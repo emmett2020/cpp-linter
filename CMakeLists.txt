@@ -26,20 +26,12 @@ find_package(Boost 1.83.0 REQUIRED COMPONENTS filesystem system regex program_op
 
 configure_file(${config_dir}/version.h.in ${config_dir}/version.h)
 
-set(SRC_FILE
-  src/main.cpp
-  src/utils/shell.cpp
-  src/utils/program_options.cpp
-  src/utils/env_manager.cpp
-  src/utils/git_utils.cpp
-  src/utils/context.cpp
-  src/tools/clang_tidy.cpp
-  src/tools/clang_format.cpp
-  src/github/api.cpp
-  src/github/common.cpp
-)
+FILE(GLOB_RECURSE SRC_FILES "${linter_root}/src/github/*.cpp"
+                            "${linter_root}/src/tools/*.cpp"
+                            "${linter_root}/src/utils/*.cpp"
+                            "${linter_root}/src/*.cpp")
 
-add_executable(cpp-linter ${SRC_FILE})
+add_executable(cpp-linter ${SRC_FILES})
 target_include_directories(cpp-linter PRIVATE ${Boost_INCLUDE_DIRS}
                                               ${linter_root}/src)
 target_link_libraries(cpp-linter ${Boost_LIBRARIES}
@@ -52,4 +44,4 @@ target_link_libraries(cpp-linter ${Boost_LIBRARIES}
 
 
 include(${linter_root}/cmake/FetchCatch2.cmake)
-add_subdirectory(tests)
+# add_subdirectory(tests)

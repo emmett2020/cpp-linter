@@ -14,23 +14,23 @@
  * limitations under the License.
  */
 #include <cctype>
-#include <fstream>
 #include <git2/oid.h>
+#include <memory>
 #include <print>
 #include <string>
 #include <vector>
 
+#include <boost/program_options/variables_map.hpp>
 #include <spdlog/spdlog.h>
 
 #include "configs/version.h"
 #include "context.h"
-#include "github/api.h"
 #include "github/common.h"
 #include "program_options.h"
+#include "tools/base_creator.h"
+#include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
-#include "tools/clang_tidy/base_impl.h"
 #include "tools/clang_tidy/clang_tidy.h"
-#include "tools/clang_tidy/creator.h"
 #include "utils/env_manager.h"
 #include "utils/git_utils.h"
 #include "utils/util.h"
@@ -67,15 +67,25 @@ void print_version() {
              cpp_linter_VERSION_PATCH);
 }
 
+constexpr auto cur_os = tool::operating_system_t::ubuntu;
+constexpr auto cur_arch = tool::arch_t::x86_64;
+
+auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
+  auto ret = std::vector<tool::creator_base_ptr>{};
+  ret.push_back(std::make_unique<tool::clang_format::creator>());
+  return ret;
+}
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
-  auto clang_tidy_creator = tool::clang_tidy::creator{};
-  auto clang_format_creator = tool::clang_format::creator{};
+  auto tool_creators = collect_tool_creators();
 
   auto desc = create_program_options_desc();
-  clang_tidy_creator.register_option_desc(desc);
-  clang_format_creator.register_option_desc(desc);
+  for (const auto &creator : tool_creators) {
+    creator->register_option(desc);
+  }
+
   auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
     std::cout << desc << "\n";
@@ -86,76 +96,70 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  auto ctx = context_t{};
-  ctx.use_on_local = env::get(github_actions) != "true";
-  check_and_fill_context_by_program_options(options, ctx);
-  set_log_level(ctx.log_level);
+  for (auto &creator : tool_creators) { // NOLINT
+    creator->create_option(options);
+  }
+
+  auto context = context_t{};
+  context.use_on_local = env::get(github_actions) != "true";
+  check_and_fill_context_by_program_options(options, context);
+  set_log_level(context.log_level);
 
   // Get some additional informations when on Github environment.
-  if (!ctx.use_on_local) {
+  if (!context.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
     check_github_env(env);
-    fill_context_by_env(env, ctx);
+    fill_context_by_env(env, context);
   }
-  print_context(ctx);
+  print_context(context);
 
   // Open user's git repository.
   git::setup();
-  auto repo = git::repo::open(ctx.repo_path);
+  auto repo = git::repo::open(context.repo_path);
   auto target_commit = git::convert<git::commit_ptr>(
-      git::revparse::single(repo.get(), ctx.target));
+      git::revparse::single(repo.get(), context.target));
   auto source_commit = git::convert<git::commit_ptr>(
-      git::revparse::single(repo.get(), ctx.source));
+      git::revparse::single(repo.get(), context.source));
   auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(),
                                           source_commit.get());
+  context.patches = git::patch::create_from_diff(diff.get());
 
-  auto linter_result = total_result{};
-  linter_result.patches = git::patch::create_from_diff(diff.get());
-  auto changed_files = git::patch::changed_files(linter_result.patches);
-  print_changed_files(changed_files);
+  // auto linter_result = total_result{};
+  // auto changed_files = git::patch::changed_files(linter_result.patches);
+  // print_changed_files(changed_files);
 
-  if (ctx.clang_format_option.enable_clang_format) {
-    apply_clang_format_on_files(ctx, changed_files, linter_result);
-  }
-  if (ctx.clang_tidy_option.enable_clang_tidy) {
-    apply_clang_tidy_on_files(ctx, changed_files, linter_result);
-  }
-
-  if (ctx.enable_step_summary) {
-    auto summary_file = env::get(github_step_summary);
-    auto file = std::fstream{summary_file, std::ios::app};
-    throw_unless(file.is_open(), "failed to open step summary file to write");
-    file << make_brief_result(ctx, linter_result);
-  }
-
-  if (ctx.enable_comment_on_issue) {
-    auto github_client = github_api_client{ctx};
-    github_client.get_issue_comment_id();
-    github_client.add_or_update_issue_comment(
-        make_brief_result(ctx, linter_result));
-  }
-
-  if (ctx.enable_pull_request_review) {
-    // TODO: merge
-    auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);
-    auto clang_format_comments = make_clang_format_pr_review_comment(
-        ctx, linter_result, repo.get(), source_commit.get());
-    comments.insert(comments.end(), clang_format_comments.begin(),
-                    clang_format_comments.end());
-    auto body = make_pr_review_comment_str(comments);
-    auto github_client = github_api_client{ctx};
-    github_client.post_pull_request_review(body);
-  }
-
-  if (!ctx.use_on_local) {
-    write_to_github_output(ctx, linter_result);
-  }
+  // if (ctx.enable_step_summary) {
+  //   auto summary_file = env::get(github_step_summary);
+  //   auto file = std::fstream{summary_file, std::ios::app};
+  //   throw_unless(file.is_open(), "failed to open step summary file to
+  //   write"); file << make_brief_result(ctx, linter_result);
+  // }
+  //
+  // if (ctx.enable_comment_on_issue) {
+  //   auto github_client = github_api_client{ctx};
+  //   github_client.get_issue_comment_id();
+  //   github_client.add_or_update_issue_comment(
+  //       make_brief_result(ctx, linter_result));
+  // }
+  //
+  // if (ctx.enable_pull_request_review) {
+  //   // TODO: merge
+  //   auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);
+  //   auto clang_format_comments = make_clang_format_pr_review_comment(
+  //       ctx, linter_result, repo.get(), source_commit.get());
+  //   comments.insert(comments.end(), clang_format_comments.begin(),
+  //                   clang_format_comments.end());
+  //   auto body = make_pr_review_comment_str(comments);
+  //   auto github_client = github_api_client{ctx};
+  //   github_client.post_pull_request_review(body);
+  // }
+  //
+  // if (!ctx.use_on_local) {
+  //   write_to_github_output(ctx, linter_result);
+  // }
 
   git::shutdown();
   auto all_passes = true;
-  if (ctx.clang_tidy_option.enable_clang_tidy) {
-    all_passes &= (linter_result.clang_tidy_failed.empty());
-  }
   return all_passes ? 0 : 1;
 }

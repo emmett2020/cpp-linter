@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_format/base_impl.h"
+#include "tools/clang_format/general/impl.h"
 
 #include <cctype>
 #include <cstdint>
@@ -27,15 +27,13 @@
 #include <spdlog/spdlog.h>
 #include <tinyxml2.h>
 
+#include "tools/clang_format/general/reporter.h"
+#include "tools/util.h"
 #include "utils/shell.h"
 #include "utils/util.h"
 
 namespace linter::tool::clang_format {
 namespace {
-void trace_replacement(const replacement_t &replacement) {
-  spdlog::trace("replacement: offset: {}, length: {}, data: {}",
-                replacement.offset, replacement.length, replacement.data);
-}
 
 // Read a file and get this
 auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
@@ -116,7 +114,6 @@ auto parse_replacements_xml(std::string_view data) -> replacements_t {
       replacement.data = text;
     }
 
-    trace_replacement(replacement);
     replacements.emplace_back(std::move(replacement));
 
     replacement_ele = replacement_ele->NextSiblingElement(replacement_str);
@@ -146,7 +143,7 @@ auto make_source_code_options(std::string_view file)
   return tool_opt;
 }
 
-auto execute(const user_option &user_opt, output_style_t output_style,
+auto execute(const option_t &opt, output_style_t output_style,
              std::string_view repo, std::string_view file) -> shell::result {
   spdlog::trace("Enter clang_format::execute()");
 
@@ -155,19 +152,20 @@ auto execute(const user_option &user_opt, output_style_t output_style,
                       : make_replacements_options(file);
   auto tool_opt_str =
       tool_opt | std::views::join_with(' ') | std::ranges::to<std::string>();
-  spdlog::info("Running command: {} {}", user_opt.binary, tool_opt_str);
+  spdlog::info("Running command: {} {}", opt.binary, tool_opt_str);
 
-  return shell::execute(user_opt.binary, tool_opt, repo);
+  return shell::execute(opt.binary, tool_opt, repo);
 }
 
 } // namespace
 
-auto base_clang_format::apply_to_single_file(
-    const user_option &user_opt, const std::string &repo,
-    const std::string &file) -> per_file_result {
+auto clang_format_general::check_single_file(
+    [[maybe_unused]] const context_t &ctx, const std::string &root_dir,
+    const std::string &file) const -> per_file_result {
   spdlog::trace("Enter base_clang_format::apply_on_single_file()");
 
-  auto xml_res = execute(user_opt, output_style_t::replacement_xml, repo, file);
+  auto xml_res =
+      execute(option, output_style_t::replacement_xml, root_dir, file);
   auto result = per_file_result{};
   result.file_path = file;
   result.tool_stdout = xml_res.std_out;
@@ -180,10 +178,10 @@ auto base_clang_format::apply_to_single_file(
   auto replacements = parse_replacements_xml(xml_res.std_out);
   result.replacements = std::move(replacements);
 
-  if (user_opt.needs_formatted_source_code) {
+  if (option.needs_formatted_source_code) {
     spdlog::debug("Execute clang-format again to get formatted source code.");
     auto code_res =
-        execute(user_opt, output_style_t::formatted_source_code, repo, file);
+        execute(option, output_style_t::formatted_source_code, root_dir, file);
     result.tool_stdout += "\n" + code_res.std_out;
     result.tool_stderr += "\n" + code_res.std_err;
     if (code_res.exit_code != 0) {
@@ -194,6 +192,41 @@ auto base_clang_format::apply_to_single_file(
   }
 
   return result;
+}
+
+void clang_format_general::check(const context_t &ctx,
+                                 const std::string &root_dir,
+                                 const std::vector<std::string> &files) {
+  for (const auto &file : files) {
+    if (filter_file(option.source_filter_iregex, file)) {
+      result.ignored_files.push_back(file);
+      spdlog::trace("file is ignored {} by {}", file, option.binary);
+      continue;
+    }
+
+    auto per_file_result = check_single_file(ctx, root_dir, file);
+    if (per_file_result.passed) {
+      spdlog::info("file: {} passes {} check.", file, option.binary);
+      result.passes[file] = std::move(per_file_result);
+      continue;
+    }
+
+    spdlog::error("file: {} doesn't pass {} check.", file, option.binary);
+    result.fails[file] = std::move(per_file_result);
+
+    if (option.enabled_fastly_exit) {
+      spdlog::info("{} fastly exit since check failed", option.binary);
+      result.final_passed = false;
+      result.fastly_exited = true;
+      return;
+    }
+  }
+
+  result.final_passed = true;
+}
+
+auto clang_format_general::get_reporter() -> reporter_base_ptr {
+  return std::make_unique<reporter_t>(option, result);
 }
 
 } // namespace linter::tool::clang_format

@@ -15,27 +15,11 @@
  */
 #pragma once
 
-#include <string>
 #include <vector>
 
-#include <spdlog/spdlog.h>
-
-#include "tools/base_option.h"
 #include "tools/base_result.h"
-#include "tools/base_tool.h"
 
 namespace linter::tool::clang_tidy {
-struct user_option : option_base {
-  bool allow_no_checks = false;
-  bool enable_check_profile = false;
-  std::string checks;
-  std::string config;
-  std::string config_file;
-  std::string database;
-  std::string header_filter;
-  std::string line_filter;
-};
-
 /// Represents statistics outputed by clang-tidy. It's usually the stderr
 /// messages of clang-tidy.
 struct statistic {
@@ -73,17 +57,5 @@ struct per_file_result : per_file_result_base {
   diagnostics diags;
 };
 
-struct base_clang_tidy : tool_base<user_option, per_file_result> {
-  bool is_supported(operating_system_t system, arch_t arch) override {
-    return system == operating_system_t::linux && arch == arch_t::x86_64;
-  }
-
-  constexpr auto name() -> std::string_view override { return "clang_tidy"; }
-
-  auto
-  apply_to_single_file(const user_option &user_opt, const std::string &repo,
-                       const std::string &file) -> per_file_result override;
-};
-
-using clang_tidy_ptr = tool_base_ptr<user_option, per_file_result>;
+using result_t = multi_files_result_base<per_file_result>;
 } // namespace linter::tool::clang_tidy
