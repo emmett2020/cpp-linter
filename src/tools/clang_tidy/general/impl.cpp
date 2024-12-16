@@ -241,7 +241,8 @@ void print_statistic(const statistic &stat) {
 } // namespace
 
 auto clang_tidy_general::check_single_file(
-    [[maybe_unused]] const context_t &context, const std::string &root_dir,
+    [[maybe_unused]] const runtime_context &context,
+    const std::string &root_dir,
     const std::string &file) const -> per_file_result {
   spdlog::info("Start to run clang-tidy");
   auto [ec, std_out, std_err] = execute(option, root_dir, file);
@@ -270,7 +271,7 @@ auto clang_tidy_general::check_single_file(
   return result;
 }
 
-void clang_tidy_general::check(const context_t &context,
+void clang_tidy_general::check(const runtime_context &context,
                                const std::string &root_dir,
                                const std::vector<std::string> &files) {
   for (const auto &file : files) {

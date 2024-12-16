@@ -116,5 +116,5 @@ struct github_env {
 auto read_github_env() -> github_env;
 void check_github_env(const github_env &env);
 void print_github_env(const github_env &env);
-void fill_context_by_env(const github_env &env, context_t &ctx);
+void fill_context_by_env(const github_env &env, runtime_context &ctx);
 } // namespace linter

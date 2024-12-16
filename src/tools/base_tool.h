@@ -23,19 +23,6 @@
 #include "tools/base_reporter.h"
 
 namespace linter::tool {
-/// The operating system type.
-enum class operating_system_t : std::uint8_t {
-  windows,
-  macos,
-  ubuntu,
-};
-
-/// The archecture type.
-enum class arch_t : std::uint8_t {
-  x86_64,
-  arm64,
-};
-
 /// This is a base class represents linter tools. All specified tools should be
 /// derived from this.
 struct tool_base {
@@ -51,7 +38,8 @@ struct tool_base {
   virtual auto version() -> std::string_view = 0;
 
   /// Apply this tool to a single file.
-  virtual void check(const context_t &context, const std::string &root_dir,
+  virtual void check(const runtime_context &context,
+                     const std::string &root_dir,
                      const std::vector<std::string> &files) = 0;
 
   virtual auto get_reporter() -> reporter_base_ptr = 0;

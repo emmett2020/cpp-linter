@@ -33,7 +33,7 @@ struct reporter_t : reporter_base {
   reporter_t(option_t opt, result_t res)
       : option(std::move(opt)), result(std::move(res)) {}
 
-  auto make_issue_comment(context_t ctx) -> std::string override {
+  auto make_issue_comment(runtime_context ctx) -> std::string override {
     auto res = std::string{};
     res += std::format(
         "<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
@@ -50,10 +50,12 @@ struct reporter_t : reporter_base {
     return res;
   }
 
-  auto make_step_summary(context_t ctx) -> std::string override { return {}; }
+  auto make_step_summary(runtime_context ctx) -> std::string override {
+    return {};
+  }
 
-  auto
-  make_review_comment(context_t context) -> github::review_comments override {
+  auto make_review_comment(runtime_context context)
+      -> github::review_comments override {
     auto comments = github::review_comments{};
 
     for (const auto &[file, per_file_result] : result.fails) {
@@ -88,7 +90,7 @@ struct reporter_t : reporter_base {
     return comments;
   }
 
-  auto write_to_action_output(context_t ctx) -> void override {
+  auto write_to_action_output(runtime_context ctx) -> void override {
     auto output = env::get(github_output);
     auto file = std::fstream{output, std::ios::app};
     throw_unless(file.is_open(), "error to open output file to write");

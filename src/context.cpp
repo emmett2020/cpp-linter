@@ -18,7 +18,7 @@
 #include <spdlog/spdlog.h>
 
 namespace linter {
-void print_context(const context_t &ctx) {
+void print_context(const runtime_context &ctx) {
   spdlog::info("Context: ");
   spdlog::info("--------------------------------------------------");
   spdlog::info("Common Options:");

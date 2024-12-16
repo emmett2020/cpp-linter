@@ -160,7 +160,7 @@ auto execute(const option_t &opt, output_style_t output_style,
 } // namespace
 
 auto clang_format_general::check_single_file(
-    [[maybe_unused]] const context_t &ctx, const std::string &root_dir,
+    [[maybe_unused]] const runtime_context &ctx, const std::string &root_dir,
     const std::string &file) const -> per_file_result {
   spdlog::trace("Enter base_clang_format::apply_on_single_file()");
 
@@ -194,7 +194,7 @@ auto clang_format_general::check_single_file(
   return result;
 }
 
-void clang_format_general::check(const context_t &ctx,
+void clang_format_general::check(const runtime_context &ctx,
                                  const std::string &root_dir,
                                  const std::vector<std::string> &files) {
   for (const auto &file : files) {

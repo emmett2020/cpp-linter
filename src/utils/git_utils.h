@@ -681,6 +681,10 @@ auto tree_to_tree(repo_raw_ptr repo, tree_raw_ptr old_tree,
 auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr commit1,
                       commit_raw_ptr commit2) -> diff_ptr;
 
+/// An utility to get diff.
+auto get(git_repository &repo, git_commit &commit1,
+         git_commit &commit2) -> diff_ptr;
+
 /// Initialize diff options structure
 void init_option(diff_options_raw_ptr opts);
 
@@ -798,6 +802,9 @@ namespace revparse {
 /// Find a single object, as specified by a revision string.
 /// https://git-scm.com/docs/git-rev-parse.html#_specifying_revisions
 auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr;
+
+/// An utility to get commit point by revision string.
+auto commit(git_repository &repo, const std::string &spec) -> commit_ptr;
 
 /// Find a complete sha based on given short sha
 auto complete_sha(repo_raw_ptr repo,
@@ -957,7 +964,7 @@ namespace patch {
 auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr;
 
 /// Return all patches.
-auto create_from_diff(diff_raw_ptr diff)
+auto create_from_diff(git_diff &diff)
     -> std::unordered_map<std::string, patch_ptr>;
 
 /// Directly generate a patch from the difference between two buffers.

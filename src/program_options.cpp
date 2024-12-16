@@ -64,7 +64,7 @@ void must_not_specify(const std::string &condition,
 
 // Theses options work both on local and CI.
 void check_and_fill_context_common(
-    const program_options::variables_map &variables, context_t &ctx) {
+    const program_options::variables_map &variables, runtime_context &ctx) {
   spdlog::trace("check_and_fill_context_common");
   if (variables.contains(log_level)) {
     ctx.log_level = variables[log_level].as<std::string>();
@@ -80,7 +80,7 @@ void check_and_fill_context_common(
 }
 
 void check_and_fill_context_on_ci(
-    const program_options::variables_map &variables, context_t &ctx) {
+    const program_options::variables_map &variables, runtime_context &ctx) {
   spdlog::trace("check_and_fill_context_on_ci");
   auto must_not_specify_option = {repo_path, repo, source, event_name,
                                   pr_number};
@@ -103,7 +103,7 @@ void check_and_fill_context_on_ci(
 }
 
 void check_and_fill_context_on_local(
-    const program_options::variables_map &variables, context_t &ctx) {
+    const program_options::variables_map &variables, runtime_context &ctx) {
   spdlog::trace("check_and_fill_context_on_local");
   auto must_specify_option = {repo_path, source, event_name};
   must_specify("use cpp-linter on local", variables, must_specify_option);
@@ -184,7 +184,7 @@ auto parse_program_options(int argc, char **argv,
 // This function will be called after check context. So there's no need to do
 // same check.
 void check_and_fill_context_by_program_options(
-    const program_options::variables_map &variables, context_t &ctx) {
+    const program_options::variables_map &variables, runtime_context &ctx) {
   spdlog::debug("Start to check program_options and fill context by it");
 
   check_and_fill_context_common(variables, ctx);

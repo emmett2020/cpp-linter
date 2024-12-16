@@ -20,11 +20,12 @@
 #include <unordered_map>
 
 #include "utils/git_utils.h"
+#include "utils/platform.h"
 
 namespace linter {
 
 /// The runtime context for all tools.
-struct context_t {
+struct runtime_context {
   bool use_on_local = false;
   std::string log_level;
   bool enable_step_summary = false;
@@ -40,8 +41,11 @@ struct context_t {
   std::string source;
   std::int32_t pr_number = -1;
 
+  operating_system_t os = operating_system_t::ubuntu;
+  arch_t arch = arch_t::x86_64;
+
   std::unordered_map<std::string, git::patch_ptr> patches;
 };
 
-void print_context(const context_t &ctx);
+void print_context(const runtime_context &ctx);
 } // namespace linter

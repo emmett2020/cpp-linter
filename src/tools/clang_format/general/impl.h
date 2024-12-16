@@ -37,10 +37,11 @@ struct clang_format_general : tool_base {
 
   auto version() -> std::string_view override { return "unknown"; }
 
-  auto check_single_file(const context_t &ctx, const std::string &root_dir,
+  auto check_single_file(const runtime_context &ctx,
+                         const std::string &root_dir,
                          const std::string &file) const -> per_file_result;
 
-  void check(const context_t &ctx, const std::string &root_dir,
+  void check(const runtime_context &ctx, const std::string &root_dir,
              const std::vector<std::string> &files) override;
 
   auto get_reporter() -> reporter_base_ptr override;

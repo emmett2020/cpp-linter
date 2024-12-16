@@ -29,14 +29,14 @@ using namespace std::string_literals;
 struct reporter_base {
   virtual ~reporter_base() = default;
 
-  virtual auto make_issue_comment(context_t ctx) -> std::string = 0;
+  virtual auto make_issue_comment(runtime_context ctx) -> std::string = 0;
 
-  virtual auto make_step_summary(context_t ctx) -> std::string = 0;
+  virtual auto make_step_summary(runtime_context ctx) -> std::string = 0;
 
   virtual auto
-  make_review_comment(context_t ctx) -> github::review_comments = 0;
+  make_review_comment(runtime_context ctx) -> github::review_comments = 0;
 
-  virtual void write_to_action_output(context_t ctx) = 0;
+  virtual void write_to_action_output(runtime_context ctx) = 0;
 };
 
 using reporter_base_ptr = std ::unique_ptr<reporter_base>;

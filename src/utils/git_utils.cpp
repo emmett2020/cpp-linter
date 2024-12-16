@@ -560,6 +560,11 @@ auto commit_to_commit(repo_raw_ptr repo, commit_raw_ptr commit1,
   return tree_to_tree(repo, tree1.get(), tree2.get(), nullptr);
 }
 
+auto get(git_repository &repo, git_commit &commit1,
+         git_commit &commit2) -> diff_ptr {
+  return commit_to_commit(&repo, &commit1, &commit2);
+}
+
 void init_option(diff_options_raw_ptr opts) {
   auto ret = ::git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
   throw_if(ret);
@@ -850,6 +855,10 @@ auto single(repo_raw_ptr repo, const std::string &spec) -> object_ptr {
   return {obj, ::git_object_free};
 }
 
+auto commit(git_repository &repo, const std::string &spec) -> commit_ptr {
+  return convert<commit_ptr>(single(&repo, spec));
+}
+
 auto complete_sha(repo_raw_ptr repo,
                   const std::string &short_sha) -> std::string {
   auto obj = single(repo, short_sha);
@@ -989,12 +998,12 @@ auto create_from_diff(diff_raw_ptr diff, std::size_t idx) -> patch_ptr {
   return {patch, ::git_patch_free};
 }
 
-auto create_from_diff(diff_raw_ptr diff)
+auto create_from_diff(git_diff &diff)
     -> std::unordered_map<std::string, patch_ptr> {
   auto res = std::unordered_map<std::string, patch_ptr>{};
-  auto num_deltas = git::diff::num_deltas(diff);
+  auto num_deltas = git::diff::num_deltas(&diff);
   for (int i = 0; i < num_deltas; ++i) {
-    auto patch = git::patch::create_from_diff(diff, i);
+    auto patch = git::patch::create_from_diff(&diff, i);
     const auto *delta = git::patch::get_delta(patch.get());
     res.insert({delta->new_file.path, std::move(patch)});
   }

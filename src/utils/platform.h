@@ -15,23 +15,21 @@
  */
 #pragma once
 
-#include <boost/program_options.hpp>
-#include <spdlog/spdlog.h>
-
-#include "context.h"
+#include <cstdint>
 
 namespace linter {
-namespace program_options = boost::program_options;
 
-constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
+/// The operating system type.
+enum class operating_system_t : std::uint8_t {
+  windows,
+  macos,
+  ubuntu,
+};
 
-/// Create the options description of cpp-linter command line.
-auto create_program_options_desc() -> program_options::options_description;
+/// The archecture type.
+enum class arch_t : std::uint8_t {
+  x86_64,
+  arm64,
+};
 
-auto parse_program_options(int argc, char **argv,
-                           const program_options::options_description &desc)
-    -> program_options::variables_map;
-
-void check_and_fill_context_by_program_options(
-    const program_options::variables_map &variables, runtime_context &ctx);
 } // namespace linter

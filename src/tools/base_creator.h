@@ -29,8 +29,7 @@ struct creator_base {
   virtual void
   create_option(const program_options::variables_map &variables) = 0;
 
-  virtual auto create_tool(operating_system_t cur_system,
-                           arch_t cur_arch) -> tool_base_ptr = 0;
+  virtual auto create_tool(const runtime_context &context) -> tool_base_ptr = 0;
 };
 
 using creator_base_ptr = std::unique_ptr<creator_base>;

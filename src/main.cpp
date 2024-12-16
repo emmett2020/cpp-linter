@@ -67,9 +67,6 @@ void print_version() {
              cpp_linter_VERSION_PATCH);
 }
 
-constexpr auto cur_os = tool::operating_system_t::ubuntu;
-constexpr auto cur_arch = tool::arch_t::x86_64;
-
 auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
   auto ret = std::vector<tool::creator_base_ptr>{};
   ret.push_back(std::make_unique<tool::clang_format::creator>());
@@ -80,6 +77,7 @@ auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
 } // namespace
 
 auto main(int argc, char **argv) -> int {
+  // Handle user options.
   auto desc = create_program_options_desc();
   auto tool_creators = collect_tool_creators();
   for (const auto &creator : tool_creators) {
@@ -96,16 +94,16 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  for (auto &creator : tool_creators) { // NOLINT
+  for (auto &creator : tool_creators) {
     creator->create_option(options);
   }
 
-  auto context = context_t{};
+  // Fill runtime context by user options and environment variables.
+  auto context = runtime_context{};
   context.use_on_local = env::get(github_actions) != "true";
   check_and_fill_context_by_program_options(options, context);
   set_log_level(context.log_level);
 
-  // Get some additional informations when on Github environment.
   if (!context.use_on_local) {
     auto env = read_github_env();
     print_github_env(env);
@@ -114,20 +112,21 @@ auto main(int argc, char **argv) -> int {
   }
   print_context(context);
 
-  // Open user's git repository.
+  // Fill runtime context by git repositofy informations.
   git::setup();
   auto repo = git::repo::open(context.repo_path);
-  auto target_commit = git::convert<git::commit_ptr>(
-      git::revparse::single(repo.get(), context.target));
-  auto source_commit = git::convert<git::commit_ptr>(
-      git::revparse::single(repo.get(), context.source));
-  auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(),
-                                          source_commit.get());
-  context.patches = git::patch::create_from_diff(diff.get());
+  auto target_commit = git::revparse::commit(*repo, context.target);
+  auto source_commit = git::revparse::commit(*repo, context.source);
+  auto diff = git::diff::get(*repo, *target_commit, *source_commit);
+  context.patches = git::patch::create_from_diff(*diff);
 
-  // auto linter_result = total_result{};
-  // auto changed_files = git::patch::changed_files(linter_result.patches);
-  // print_changed_files(changed_files);
+  auto changed_files = git::patch::changed_files(context.patches);
+  print_changed_files(changed_files);
+
+  auto tools = std::vector<tool::tool_base_ptr>{};
+  for (auto &creator : tool_creators) {
+    tools.emplace_back(creator->create_tool(context));
+  }
 
   // if (ctx.enable_step_summary) {
   //   auto summary_file = env::get(github_step_summary);
