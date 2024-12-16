@@ -25,68 +25,44 @@ using namespace std::string_view_literals;
 
 namespace {
 
-  // This function must be called before any spdlog operations.
-  void set_log_level(std::string_view log_level_str) {
-    static constexpr auto valid_log_levels = {"trace", "debug", "error"};
-    assert(std::ranges::contains(valid_log_levels, log_level_str));
+// This function must be called before any spdlog operations.
+void set_log_level(std::string_view log_level_str) {
+  static constexpr auto valid_log_levels = {"trace", "debug", "error"};
+  assert(std::ranges::contains(valid_log_levels, log_level_str));
 
-    auto log_level = spdlog::level::info;
-    if (log_level_str == "trace") {
-      log_level = spdlog::level::trace;
-    } else if (log_level_str == "debug") {
-      log_level = spdlog::level::debug;
-    } else {
-      log_level = spdlog::level::err;
-    }
-    spdlog::set_level(log_level);
+  auto log_level = spdlog::level::info;
+  if (log_level_str == "trace") {
+    log_level = spdlog::level::trace;
+  } else if (log_level_str == "debug") {
+    log_level = spdlog::level::debug;
+  } else {
+    log_level = spdlog::level::err;
   }
+  spdlog::set_level(log_level);
+}
 
-  auto print_changed_files(const std::vector<std::string> &files) {
-    spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
-  }
-
-  auto make_brief_result(const context &ctx, const total_result &result) -> std::string {
-    static const auto title     = "# The cpp-linter Result"s;
-    static const auto hint_pass = ":rocket: All checks on all file passed."s;
-    static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
-
-    auto clang_tidy_passed   = result.clang_tidy_failed.empty();
-    auto clang_format_passed = result.clang_format_failed.empty();
-    auto all_check_passes    = clang_tidy_passed && clang_format_passed;
-    if (all_check_passes) {
-      return title + hint_pass;
-    }
-
-    auto details = std::string{};
-    if (!clang_format_passed) {
-      details += make_clang_format_result_str(ctx, result);
-    }
-    if (!clang_tidy_passed) {
-      details += make_clang_tidy_result_str(ctx, result);
-    }
-
-    return title + hint_fail + details;
-  }
+auto print_changed_files(const std::vector<std::string> &files) {
+  spdlog::info("Got {} changed files. File list:\n{}", files.size(),
+               concat(files));
+}
 
 } // namespace
 
 auto main(int argc, char **argv) -> int {
   // Handle user inputs.
-  auto desc    = make_program_options_desc();
+  auto desc = make_program_options_desc();
   auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
   }
   if (options.contains("version")) {
-    std::print("{}.{}.{}",
-               cpp_linter_VERSION_MAJOR,
-               cpp_linter_VERSION_MINOR,
+    std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
                cpp_linter_VERSION_PATCH);
     return 0;
   }
 
-  auto ctx         = context_t{};
+  auto ctx = context_t{};
   ctx.use_on_local = env::get(github_actions) != "true";
   check_and_fill_context_by_program_options(options, ctx);
   set_log_level(ctx.log_level);
@@ -102,14 +78,17 @@ auto main(int argc, char **argv) -> int {
 
   // Open user's git repository.
   git::setup();
-  auto repo          = git::repo::open(ctx.repo_path);
-  auto target_commit = git::convert<git::commit_ptr>(git::revparse::single(repo.get(), ctx.target));
-  auto source_commit = git::convert<git::commit_ptr>(git::revparse::single(repo.get(), ctx.source));
-  auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(), source_commit.get());
+  auto repo = git::repo::open(ctx.repo_path);
+  auto target_commit = git::convert<git::commit_ptr>(
+      git::revparse::single(repo.get(), ctx.target));
+  auto source_commit = git::convert<git::commit_ptr>(
+      git::revparse::single(repo.get(), ctx.source));
+  auto diff = git::diff::commit_to_commit(repo.get(), target_commit.get(),
+                                          source_commit.get());
 
-  auto linter_result    = total_result{};
+  auto linter_result = total_result{};
   linter_result.patches = git::patch::create_from_diff(diff.get());
-  auto changed_files    = git::patch::changed_files(linter_result.patches);
+  auto changed_files = git::patch::changed_files(linter_result.patches);
   print_changed_files(changed_files);
 
   if (ctx.clang_format_option.enable_clang_format) {
@@ -121,7 +100,7 @@ auto main(int argc, char **argv) -> int {
 
   if (ctx.enable_step_summary) {
     auto summary_file = env::get(github_step_summary);
-    auto file         = std::fstream{summary_file, std::ios::app};
+    auto file = std::fstream{summary_file, std::ios::app};
     throw_unless(file.is_open(), "failed to open step summary file to write");
     file << make_brief_result(ctx, linter_result);
   }
@@ -129,16 +108,18 @@ auto main(int argc, char **argv) -> int {
   if (ctx.enable_comment_on_issue) {
     auto github_client = github_api_client{ctx};
     github_client.get_issue_comment_id();
-    github_client.add_or_update_issue_comment(make_brief_result(ctx, linter_result));
+    github_client.add_or_update_issue_comment(
+        make_brief_result(ctx, linter_result));
   }
 
   if (ctx.enable_pull_request_review) {
     // TODO: merge
     auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);
-    auto clang_format_comments =
-      make_clang_format_pr_review_comment(ctx, linter_result, repo.get(), source_commit.get());
-    comments.insert(comments.end(), clang_format_comments.begin(), clang_format_comments.end());
-    auto body          = make_pr_review_comment_str(comments);
+    auto clang_format_comments = make_clang_format_pr_review_comment(
+        ctx, linter_result, repo.get(), source_commit.get());
+    comments.insert(comments.end(), clang_format_comments.begin(),
+                    clang_format_comments.end());
+    auto body = make_pr_review_comment_str(comments);
     auto github_client = github_api_client{ctx};
     github_client.post_pull_request_review(body);
   }

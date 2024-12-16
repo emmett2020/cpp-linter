@@ -18,31 +18,30 @@
 
 #include <utility>
 
-#include "tools/clang_format/base.h"
+#include "tools/clang_format/base_impl.h"
 #include "tools/clang_format/version_18.h"
 #include "utils/util.h"
 
 namespace linter::tool::clang_format {
-  auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
-    -> clang_format_ptr {
-    throw_if(std::ranges::contains(supported_version, version),
-             "Create clang-format instance failed since unsupported version.");
+auto create_instance(operating_system_t cur_system, arch_t cur_arch,
+                     const std::string &version) -> clang_format_ptr {
+  throw_if(std::ranges::contains(supported_version, version),
+           "Create clang-format instance failed since unsupported version.");
 
-    auto tool = clang_format_ptr{};
-    if (version == version_18_1_3) {
-      tool = std::make_unique<clang_format_v18_1_3>();
-    } else if (version == version_18_1_0) {
-      tool = std::make_unique<clang_format_v18_1_0>();
-    } else {
-      std::unreachable();
-    }
-
-    throw_unless(
-      tool->is_supported(cur_system, cur_arch),
-      std::format("Create clang-format {} instance failed since not supported on this platform",
-                  version));
-    return tool;
+  auto tool = clang_format_ptr{};
+  if (version == version_18_1_3) {
+    tool = std::make_unique<clang_format_v18_1_3>();
+  } else if (version == version_18_1_0) {
+    tool = std::make_unique<clang_format_v18_1_0>();
+  } else {
+    std::unreachable();
   }
 
+  throw_unless(tool->is_supported(cur_system, cur_arch),
+               std::format("Create clang-format {} instance failed since not "
+                           "supported on this platform",
+                           version));
+  return tool;
+}
 
 } // namespace linter::tool::clang_format

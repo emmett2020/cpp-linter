@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_format/base.h"
-#include "tools/clang_format/version_18.h"
+#include "tools/clang_format/base_impl.h"
 #include "tools/clang_format/creator.h"
+#include "tools/clang_format/reporter.h"
+#include "tools/clang_format/version_18.h"

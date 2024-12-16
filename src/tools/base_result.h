@@ -43,4 +43,5 @@ namespace linter::tool {
     std::unordered_map<std::string, PerFileResult> fails;
   };
 
+
 } // namespace linter::tool
