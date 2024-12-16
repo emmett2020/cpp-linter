@@ -15,6 +15,7 @@
  */
 #pragma once
 
+#include "program_options.h"
 #include "tools/base_option.h"
 #include "tools/base_reporter.h"
 #include "tools/base_result.h"
@@ -22,12 +23,19 @@
 
 namespace linter::tool {
 
-struct creator_base {
+template <class UserOption, class PerFileResult> struct creator_base {
   virtual ~creator_base() = default;
-  virtual auto create_option() -> option_base_ptr = 0;
+
+  virtual void
+  register_option_desc(program_options::options_description &desc) = 0;
+
+  virtual auto create_option(const program_options::variables_map &variables)
+      -> UserOption = 0;
   virtual auto create_instance(operating_system_t cur_system, arch_t cur_arch,
-                               const std::string &version) -> tool_base_ptr = 0;
-  virtual reporter create_reporter() = 0;
+                               const std::string &version)
+      -> tool_base_ptr<UserOption, PerFileResult> = 0;
+  virtual auto create_reporter()
+      -> reporter_base<UserOption, final_result<PerFileResult>> = 0;
 };
 
 } // namespace linter::tool

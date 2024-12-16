@@ -47,7 +47,7 @@ template <class UserOption, class PerFileResult> struct reporter_interface {
 };
 
 template <class UserOption, class Result>
-struct reporter : reporter_interface<UserOption, Result> {
+struct reporter_base : reporter_interface<UserOption, Result> {
   UserOption opt;
   Result result;
 };

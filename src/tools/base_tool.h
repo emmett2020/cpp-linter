@@ -61,17 +61,15 @@ template <class UserOption, class PerFileResult> struct interface {
 /// This is a base class represents linter tools. All specified tools should be
 /// derived from this.
 template <class UserOption, class PerFileResult>
-class tool_base : interface<UserOption, PerFileResult> {
-public:
+struct tool_base : public interface<UserOption, PerFileResult> {
   using user_option_t = UserOption;
   using per_file_result_t = PerFileResult;
   using final_result_t = final_result<PerFileResult>;
 
-  explicit tool_base(const context_t &ctx) : ctx_{ctx} {}
-
   ~tool_base() override = default;
 
-  auto run(const user_option_t &opt, const std::string &repo,
+  auto run([[maybe_unused]] const context_t &ctx, const user_option_t &opt,
+           const std::string &repo,
            const std::vector<std::string> &files) -> final_result_t {
     auto result = final_result_t{};
 
@@ -103,9 +101,6 @@ public:
     result.final_passed = true;
     return result;
   }
-
-protected:
-  const context_t &ctx_; // NOLINT
 };
 
 /// An unique pointer for base tool.

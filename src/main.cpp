@@ -23,12 +23,16 @@
 #include <spdlog/spdlog.h>
 
 #include "configs/version.h"
+#include "context.h"
 #include "github/api.h"
 #include "github/common.h"
-#include "utils/context.h"
+#include "program_options.h"
+#include "tools/clang_format/clang_format.h"
+#include "tools/clang_tidy/base_impl.h"
+#include "tools/clang_tidy/clang_tidy.h"
+#include "tools/clang_tidy/creator.h"
 #include "utils/env_manager.h"
 #include "utils/git_utils.h"
-#include "utils/program_options.h"
 #include "utils/util.h"
 
 using namespace linter; // NOLINT
@@ -58,19 +62,27 @@ auto print_changed_files(const std::vector<std::string> &files) {
                concat(files));
 }
 
+void print_version() {
+  std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
+             cpp_linter_VERSION_PATCH);
+}
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
-  // Handle user inputs.
-  auto desc = make_program_options_desc();
+  auto clang_tidy_creator = tool::clang_tidy::creator{};
+  auto clang_format_creator = tool::clang_format::creator{};
+
+  auto desc = create_program_options_desc();
+  clang_tidy_creator.register_option_desc(desc);
+  clang_format_creator.register_option_desc(desc);
   auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
   }
   if (options.contains("version")) {
-    std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
-               cpp_linter_VERSION_PATCH);
+    print_version();
     return 0;
   }
 

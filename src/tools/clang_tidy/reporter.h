@@ -21,13 +21,15 @@
 #include "tools/base_reporter.h"
 #include "tools/clang_tidy/base_impl.h"
 #include "utils/env_manager.h"
+#include "utils/util.h"
 
 namespace linter::tool::clang_tidy {
-//
 
-struct reporter : tool_base<user_option, per_file_result> {
-  auto make_issue_comment(const user_option &option,
-                          const final_result_t &result) -> std::string {
+struct reporter : reporter_base<user_option, per_file_result> {
+  virtual ~reporter() = default;
+  auto
+  make_issue_comment(const user_option &option,
+                     const final_result_t &result) -> std::string override {
     auto res = std::string{};
     res += std::format(
         "<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
@@ -44,15 +46,16 @@ struct reporter : tool_base<user_option, per_file_result> {
     return res;
   }
 
-  auto make_step_summary(const user_option &option,
-                         const final_result_t &result) -> std::string {
+  auto
+  make_step_summary(const user_option & /*option*/,
+                    const final_result_t & /*result*/) -> std::string override {
     return {};
   }
 
   auto make_pr_review_comment([[maybe_unused]] const user_option &option,
                               const final_result_t &result)
-      -> github::pull_request::review_comments {
-    auto comments = github::pull_request::review_comments{};
+      -> github::review_comments {
+    auto comments = github::review_comments{};
 
     for (const auto &[file, per_file_result] : result.fails) {
       // Get the same file's delta and clang-tidy result
@@ -75,7 +78,7 @@ struct reporter : tool_base<user_option, per_file_result> {
             pos += num_lines;
             continue;
           }
-          auto comment = github::pull_request::review_comment{};
+          auto comment = github::review_comment{};
           comment.path = file;
           comment.position = pos + row - hunk.new_start + 1;
           comment.body = diag.header.brief + diag.header.diagnostic_type;

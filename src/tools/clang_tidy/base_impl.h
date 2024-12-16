@@ -25,7 +25,7 @@
 #include "tools/base_tool.h"
 
 namespace linter::tool::clang_tidy {
-struct user_option : user_option_base {
+struct user_option : option_base {
   bool allow_no_checks = false;
   bool enable_check_profile = false;
   std::string checks;

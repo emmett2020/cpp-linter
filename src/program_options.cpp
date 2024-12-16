@@ -16,17 +16,15 @@
 #include "program_options.h"
 
 #include <algorithm>
-
-#include <boost/algorithm/string/case_conv.hpp>
 #include <initializer_list>
 
+#include <boost/algorithm/string/case_conv.hpp>
+#include <boost/program_options/options_description.hpp>
+
 #include "github/common.h"
-#include "utils/shell.h"
 #include "utils/util.h"
 
 namespace linter {
-namespace program_options = boost::program_options;
-
 namespace {
 constexpr auto help = "help";
 constexpr auto version = "version";
@@ -41,38 +39,6 @@ constexpr auto pr_number = "pr-number";
 constexpr auto enable_step_summary = "enable-step-summary";
 constexpr auto enable_comment_on_issue = "enable-comment-on-issue";
 constexpr auto enable_pull_request_review = "enable-pull-request-review";
-constexpr auto enable_clang_tidy = "enable-clang-tidy";
-constexpr auto enable_clang_tidy_fastly_exit = "enable-clang-tidy-fastly-exit";
-constexpr auto clang_tidy_version = "clang-tidy-version";
-constexpr auto clang_tidy_binary = "clang-tidy-binary";
-constexpr auto clang_tidy_allow_no_checks = "clang-tidy-allow-no-checks";
-constexpr auto clang_tidy_enable_check_profile =
-    "clang-tidy-enable-check-profile";
-constexpr auto clang_tidy_checks = "clang-tidy-checks";
-constexpr auto clang_tidy_config = "clang-tidy-config";
-constexpr auto clang_tidy_config_file = "clang-tidy-config-file";
-constexpr auto clang_tidy_database = "clang-tidy-database";
-constexpr auto clang_tidy_header_filter = "clang-tidy-header-filter";
-constexpr auto clang_tidy_line_filter = "clang-tidy-line-filter";
-constexpr auto clang_tidy_iregex = "clang-tidy-iregex";
-constexpr auto enable_clang_format = "enable-clang-format";
-constexpr auto enable_clang_format_fastly_exit =
-    "enable-clang-format-fastly-exit";
-constexpr auto clang_format_version = "clang-format-version";
-constexpr auto clang_format_binary = "clang-format-binary";
-constexpr auto clang_format_iregex = "clang-format-iregex";
-
-// Find the full executable path of clang tools with specific version.
-auto find_clang_tool(std::string_view tool,
-                     std::uint16_t version) -> std::string {
-  auto command = std::format("{}-{}", tool, version);
-  auto [ec, std_out, std_err] = shell::which(command);
-  throw_unless(ec == 0, std::format("find {}-{} failed, error message: {}",
-                                    tool, version, std_err));
-  auto trimmed = trim(std_out);
-  throw_if(trimmed.empty(), "got empty clang tool path");
-  return {trimmed.data(), trimmed.size()};
-}
 
 // Some options must be specified on the given condition, check it.
 void must_specify(const std::string &condition,
@@ -111,115 +77,10 @@ void check_and_fill_context_common(
   must_specify("use cpp-linter on local and CI", variables,
                must_specify_option);
   ctx.target = variables[target].as<std::string>();
-
-  // clang-tidy options
-  {
-    auto &tidy_opt = ctx.clang_tidy_option;
-    if (variables.contains(enable_clang_tidy)) {
-      tidy_opt.enable_clang_tidy = variables[enable_clang_tidy].as<bool>();
-    }
-    if (variables.contains(enable_clang_tidy_fastly_exit)) {
-      tidy_opt.enable_clang_tidy_fastly_exit =
-          variables[enable_clang_tidy_fastly_exit].as<bool>();
-    }
-    if (variables.contains(clang_tidy_version)) {
-      tidy_opt.clang_tidy_version =
-          variables[clang_tidy_version].as<std::uint16_t>();
-      throw_if(
-          variables.contains(clang_tidy_binary),
-          "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
-      tidy_opt.clang_tidy_binary = find_clang_tool(
-          "clang-tidy", ctx.clang_tidy_option.clang_tidy_version);
-    }
-    if (variables.contains(clang_tidy_binary)) {
-      throw_if(
-          variables.contains(clang_tidy_version),
-          "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
-      tidy_opt.clang_tidy_binary =
-          variables[clang_tidy_binary].as<std::string>();
-      if (tidy_opt.enable_clang_tidy) {
-        auto [ec, stdout, stderr] = shell::which(tidy_opt.clang_tidy_binary);
-        throw_unless(ec == 0,
-                     std::format("can't find given clang_tidy_binary: {}",
-                                 tidy_opt.clang_tidy_binary));
-      }
-    }
-    spdlog::info("The clang-tidy executable path: {}",
-                 ctx.clang_tidy_option.clang_tidy_binary);
-    if (variables.contains(clang_tidy_allow_no_checks)) {
-      tidy_opt.allow_no_checks =
-          variables[clang_tidy_allow_no_checks].as<bool>();
-    }
-    if (variables.contains(clang_tidy_enable_check_profile)) {
-      tidy_opt.enable_check_profile =
-          variables[clang_tidy_enable_check_profile].as<bool>();
-    }
-    if (variables.contains(clang_tidy_checks)) {
-      tidy_opt.checks = variables[clang_tidy_checks].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_config)) {
-      tidy_opt.config = variables[clang_tidy_config].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_config_file)) {
-      tidy_opt.config_file =
-          variables[clang_tidy_config_file].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_database)) {
-      tidy_opt.database = variables[clang_tidy_database].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_header_filter)) {
-      tidy_opt.header_filter =
-          variables[clang_tidy_header_filter].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_line_filter)) {
-      tidy_opt.line_filter =
-          variables[clang_tidy_line_filter].as<std::string>();
-    }
-    if (variables.contains(clang_tidy_iregex)) {
-      tidy_opt.source_iregex = variables[clang_tidy_iregex].as<std::string>();
-    }
-  }
-
-  // clang-format options
-  {
-    auto &opt = ctx.clang_format_option;
-    if (variables.contains(enable_clang_format)) {
-      opt.enable_clang_format = variables[enable_clang_format].as<bool>();
-    }
-    if (variables.contains(enable_clang_format_fastly_exit)) {
-      opt.enable_clang_format_fastly_exit =
-          variables[enable_clang_format_fastly_exit].as<bool>();
-    }
-    if (variables.contains(clang_format_version)) {
-      opt.clang_format_version =
-          variables[clang_format_version].as<std::uint16_t>();
-      throw_if(variables.contains(clang_format_binary),
-               "specify both clang-format-binary and clang-format-version is "
-               "ambiguous");
-      opt.clang_format_binary = find_clang_tool(
-          "clang-format", ctx.clang_format_option.clang_format_version);
-    }
-    if (variables.contains(clang_format_binary)) {
-      throw_if(variables.contains(clang_format_version),
-               "specify both clang-format-binary and clang-format-version is "
-               "ambiguous");
-      opt.clang_format_binary =
-          variables[clang_format_binary].as<std::string>();
-      if (opt.enable_clang_format) {
-        auto [ec, stdout, stderr] = shell::which(opt.clang_format_binary);
-        throw_unless(ec == 0,
-                     std::format("can't find given clang_format_binary: {}",
-                                 opt.clang_format_binary));
-      }
-    }
-    spdlog::info("The clang-format executable path: {}",
-                 ctx.clang_format_option.clang_format_binary);
-  }
 }
 
 void check_and_fill_context_on_ci(
-    const program_options::variables_map &variables,
-    [[maybe_unused]] context &ctx) {
+    const program_options::variables_map &variables, context_t &ctx) {
   spdlog::trace("check_and_fill_context_on_ci");
   auto must_not_specify_option = {repo_path, repo, source, event_name,
                                   pr_number};
@@ -242,7 +103,7 @@ void check_and_fill_context_on_ci(
 }
 
 void check_and_fill_context_on_local(
-    const program_options::variables_map &variables, context &ctx) {
+    const program_options::variables_map &variables, context_t &ctx) {
   spdlog::trace("check_and_fill_context_on_local");
   auto must_specify_option = {repo_path, source, event_name};
   must_specify("use cpp-linter on local", variables, must_specify_option);
@@ -286,10 +147,10 @@ void check_and_fill_context_on_local(
 } // namespace
 
 auto create_program_options_desc() -> program_options::options_description {
-  using namespace program_options; // NOLINT
+  using program_options::value;
   using std::string;
-  using std::uint16_t;
-  auto desc = options_description{"cpp-linter options:"};
+
+  auto desc = program_options::options_description{"cpp-linter options:"};
 
   // clang-format off
   desc.add_options()
@@ -306,29 +167,7 @@ auto create_program_options_desc() -> program_options::options_description {
       (enable_comment_on_issue,          value<bool>(),      "Enable comment on issue. This will set http request to github")
       (enable_pull_request_review,       value<bool>(),      "Enable pull request reivew. This will set http request to github")
       (enable_step_summary,              value<bool>(),      "Enable step summary.")
-      (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
-      (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit."
-                                                             "This means cpp-linter will stop all clang-tidy"
-                                                             "checks as soon as first error occurs")
-      (clang_tidy_version,               value<uint16_t>(),  "The version of clang-tidy to be used")
-      (clang_tidy_binary,                value<string>(),    "The binary of clang-tidy to be used. You are't allowed to specify"
-                                                             "both this option and clang-tidy-version to avoid ambiguous.")
-      (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
-      (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
-      (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
-      (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
-      (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
-      (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
-      (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
-      (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
-      (enable_clang_format,              value<bool>(),      "Enabel clang-format check")
-      (enable_clang_format_fastly_exit,  value<bool>(),      "Enabel clang-format fastly exit."
-                                                             "This means cpp-linter will stop all clang-format"
-                                                             "checks as soon as first error occurs")
-      (clang_format_version,             value<uint16_t>(),  "The version of clang-format to be used")
-      (clang_format_binary,              value<string>(),    "The binary of clang-format to be used. You are't allowed to specify"
-                                                             "both this option and clang-format-version to avoid ambiguous.")
-    ;
+   ;
   // clang-format on
   return desc;
 }
@@ -346,7 +185,7 @@ auto parse_program_options(int argc, char **argv,
 // This function will be called after check context. So there's no need to do
 // same check.
 void check_and_fill_context_by_program_options(
-    const program_options::variables_map &variables, context &ctx) {
+    const program_options::variables_map &variables, context_t &ctx) {
   spdlog::debug("Start to check program_options and fill context by it");
 
   check_and_fill_context_common(variables, ctx);
