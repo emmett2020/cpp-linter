@@ -16,15 +16,15 @@
 #pragma once
 
 #include "tools/base_tool.h"
-#include "tools/clang_tidy/base.h"
+#include "tools/clang_tidy/base_impl.h"
 #include "tools/clang_tidy/version_18.h"
 
 namespace linter::tool::clang_tidy {
-  constexpr auto supported_version = {version_18_1_0, version_18_1_3};
+constexpr auto supported_version = {version_18_1_0, version_18_1_3};
 
-  auto create_option() -> user_option;
+auto create_option() -> user_option;
 
-  auto create_instance(operating_system_t cur_system, arch_t cur_arch, const std::string& version)
-    -> clang_tidy_ptr;
+auto create_instance(operating_system_t cur_system, arch_t cur_arch,
+                     const std::string &version) -> clang_tidy_ptr;
 
 } // namespace linter::tool::clang_tidy

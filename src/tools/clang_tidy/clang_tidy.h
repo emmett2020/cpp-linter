@@ -13,6 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_tidy/base.h"
-#include "tools/clang_tidy/version_18.h"
+#include "tools/clang_tidy/base_impl.h"
 #include "tools/clang_tidy/creator.h"
+#include "tools/clang_tidy/version_18.h"
