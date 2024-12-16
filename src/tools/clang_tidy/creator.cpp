@@ -18,6 +18,8 @@
 
 #include <utility>
 
+#include <boost/program_options.hpp>
+
 #include "tools/clang_tidy/base_impl.h"
 #include "tools/clang_tidy/version_18.h"
 #include "utils/util.h"
