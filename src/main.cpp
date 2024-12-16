@@ -121,31 +121,19 @@ auto main(int argc, char **argv) -> int {
   tool::do_check(tools, context);
   auto reporters = tool::get_reporters(tools);
 
+  if (context.enable_action_output) {
+    write_to_github_action_output(context, reporters);
+  }
   if (context.enable_step_summary) {
     write_to_github_step_summary(context, reporters);
   }
-
   if (context.enable_comment_on_issue) {
     comment_on_github_issue(context, reporters);
   }
-
-  // if (ctx.enable_pull_request_review) {
-  //   // TODO: merge
-  //   auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);
-  //   auto clang_format_comments = make_clang_format_pr_review_comment(
-  //       ctx, linter_result, repo.get(), source_commit.get());
-  //   comments.insert(comments.end(), clang_format_comments.begin(),
-  //                   clang_format_comments.end());
-  //   auto body = make_pr_review_comment_str(comments);
-  //   auto github_client = github_api_client{ctx};
-  //   github_client.post_pull_request_review(body);
-  // }
-  //
-  // if (!ctx.use_on_local) {
-  //   write_to_github_output(ctx, linter_result);
-  // }
+  if (context.enable_pull_request_review) {
+    comment_on_github_pull_request_review(context, reporters);
+  }
 
   git::shutdown();
-  auto all_passes = true;
-  return all_passes ? 0 : 1;
+  return all_passed(reporters) ? 0 : 1;
 }

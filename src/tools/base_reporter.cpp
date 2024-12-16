@@ -21,11 +21,29 @@
 #include "context.h"
 #include "github/api.h"
 #include "github/common.h"
+#include "github/review_comment.h"
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
 namespace linter::tool {
 using namespace std::string_literals;
+
+void write_to_github_action_output(
+    const runtime_context &context,
+    const std::vector<reporter_base_ptr> &reporters) {
+  for (const auto &reporter : reporters) {
+    reporter->write_to_action_output(context);
+  }
+}
+
+bool all_passed(const std::vector<reporter_base_ptr> &reporters) {
+  for (const auto &reporter : reporters) {
+    if (!reporter->is_passed()) {
+      return false;
+    }
+  }
+  return true;
+}
 
 void write_to_github_step_summary(
     const runtime_context &context,
@@ -39,11 +57,7 @@ void write_to_github_step_summary(
   static const auto hint_fail =
       ":warning: Some files didn't pass the cpp-linter checks\n"s;
 
-  bool all_passed = true;
-  for (const auto &reporter : reporters) {
-    all_passed &= reporter->is_passed();
-  }
-  if (all_passed) {
+  if (all_passed(reporters)) {
     file << (title + hint_pass);
     return;
   }
@@ -64,5 +78,18 @@ void comment_on_github_issue(const runtime_context &context,
     content += reporter->make_issue_comment(context) + "\n";
   }
   github_client.add_or_update_issue_comment(content);
+}
+
+void comment_on_github_pull_request_review(
+    const runtime_context &context,
+    const std::vector<reporter_base_ptr> &reporters) {
+  auto github_client = github_api_client{context};
+  auto comments = github::review_comments{};
+  for (const auto &reporter : reporters) {
+    auto ret = reporter->make_review_comment(context);
+    comments.insert(comments.end(), ret.begin(), ret.end());
+  }
+  auto body = github::make_review_str(comments);
+  github_client.post_pull_request_review(body);
 }
 } // namespace linter::tool
