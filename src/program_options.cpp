@@ -74,8 +74,7 @@ void check_and_fill_context_common(
   }
 
   auto must_specify_option = {target};
-  must_specify("use cpp-linter on local and CI", variables,
-               must_specify_option);
+  must_specify("use cpp-linter on local or CI", variables, must_specify_option);
   ctx.target = variables[target].as<std::string>();
 }
 

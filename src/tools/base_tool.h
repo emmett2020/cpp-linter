@@ -38,9 +38,7 @@ struct tool_base {
   virtual auto version() -> std::string_view = 0;
 
   /// Apply this tool to a single file.
-  virtual void check(const runtime_context &context,
-                     const std::string &root_dir,
-                     const std::vector<std::string> &files) = 0;
+  virtual void check(const runtime_context &context) = 0;
 
   virtual auto get_reporter() -> reporter_base_ptr = 0;
 };

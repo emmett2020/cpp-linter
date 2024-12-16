@@ -271,9 +271,9 @@ auto clang_tidy_general::check_single_file(
   return result;
 }
 
-void clang_tidy_general::check(const runtime_context &context,
-                               const std::string &root_dir,
-                               const std::vector<std::string> &files) {
+void clang_tidy_general::check(const runtime_context &context) {
+  const auto root_dir = context.repo_path;
+  const auto files = context.changed_files;
   for (const auto &file : files) {
     if (filter_file(option.source_filter_iregex, file)) {
       result.ignored_files.push_back(file);

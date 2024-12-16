@@ -28,6 +28,7 @@
 #include "github/common.h"
 #include "program_options.h"
 #include "tools/base_creator.h"
+#include "tools/base_reporter.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_tidy/clang_tidy.h"
@@ -77,9 +78,12 @@ auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
 } // namespace
 
 auto main(int argc, char **argv) -> int {
+  auto tool_creators = collect_tool_creators();
+  auto tools = std::vector<tool::tool_base_ptr>{};
+  auto reporters = std::vector<tool::reporter_base_ptr>{};
+
   // Handle user options.
   auto desc = create_program_options_desc();
-  auto tool_creators = collect_tool_creators();
   for (const auto &creator : tool_creators) {
     creator->register_option(desc);
   }
@@ -119,13 +123,14 @@ auto main(int argc, char **argv) -> int {
   auto source_commit = git::revparse::commit(*repo, context.source);
   auto diff = git::diff::get(*repo, *target_commit, *source_commit);
   context.patches = git::patch::create_from_diff(*diff);
+  context.changed_files = git::patch::changed_files(context.patches);
 
-  auto changed_files = git::patch::changed_files(context.patches);
-  print_changed_files(changed_files);
-
-  auto tools = std::vector<tool::tool_base_ptr>{};
   for (auto &creator : tool_creators) {
     tools.emplace_back(creator->create_tool(context));
+  }
+
+  for (auto &tool : tools) {
+    tool->check(context);
   }
 
   // if (ctx.enable_step_summary) {

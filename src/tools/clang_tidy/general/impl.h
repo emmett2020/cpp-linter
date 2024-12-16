@@ -38,8 +38,7 @@ struct clang_tidy_general : tool_base {
                          const std::string &root_dir,
                          const std::string &file) const -> per_file_result;
 
-  void check(const runtime_context &context, const std::string &root_dir,
-             const std::vector<std::string> &files) override;
+  void check(const runtime_context &context) override;
 
   auto get_reporter() -> reporter_base_ptr override;
 

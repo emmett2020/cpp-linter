@@ -44,6 +44,7 @@ struct runtime_context {
   operating_system_t os = operating_system_t::ubuntu;
   arch_t arch = arch_t::x86_64;
 
+  std::vector<std::string> changed_files;
   std::unordered_map<std::string, git::patch_ptr> patches;
 };
 

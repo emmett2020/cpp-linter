@@ -194,9 +194,9 @@ auto clang_format_general::check_single_file(
   return result;
 }
 
-void clang_format_general::check(const runtime_context &ctx,
-                                 const std::string &root_dir,
-                                 const std::vector<std::string> &files) {
+void clang_format_general::check(const runtime_context &context) {
+  const auto root_dir = context.repo_path;
+  const auto files = context.changed_files;
   for (const auto &file : files) {
     if (filter_file(option.source_filter_iregex, file)) {
       result.ignored_files.push_back(file);
@@ -204,7 +204,7 @@ void clang_format_general::check(const runtime_context &ctx,
       continue;
     }
 
-    auto per_file_result = check_single_file(ctx, root_dir, file);
+    auto per_file_result = check_single_file(context, root_dir, file);
     if (per_file_result.passed) {
       spdlog::info("file: {} passes {} check.", file, option.binary);
       result.passes[file] = std::move(per_file_result);
