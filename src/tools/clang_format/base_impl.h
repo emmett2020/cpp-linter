@@ -26,7 +26,7 @@
 #include "tools/base_tool.h"
 
 namespace linter::tool::clang_format {
-struct user_option : user_option_base {
+struct user_option : option_base {
   bool enable_warning_as_error = false;
   bool needs_formatted_source_code = false;
 };

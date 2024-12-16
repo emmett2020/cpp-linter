@@ -23,7 +23,7 @@
 #include <nlohmann/json.hpp>
 #include <spdlog/spdlog.h>
 
-#include "utils/context.h"
+#include "context.h"
 
 namespace linter {
 struct rate_limit_headers {

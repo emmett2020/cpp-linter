@@ -27,7 +27,7 @@
 #include <spdlog/spdlog.h>
 
 #include "common.h"
-#include "utils/context.h"
+#include "context.h"
 #include "utils/util.h"
 
 namespace linter {

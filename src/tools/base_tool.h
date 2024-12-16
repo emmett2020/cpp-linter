@@ -19,8 +19,8 @@
 #include <string>
 
 #include "base_result.h"
+#include "context.h"
 #include "github/review_comment.h"
-#include "utils/context.h"
 
 namespace linter::tool {
 /// The operating system type.

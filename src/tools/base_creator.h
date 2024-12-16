@@ -15,4 +15,19 @@
  */
 #pragma once
 
-namespace linter { } // namespace linter
+#include "tools/base_option.h"
+#include "tools/base_reporter.h"
+#include "tools/base_result.h"
+#include "tools/base_tool.h"
+
+namespace linter::tool {
+
+struct creator_base {
+  virtual ~creator_base() = default;
+  virtual auto create_option() -> option_base_ptr = 0;
+  virtual auto create_instance(operating_system_t cur_system, arch_t cur_arch,
+                               const std::string &version) -> tool_base_ptr = 0;
+  virtual reporter create_reporter() = 0;
+};
+
+} // namespace linter::tool

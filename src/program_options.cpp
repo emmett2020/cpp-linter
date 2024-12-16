@@ -98,7 +98,7 @@ void must_not_specify(const std::string &condition,
 
 // Theses options work both on local and CI.
 void check_and_fill_context_common(
-    const program_options::variables_map &variables, context &ctx) {
+    const program_options::variables_map &variables, context_t &ctx) {
   spdlog::trace("check_and_fill_context_common");
   if (variables.contains(log_level)) {
     ctx.log_level = variables[log_level].as<std::string>();
@@ -285,7 +285,7 @@ void check_and_fill_context_on_local(
 
 } // namespace
 
-auto make_program_options_desc() -> program_options::options_description {
+auto create_program_options_desc() -> program_options::options_description {
   using namespace program_options; // NOLINT
   using std::string;
   using std::uint16_t;

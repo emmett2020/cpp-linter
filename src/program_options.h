@@ -25,7 +25,7 @@ namespace program_options = boost::program_options;
 
 constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
-auto make_program_options_desc() -> program_options::options_description;
+auto create_program_options_desc() -> program_options::options_description;
 
 auto parse_program_options(int argc, char **argv,
                            const program_options::options_description &desc)

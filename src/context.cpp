@@ -38,32 +38,6 @@ void print_context(const context_t &ctx) {
   spdlog::info("\trepository source: {}", ctx.source);
   spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
 
-  const auto &tidy_opt = ctx.clang_tidy_option;
-  spdlog::info("Options of clang-tidy:");
-  spdlog::info("\tenable clang tidy: {}", tidy_opt.enable_clang_tidy);
-  spdlog::info("\tenable clang tidy fastly exit: {}",
-               tidy_opt.enable_clang_tidy_fastly_exit);
-  spdlog::info("\tallow no checks: {}", tidy_opt.allow_no_checks);
-  spdlog::info("\tenable check profile: {}", tidy_opt.enable_check_profile);
-  spdlog::info("\tclang tidy version: {}", tidy_opt.clang_tidy_version);
-  spdlog::info("\tclang tidy binary: {}", tidy_opt.clang_tidy_binary);
-  spdlog::info("\tchecks: {}", tidy_opt.checks);
-  spdlog::info("\tconfig: {}", tidy_opt.config);
-  spdlog::info("\tconfig file: {}", tidy_opt.config_file);
-  spdlog::info("\tdatabase: {}", tidy_opt.database);
-  spdlog::info("\theader filter: {}", tidy_opt.header_filter);
-  spdlog::info("\tline filter: {}", tidy_opt.line_filter);
-  spdlog::info("\tsource file iregex: {}", tidy_opt.source_iregex);
-
-  const auto &format_opt = ctx.clang_format_option;
-  spdlog::info("Options of clang-tidy:");
-  spdlog::info("\tenable clang format: {}", format_opt.enable_clang_format);
-  spdlog::info("\tenable clang format fastly exit: {}",
-               format_opt.enable_clang_format_fastly_exit);
-  spdlog::info("\tclang format version: {}", format_opt.clang_format_version);
-  spdlog::info("\tclang format binary: {}", format_opt.clang_format_binary);
-  spdlog::info("\tclang format source file iregex: {}",
-               format_opt.source_iregex);
   spdlog::info("");
 }
 
