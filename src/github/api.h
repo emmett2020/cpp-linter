@@ -35,7 +35,7 @@ using namespace std::string_literals;
 
 class github_api_client {
 public:
-  explicit github_api_client(runtime_context ctx) : ctx_(std::move(ctx)) {}
+  explicit github_api_client(const runtime_context &ctx) : ctx_(ctx) {}
 
   static void check_http_response(const httplib::Result &response) {
     auto code = response->status / 100;
@@ -230,7 +230,7 @@ public:
   [[nodiscard]] auto ctx() const -> const runtime_context & { return ctx_; }
 
 private:
-  runtime_context ctx_;
+  const runtime_context &ctx_; // TODO: move context to parameter
   std::uint32_t comment_id_ = -1;
   httplib::Client client{github_api};
 };

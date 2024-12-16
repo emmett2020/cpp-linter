@@ -122,15 +122,12 @@ auto main(int argc, char **argv) -> int {
   auto reporters = tool::get_reporters(tools);
 
   if (context.enable_step_summary) {
-    make_step_summary(context, reporters);
+    write_to_github_step_summary(context, reporters);
   }
 
-  // if (ctx.enable_comment_on_issue) {
-  //   auto github_client = github_api_client{ctx};
-  //   github_client.get_issue_comment_id();
-  //   github_client.add_or_update_issue_comment(
-  //       make_brief_result(ctx, linter_result));
-  // }
+  if (context.enable_comment_on_issue) {
+    comment_on_github_issue(context, reporters);
+  }
 
   // if (ctx.enable_pull_request_review) {
   //   // TODO: merge

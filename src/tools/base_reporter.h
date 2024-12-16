@@ -42,7 +42,11 @@ struct reporter_base {
 
 using reporter_base_ptr = std ::unique_ptr<reporter_base>;
 
-void make_step_summary(const runtime_context &context,
-                       const std::vector<reporter_base_ptr> &reporters);
+void write_to_github_step_summary(
+    const runtime_context &context,
+    const std::vector<reporter_base_ptr> &reporters);
+
+void comment_on_github_issue(const runtime_context &context,
+                             const std::vector<reporter_base_ptr> &reporters);
 
 } // namespace linter::tool

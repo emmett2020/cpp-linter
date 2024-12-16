@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "context.h"
+#include "github/api.h"
 #include "github/common.h"
 #include "utils/env_manager.h"
 #include "utils/util.h"
@@ -26,8 +27,9 @@
 namespace linter::tool {
 using namespace std::string_literals;
 
-void make_step_summary(const runtime_context &context,
-                       const std::vector<reporter_base_ptr> &reporters) {
+void write_to_github_step_summary(
+    const runtime_context &context,
+    const std::vector<reporter_base_ptr> &reporters) {
   auto summary_file = env::get(github_step_summary);
   auto file = std::fstream{summary_file, std::ios::app};
   throw_unless(file.is_open(), "failed to open step summary file to write");
@@ -51,5 +53,16 @@ void make_step_summary(const runtime_context &context,
     summary += reporter->make_step_summary(context) + "\n";
   }
   file << (title + hint_fail + summary);
+}
+
+void comment_on_github_issue(const runtime_context &context,
+                             const std::vector<reporter_base_ptr> &reporters) {
+  auto github_client = github_api_client{context};
+  github_client.get_issue_comment_id();
+  auto content = ""s;
+  for (const auto &reporter : reporters) {
+    content += reporter->make_issue_comment(context) + "\n";
+  }
+  github_client.add_or_update_issue_comment(content);
 }
 } // namespace linter::tool
