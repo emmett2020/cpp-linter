@@ -46,4 +46,20 @@ struct tool_base {
 /// An unique pointer for base tool.
 using tool_base_ptr = std::unique_ptr<tool_base>;
 
+inline void do_check(const std::vector<tool_base_ptr> &tools,
+                     const runtime_context &context) {
+  for (const auto &tool : tools) {
+    tool->check(context);
+  }
+}
+
+inline auto get_reporters(const std::vector<tool_base_ptr> &tools)
+    -> std::vector<reporter_base_ptr> {
+  auto ret = std::vector<reporter_base_ptr>{};
+  for (const auto &tool : tools) {
+    ret.emplace_back(tool->get_reporter());
+  }
+  return ret;
+}
+
 } // namespace linter::tool

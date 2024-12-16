@@ -79,15 +79,10 @@ auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
 
 auto main(int argc, char **argv) -> int {
   auto tool_creators = collect_tool_creators();
-  auto tools = std::vector<tool::tool_base_ptr>{};
-  auto reporters = std::vector<tool::reporter_base_ptr>{};
 
   // Handle user options.
   auto desc = create_program_options_desc();
-  for (const auto &creator : tool_creators) {
-    creator->register_option(desc);
-  }
-
+  tool::register_options(tool_creators, desc);
   auto options = parse_program_options(argc, argv, desc);
   if (options.contains("help")) {
     std::cout << desc << "\n";
@@ -97,10 +92,7 @@ auto main(int argc, char **argv) -> int {
     print_version();
     return 0;
   }
-
-  for (auto &creator : tool_creators) {
-    creator->create_option(options);
-  }
+  tool::create_options(tool_creators, options);
 
   // Fill runtime context by user options and environment variables.
   auto context = runtime_context{};
@@ -125,14 +117,9 @@ auto main(int argc, char **argv) -> int {
   context.patches = git::patch::create_from_diff(*diff);
   context.changed_files = git::patch::changed_files(context.patches);
 
-  for (auto &creator : tool_creators) {
-    tools.emplace_back(creator->create_tool(context));
-  }
-
-  for (auto &tool : tools) {
-    tool->check(context);
-    reporters.emplace_back(tool->get_reporter());
-  }
+  auto tools = tool::create_tools(tool_creators, context);
+  tool::do_check(tools, context);
+  auto reporters = tool::get_reporters(tools);
 
   if (context.enable_step_summary) {
     make_step_summary(context, reporters);
@@ -144,7 +131,7 @@ auto main(int argc, char **argv) -> int {
   //   github_client.add_or_update_issue_comment(
   //       make_brief_result(ctx, linter_result));
   // }
-  //
+
   // if (ctx.enable_pull_request_review) {
   //   // TODO: merge
   //   auto comments = make_clang_tidy_pr_review_comment(ctx, linter_result);

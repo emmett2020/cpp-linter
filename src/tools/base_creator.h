@@ -17,6 +17,7 @@
 
 #include "program_options.h"
 #include "tools/base_tool.h"
+#include <boost/program_options/variables_map.hpp>
 
 namespace linter::tool {
 
@@ -33,5 +34,29 @@ struct creator_base {
 };
 
 using creator_base_ptr = std::unique_ptr<creator_base>;
+
+inline auto register_options(const std::vector<creator_base_ptr> &creators,
+                             program_options::options_description &desc) {
+  for (const auto &creator : creators) {
+    creator->register_option(desc);
+  }
+}
+
+inline auto create_options(const std::vector<creator_base_ptr> &creators,
+                           program_options::variables_map &variables) {
+  for (const auto &creator : creators) {
+    creator->create_option(variables);
+  }
+}
+
+inline auto
+create_tools(const std::vector<creator_base_ptr> &creators,
+             const runtime_context &context) -> std::vector<tool_base_ptr> {
+  auto ret = std::vector<tool_base_ptr>{};
+  for (const auto &creator : creators) {
+    ret.emplace_back(creator->create_tool(context));
+  }
+  return ret;
+}
 
 } // namespace linter::tool
