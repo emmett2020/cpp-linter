@@ -15,11 +15,10 @@
  */
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "utils/git_utils.h"
 
 namespace linter::tool {
 

@@ -18,6 +18,8 @@
 
 #include <utility>
 
+#include <spdlog/spdlog.h>
+
 #include "context.h"
 #include "github/utils.h"
 #include "tools/base_reporter.h"
@@ -30,16 +32,18 @@ struct reporter_t : reporter_base {
   reporter_t(option_t opt, result_t res)
       : option(std::move(opt)), result(std::move(res)) {}
 
-  auto make_issue_comment(runtime_context ctx) -> std::string override {
+  auto
+  make_issue_comment(const runtime_context &context) -> std::string override {
     return "";
   }
 
-  auto make_step_summary(runtime_context ctx) -> std::string override {
+  auto
+  make_step_summary(const runtime_context &context) -> std::string override {
     return {};
   }
 
-  auto
-  make_review_comment(runtime_context ctx) -> github::review_comments override {
+  auto make_review_comment(const runtime_context &context)
+      -> github::review_comments override {
     auto comments = github::review_comments{};
 
     for (const auto &[file, per_file_result] : result.fails) {
@@ -86,9 +90,10 @@ struct reporter_t : reporter_base {
     return comments;
   }
 
-  void write_to_action_output(runtime_context ctx) override {}
+  void write_to_action_output(const runtime_context &ctx) override {}
 
-  runtime_context context;
+  bool is_passed() override { return result.final_passed; }
+
   option_t option;
   result_t result;
 };

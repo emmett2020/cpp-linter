@@ -131,15 +131,13 @@ auto main(int argc, char **argv) -> int {
 
   for (auto &tool : tools) {
     tool->check(context);
+    reporters.emplace_back(tool->get_reporter());
   }
 
-  // if (ctx.enable_step_summary) {
-  //   auto summary_file = env::get(github_step_summary);
-  //   auto file = std::fstream{summary_file, std::ios::app};
-  //   throw_unless(file.is_open(), "failed to open step summary file to
-  //   write"); file << make_brief_result(ctx, linter_result);
-  // }
-  //
+  if (context.enable_step_summary) {
+    make_step_summary(context, reporters);
+  }
+
   // if (ctx.enable_comment_on_issue) {
   //   auto github_client = github_api_client{ctx};
   //   github_client.get_issue_comment_id();
