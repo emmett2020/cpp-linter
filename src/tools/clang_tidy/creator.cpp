@@ -30,23 +30,24 @@ void creator::register_option(
   using std::string;
 
   // clang-format off
-    desc.add_options()
-          (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
-          (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit."
-                                                                 "This means cpp-linter will stop all clang-tidy"
-                                                                 "checks as soon as first error occurs")
-          (clang_tidy_version,               value<uint16_t>(),  "The version of clang-tidy to be used")
-          (clang_tidy_binary,                value<string>(),    "The binary of clang-tidy to be used. You are't allowed to specify"
-                                                                 "both this option and clang-tidy-version to avoid ambiguous.")
-          (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
-          (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
-          (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
-          (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
-          (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
-          (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
-          (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
-          (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
-       ;
+  desc.add_options()
+    (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
+    (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit. "
+                                                           "This means cpp-linter will stop all clang-tidy "
+                                                           "checks as soon as first file error occurs")
+    (clang_tidy_version,               value<uint16_t>(),  "Set The version of clang-tidy")
+    (clang_tidy_binary,                value<string>(),    "Set the full path of clang-tidy executable binary. "
+                                                           "You are't allowed to specify both this option and "
+                                                           "clang-format-version to avoid ambiguous")
+    (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
+    (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
+    (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
+    (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
+    (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
+    (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
+    (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
+    (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
+  ;
   // clang-format on
 }
 

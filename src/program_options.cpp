@@ -149,25 +149,24 @@ void check_and_fill_context_on_local(
 auto create_program_options_desc() -> program_options::options_description {
   using program_options::value;
   using std::string;
-
-  auto desc = program_options::options_description{"cpp-linter options:"};
+  auto desc = program_options::options_description{"cpp-linter options"};
 
   // clang-format off
   desc.add_options()
-      (help,    "produce help message")
-      (version, "print current version")
-      (log_level,                        value<string>(),    "Set the log level of cpp-linter")
-      (repo_path,                        value<string>(),    "Set the full path of git repository")
-      (repo,                             value<string>(),    "Set the owner/repo of git repository")
-      (token,                            value<string>(),    "Set github token of git repository")
-      (target,                           value<string>(),    "Set the target reference/commit of git repository")
-      (source,                           value<string>(),    "Set the source reference/commit of git repository.")
-      (event_name,                       value<string>(),    "Set the event name of git repository. Such as: push, pull_request")
-      (pr_number,                        value<int32_t>(),   "Set the pull-request number of git repository.")
-      (enable_comment_on_issue,          value<bool>(),      "Enable comment on issue. This will set http request to github")
-      (enable_pull_request_review,       value<bool>(),      "Enable pull request reivew. This will set http request to github")
-      (enable_step_summary,              value<bool>(),      "Enable step summary.")
-   ;
+    (help,                                           "Produce help message")
+    (version,                                        "Print current cpp-linter version")
+    (log_level,                   value<string>(),   "Set the log verbose level of cpp-linter")
+    (repo_path,                   value<string>(),   "Set the full path of git repository")
+    (repo,                        value<string>(),   "Set the owner/repo pair of git repository")
+    (token,                       value<string>(),   "Set github token of git repository")
+    (target,                      value<string>(),   "Set the target reference/commit of git repository")
+    (source,                      value<string>(),   "Set the source reference/commit of git repository")
+    (event_name,                  value<string>(),   "Set the event name of git repository. e.g.: pull_request")
+    (pr_number,                   value<int32_t>(),  "Set the pull-request number of git repository")
+    (enable_comment_on_issue,     value<bool>(),     "Enable comment on Github issues")
+    (enable_pull_request_review,  value<bool>(),     "Enable Github pull-request reivew comment")
+    (enable_step_summary,         value<bool>(),     "Enable write step summary to Github action")
+  ;
   // clang-format on
   return desc;
 }

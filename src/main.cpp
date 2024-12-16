@@ -73,15 +73,15 @@ constexpr auto cur_arch = tool::arch_t::x86_64;
 auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
   auto ret = std::vector<tool::creator_base_ptr>{};
   ret.push_back(std::make_unique<tool::clang_format::creator>());
+  ret.push_back(std::make_unique<tool::clang_tidy::creator>());
   return ret;
 }
 
 } // namespace
 
 auto main(int argc, char **argv) -> int {
-  auto tool_creators = collect_tool_creators();
-
   auto desc = create_program_options_desc();
+  auto tool_creators = collect_tool_creators();
   for (const auto &creator : tool_creators) {
     creator->register_option(desc);
   }

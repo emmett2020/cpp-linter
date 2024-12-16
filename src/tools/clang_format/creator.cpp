@@ -36,15 +36,16 @@ void creator::register_option(
   using std::string;
 
   // clang-format off
-    desc.add_options()
-      (enable_clang_format,              value<bool>(),      "Enabel clang-format check")
-      (enable_clang_format_fastly_exit,  value<bool>(),      "Enabel clang-format fastly exit."
-                                                             "This means cpp-linter will stop all clang-format"
-                                                             "checks as soon as first error occurs")
-      (clang_format_version,             value<uint16_t>(),  "The version of clang-format to be used")
-      (clang_format_binary,              value<string>(),    "The binary of clang-format to be used. You are't allowed to specify"
-                                                             "both this option and clang-format-version to avoid ambiguous.")
-       ;
+  desc.add_options()
+    (enable_clang_format,              value<bool>(),      "Enabel clang-format check")
+    (enable_clang_format_fastly_exit,  value<bool>(),      "Enabel clang-format fastly exit. "
+                                                           "This means cpp-linter will stop all clang-format "
+                                                           "checks as soon as first file error occurs")
+    (clang_format_version,             value<uint16_t>(),  "Set the version of clang-format")
+    (clang_format_binary,              value<string>(),    "Set the full path of clang-format executable binary. "
+                                                           "You are't allowed to specify both this option and "
+                                                           "clang-format-version to avoid ambiguous")
+  ;
   // clang-format on
 }
 
