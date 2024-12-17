@@ -35,15 +35,15 @@ struct creator_base {
 
 using creator_base_ptr = std::unique_ptr<creator_base>;
 
-inline auto register_options(const std::vector<creator_base_ptr> &creators,
-                             program_options::options_description &desc) {
+inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
+                                  program_options::options_description &desc) {
   for (const auto &creator : creators) {
     creator->register_option(desc);
   }
 }
 
-inline auto create_options(const std::vector<creator_base_ptr> &creators,
-                           program_options::variables_map &variables) {
+inline auto create_tool_options(const std::vector<creator_base_ptr> &creators,
+                                program_options::variables_map &variables) {
   for (const auto &creator : creators) {
     creator->create_option(variables);
   }

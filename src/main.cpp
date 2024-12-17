@@ -82,22 +82,22 @@ auto main(int argc, char **argv) -> int {
 
   // Handle user options.
   auto desc = create_program_options_desc();
-  tool::register_options(tool_creators, desc);
-  auto options = parse_program_options(argc, argv, desc);
-  if (options.contains("help")) {
+  tool::register_tool_options(tool_creators, desc);
+  auto user_options = parse_program_options(argc, argv, desc);
+  if (user_options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
   }
-  if (options.contains("version")) {
+  if (user_options.contains("version")) {
     print_version();
     return 0;
   }
-  tool::create_options(tool_creators, options);
+  tool::create_tool_options(tool_creators, user_options);
 
   // Fill runtime context by user options and environment variables.
   auto context = runtime_context{};
-  context.use_on_local = env::get(github_actions) != "true";
-  check_and_fill_context_by_program_options(options, context);
+  context.use_on_local = !is_on_github();
+  check_and_fill_context_by_program_options(user_options, context);
   set_log_level(context.log_level);
 
   if (!context.use_on_local) {
@@ -118,8 +118,7 @@ auto main(int argc, char **argv) -> int {
   context.changed_files = git::patch::changed_files(context.patches);
 
   auto tools = tool::create_tools(tool_creators, context);
-  tool::do_check(tools, context);
-  auto reporters = tool::get_reporters(tools);
+  auto reporters = tool::check_then_get_reporters(tools, context);
 
   if (context.enable_action_output) {
     write_to_github_action_output(context, reporters);

@@ -62,4 +62,15 @@ inline auto get_reporters(const std::vector<tool_base_ptr> &tools)
   return ret;
 }
 
+inline auto check_then_get_reporters(const std::vector<tool_base_ptr> &tools,
+                                     const runtime_context &context)
+    -> std::vector<reporter_base_ptr> {
+  auto ret = std::vector<reporter_base_ptr>{};
+  for (const auto &tool : tools) {
+    tool->check(context);
+    ret.emplace_back(tool->get_reporter());
+  }
+  return ret;
+}
+
 } // namespace linter::tool
