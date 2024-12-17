@@ -23,16 +23,27 @@
 namespace linter {
   namespace program_options = boost::program_options;
 
-  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
-
   /// Create the options description of cpp-linter command line.
   auto create_program_options_desc() -> program_options::options_description;
 
+  /// Parse the given options_description with user inputs.
   auto parse_program_options(
     int argc,
     char **argv,
     const program_options::options_description &desc) -> program_options::variables_map;
 
+  /// Fill runtime context by program options.
   void fill_context_by_program_options(const program_options::variables_map &variables,
                                        runtime_context &ctx);
+
+
+  /// Some options must be specified on the given condition, check it.
+  void must_specify(const std::string &condition,
+                    const program_options::variables_map &variables,
+                    const std::initializer_list<const char *> &options);
+
+  /// Some options mustn't be specified on the given condition, check it.
+  void must_not_specify(const std::string &condition,
+                        const program_options::variables_map &variables,
+                        const std::initializer_list<const char *> &options);
 } // namespace linter
