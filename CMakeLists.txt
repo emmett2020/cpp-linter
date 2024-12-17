@@ -33,6 +33,7 @@ FILE(GLOB_RECURSE SRC_FILES "${linter_root}/src/github/*.cpp"
 
 add_executable(cpp-linter ${SRC_FILES})
 target_include_directories(cpp-linter PRIVATE ${Boost_INCLUDE_DIRS}
+                                              ${magic_enum_SOURCE_DIR}/include
                                               ${linter_root}/src)
 target_link_libraries(cpp-linter ${Boost_LIBRARIES}
                                  spdlog
@@ -40,6 +41,7 @@ target_link_libraries(cpp-linter ${Boost_LIBRARIES}
                                  httplib
                                  nlohmann_json
                                  tinyxml2
+                                 magic_enum
                                  git2)
 
 

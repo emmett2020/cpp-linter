@@ -23,30 +23,29 @@
 #include "utils/platform.h"
 
 namespace linter {
+  /// The runtime context for all tools.
+  struct runtime_context {
+    bool use_on_local               = false;
+    std::string log_level           = "info";
+    bool enable_step_summary        = false;
+    bool enable_comment_on_issue    = false;
+    bool enable_pull_request_review = false;
+    bool enable_action_output       = false;
 
-/// The runtime context for all tools.
-struct runtime_context {
-  bool use_on_local = false;
-  std::string log_level;
-  bool enable_step_summary = false;
-  bool enable_comment_on_issue = false;
-  bool enable_pull_request_review = false;
-  bool enable_action_output = false;
+    std::string repo_path;
+    std::string repo;
+    std::string token;
+    std::string event_name;
+    std::string target;
+    std::string source;
+    std::int32_t pr_number = -1;
 
-  std::string repo_path;
-  std::string repo;
-  std::string token;
-  std::string event_name;
-  std::string target;
-  std::string source;
-  std::int32_t pr_number = -1;
+    operating_system_t os = operating_system_t::ubuntu;
+    arch_t arch           = arch_t::x86_64;
 
-  operating_system_t os = operating_system_t::ubuntu;
-  arch_t arch = arch_t::x86_64;
+    std::vector<std::string> changed_files;
+    std::unordered_map<std::string, git::patch_ptr> patches;
+  };
 
-  std::vector<std::string> changed_files;
-  std::unordered_map<std::string, git::patch_ptr> patches;
-};
-
-void print_context(const runtime_context &ctx);
+  void print_context(const runtime_context &ctx);
 } // namespace linter

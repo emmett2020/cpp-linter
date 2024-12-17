@@ -44,7 +44,7 @@ namespace {
 
   // This function must be called before any spdlog operations.
   void set_log_level(std::string_view log_level_str) {
-    static constexpr auto valid_log_levels = {"trace", "debug", "error"};
+    static constexpr auto valid_log_levels = {"trace", "debug", "error", "info"};
     assert(std::ranges::contains(valid_log_levels, log_level_str));
 
     auto log_level = spdlog::level::info;
@@ -93,7 +93,6 @@ auto main(int argc, char **argv) -> int {
     print_version();
     return 0;
   }
-  tool::create_tool_options(tool_creators, user_options);
 
   // Fill runtime context by user options and environment variables.
   auto context         = runtime_context{};
@@ -116,7 +115,9 @@ auto main(int argc, char **argv) -> int {
   auto diff             = git::diff::get(*repo, *target_commit, *source_commit);
   context.patches       = git::patch::create_from_diff(*diff);
   context.changed_files = git::patch::changed_files(context.patches);
+  print_context(context);
 
+  tool::create_tool_options(tool_creators, user_options);
   auto tools     = tool::create_tools(tool_creators, context);
   auto reporters = tool::check_then_get_reporters(tools, context);
 
