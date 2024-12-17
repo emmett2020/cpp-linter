@@ -21,17 +21,18 @@
 #include "context.h"
 
 namespace linter {
-namespace program_options = boost::program_options;
+  namespace program_options = boost::program_options;
 
-constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
+  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
-/// Create the options description of cpp-linter command line.
-auto create_program_options_desc() -> program_options::options_description;
+  /// Create the options description of cpp-linter command line.
+  auto create_program_options_desc() -> program_options::options_description;
 
-auto parse_program_options(int argc, char **argv,
-                           const program_options::options_description &desc)
-    -> program_options::variables_map;
+  auto parse_program_options(
+    int argc,
+    char **argv,
+    const program_options::options_description &desc) -> program_options::variables_map;
 
-void check_and_fill_context_by_program_options(
-    const program_options::variables_map &variables, runtime_context &ctx);
+  void fill_context_by_program_options(const program_options::variables_map &variables,
+                                       runtime_context &ctx);
 } // namespace linter
