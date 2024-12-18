@@ -18,21 +18,29 @@
 #include "tools/clang_tidy/general/impl.h"
 
 namespace linter::tool::clang_tidy {
-using namespace std::string_view_literals;
+  using namespace std::string_view_literals;
 
-constexpr auto version_18_1_0 = "18.1.0"sv;
-constexpr auto version_18_1_3 = "18.1.3"sv;
+  constexpr auto version_18_1_0 = "18.1.0"sv;
+  constexpr auto version_18_1_3 = "18.1.3"sv;
 
-struct clang_tidy_v18_1_0 : clang_tidy_general {
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_0;
-  }
-};
+  struct clang_tidy_v18_1_0 : clang_tidy_general {
+    explicit clang_tidy_v18_1_0(option_t opt)
+      : clang_tidy_general(std::move(opt)) {
+    }
 
-struct clang_tidy_v18_1_3 : clang_tidy_general {
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_3;
-  }
-};
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_0;
+    }
+  };
+
+  struct clang_tidy_v18_1_3 : clang_tidy_general {
+    explicit clang_tidy_v18_1_3(option_t opt)
+      : clang_tidy_general(std::move(opt)) {
+    }
+
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_3;
+    }
+  };
 
 } // namespace linter::tool::clang_tidy

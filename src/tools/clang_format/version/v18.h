@@ -21,25 +21,28 @@
 #include "tools/clang_format/general/impl.h"
 
 namespace linter::tool::clang_format {
-using namespace std::string_view_literals;
-constexpr auto version_18_1_0 = "18.1.0"sv;
-constexpr auto version_18_1_3 = "18.1.3"sv;
+  using namespace std::string_view_literals;
+  constexpr auto version_18_1_0 = "18.1.0"sv;
+  constexpr auto version_18_1_3 = "18.1.3"sv;
 
-struct clang_format_v18_1_0 : clang_format_general {
-  explicit clang_format_v18_1_0(option_t opt)
-      : clang_format_general(std::move(opt)) {}
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_0;
-  }
-};
+  struct clang_format_v18_1_0 : clang_format_general {
+    explicit clang_format_v18_1_0(option_t opt)
+      : clang_format_general(std::move(opt)) {
+    }
 
-struct clang_format_v18_1_3 : clang_format_general {
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_0;
+    }
+  };
 
-  explicit clang_format_v18_1_3(option_t opt)
-      : clang_format_general(std::move(opt)) {}
-  constexpr auto version() -> std::string_view override {
-    return version_18_1_3;
-  }
-};
+  struct clang_format_v18_1_3 : clang_format_general {
+    explicit clang_format_v18_1_3(option_t opt)
+      : clang_format_general(std::move(opt)) {
+    }
+
+    constexpr auto version() -> std::string_view override {
+      return version_18_1_3;
+    }
+  };
 
 } // namespace linter::tool::clang_format

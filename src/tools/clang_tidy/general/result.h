@@ -20,42 +20,42 @@
 #include "tools/base_result.h"
 
 namespace linter::tool::clang_tidy {
-/// Represents statistics outputed by clang-tidy. It's usually the stderr
-/// messages of clang-tidy.
-struct statistic {
-  std::uint32_t warnings = 0;
-  std::uint32_t errors = 0;
-  std::uint32_t warnings_treated_as_errors = 0;
-  std::uint32_t total_suppressed_warnings = 0;
-  std::uint32_t non_user_code_warnings = 0;
-  std::uint32_t no_lint_warnings = 0;
-};
+  /// Represents statistics outputed by clang-tidy. It's usually the stderr
+  /// messages of clang-tidy.
+  struct statistic {
+    std::uint32_t warnings                   = 0;
+    std::uint32_t errors                     = 0;
+    std::uint32_t warnings_treated_as_errors = 0;
+    std::uint32_t total_suppressed_warnings  = 0;
+    std::uint32_t non_user_code_warnings     = 0;
+    std::uint32_t no_lint_warnings           = 0;
+  };
 
-/// Each diagnostic hase a header line.
-struct diagnostic_header {
-  std::string file_name;
-  std::string row_idx;
-  std::string col_idx;
-  std::string serverity;
-  std::string brief;
-  std::string diagnostic_type;
-};
+  /// Each diagnostic hase a header line.
+  struct diagnostic_header {
+    std::string file_name;
+    std::string row_idx;
+    std::string col_idx;
+    std::string serverity;
+    std::string brief;
+    std::string diagnostic_type;
+  };
 
-/// Represents one diagnostic which outputed by clang-tidy.
-/// Generally, each diagnostic has a header line and several details line
-/// which give a further detailed explanation.
-struct diagnostic {
-  diagnostic_header header;
-  std::string details;
-};
+  /// Represents one diagnostic which outputed by clang-tidy.
+  /// Generally, each diagnostic has a header line and several details line
+  /// which give a further detailed explanation.
+  struct diagnostic {
+    diagnostic_header header;
+    std::string details;
+  };
 
-/// Represents all diagnostics which outputed by clang-tidy.
-using diagnostics = std::vector<diagnostic>;
+  /// Represents all diagnostics which outputed by clang-tidy.
+  using diagnostics = std::vector<diagnostic>;
 
-struct per_file_result : per_file_result_base {
-  statistic stat;
-  diagnostics diags;
-};
+  struct per_file_result : per_file_result_base {
+    statistic stat;
+    diagnostics diags;
+  };
 
-using result_t = multi_files_result_base<per_file_result>;
+  using result_t = multi_files_result_base<per_file_result>;
 } // namespace linter::tool::clang_tidy

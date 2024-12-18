@@ -29,27 +29,33 @@
 
 namespace linter::tool::clang_format {
 
-struct clang_format_general : tool_base {
-  explicit clang_format_general(option_t opt) : option(std::move(opt)) {}
+  struct clang_format_general : tool_base {
+    explicit clang_format_general(option_t opt)
+      : option(std::move(opt)) {
+    }
 
-  bool is_supported(operating_system_t system, arch_t arch) override {
-    return system == operating_system_t::ubuntu && arch == arch_t::x86_64;
-  }
+    bool is_supported(operating_system_t system, arch_t arch) override {
+      return system == operating_system_t::ubuntu && arch == arch_t::x86_64;
+    }
 
-  constexpr auto name() -> std::string_view override { return "clang_format"; }
+    constexpr auto name() -> std::string_view override {
+      return "clang_format";
+    }
 
-  auto version() -> std::string_view override { return "unknown"; }
+    auto version() -> std::string_view override {
+      return "unknown";
+    }
 
-  auto check_single_file(const runtime_context &ctx,
-                         const std::string &root_dir,
-                         const std::string &file) const -> per_file_result;
+    auto check_single_file(const runtime_context &ctx,
+                           const std::string &root_dir,
+                           const std::string &file) const -> per_file_result;
 
-  void check(const runtime_context &context) override;
+    void check(const runtime_context &context) override;
 
-  auto get_reporter() -> reporter_base_ptr override;
+    auto get_reporter() -> reporter_base_ptr override;
 
-  option_t option;
-  result_t result;
-};
+    option_t option;
+    result_t result;
+  };
 
 } // namespace linter::tool::clang_format

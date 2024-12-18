@@ -19,17 +19,17 @@
 
 namespace linter {
 
-/// The operating system type.
-enum class operating_system_t : std::uint8_t {
-  windows,
-  macos,
-  ubuntu,
-};
+  /// The operating system type.
+  enum class operating_system_t : std::uint8_t {
+    windows,
+    macos,
+    ubuntu,
+  };
 
-/// The archecture type.
-enum class arch_t : std::uint8_t {
-  x86_64,
-  arm64,
-};
+  /// The archecture type.
+  enum class arch_t : std::uint8_t {
+    x86_64,
+    arm64,
+  };
 
 } // namespace linter

@@ -22,22 +22,23 @@
 
 namespace linter::tool {
 
-struct per_file_result_base {
-  bool passed = false;
-  std::string file_path;
-  std::string tool_stdout;
-  std::string tool_stderr;
-};
+  struct per_file_result_base {
+    bool passed = false;
+    std::string file_path;
+    std::string tool_stdout;
+    std::string tool_stderr;
+  };
 
-using per_file_result_base_ptr = std::unique_ptr<per_file_result_base>;
+  using per_file_result_base_ptr = std::unique_ptr<per_file_result_base>;
 
-template <class PerFileResult> struct multi_files_result_base {
-  bool final_passed = false;
-  bool fastly_exited = false;
-  std::vector<std::string> ignored_files;
+  template <class PerFileResult>
+  struct multi_files_result_base {
+    bool final_passed  = false;
+    bool fastly_exited = false;
+    std::vector<std::string> ignored_files;
 
-  std::unordered_map<std::string, PerFileResult> passes;
-  std::unordered_map<std::string, PerFileResult> fails;
-};
+    std::unordered_map<std::string, PerFileResult> passes;
+    std::unordered_map<std::string, PerFileResult> fails;
+  };
 
 } // namespace linter::tool

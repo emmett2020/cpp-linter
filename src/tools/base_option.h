@@ -19,14 +19,13 @@
 #include <string>
 
 namespace linter::tool {
-struct option_base {
-  bool enabled = false;
-  bool enabled_fastly_exit = false;
-  std::string version;
-  std::string binary;
-  std::string source_filter_iregex =
-      R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
-};
+  struct option_base {
+    bool enabled             = false;
+    bool enabled_fastly_exit = false;
+    std::string version;
+    std::string binary;
+    std::string source_filter_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
+  };
 
-using option_base_ptr = std::unique_ptr<option_base>;
+  using option_base_ptr = std::unique_ptr<option_base>;
 } // namespace linter::tool

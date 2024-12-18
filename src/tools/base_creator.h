@@ -21,46 +21,43 @@
 
 namespace linter::tool {
 
-struct creator_base {
-  virtual ~creator_base() = default;
+  struct creator_base {
+    virtual ~creator_base() = default;
 
-  virtual void
-  register_option(program_options::options_description &desc) const = 0;
+    virtual void register_option(program_options::options_description &desc) const = 0;
 
-  virtual void
-  create_option(const program_options::variables_map &variables) = 0;
+    virtual void create_option(const program_options::variables_map &variables) = 0;
 
-  virtual bool tool_is_enabled(const runtime_context &context) = 0;
+    virtual bool tool_is_enabled(const runtime_context &context) = 0;
 
-  virtual auto create_tool(const runtime_context &context) -> tool_base_ptr = 0;
-};
+    virtual auto create_tool(const runtime_context &context) -> tool_base_ptr = 0;
+  };
 
-using creator_base_ptr = std::unique_ptr<creator_base>;
+  using creator_base_ptr = std::unique_ptr<creator_base>;
 
-inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
-                                  program_options::options_description &desc) {
-  for (const auto &creator : creators) {
-    creator->register_option(desc);
-  }
-}
-
-inline auto create_tool_options(const std::vector<creator_base_ptr> &creators,
-                                program_options::variables_map &variables) {
-  for (const auto &creator : creators) {
-    creator->create_option(variables);
-  }
-}
-
-inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
-                                 const runtime_context &context)
-    -> std::vector<tool_base_ptr> {
-  auto ret = std::vector<tool_base_ptr>{};
-  for (const auto &creator : creators) {
-    if (creator->tool_is_enabled(context)) {
-      ret.emplace_back(creator->create_tool(context));
+  inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
+                                    program_options::options_description &desc) {
+    for (const auto &creator: creators) {
+      creator->register_option(desc);
     }
   }
-  return ret;
-}
+
+  inline auto create_tool_options(const std::vector<creator_base_ptr> &creators,
+                                  program_options::variables_map &variables) {
+    for (const auto &creator: creators) {
+      creator->create_option(variables);
+    }
+  }
+
+  inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
+                                   const runtime_context &context) -> std::vector<tool_base_ptr> {
+    auto ret = std::vector<tool_base_ptr>{};
+    for (const auto &creator: creators) {
+      if (creator->tool_is_enabled(context)) {
+        ret.emplace_back(creator->create_tool(context));
+      }
+    }
+    return ret;
+  }
 
 } // namespace linter::tool

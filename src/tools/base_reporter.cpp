@@ -26,70 +26,66 @@
 #include "utils/util.h"
 
 namespace linter::tool {
-using namespace std::string_literals;
+  using namespace std::string_literals;
 
-void write_to_github_action_output(
-    const runtime_context &context,
-    const std::vector<reporter_base_ptr> &reporters) {
-  for (const auto &reporter : reporters) {
-    reporter->write_to_action_output(context);
-  }
-}
-
-bool all_passed(const std::vector<reporter_base_ptr> &reporters) {
-  for (const auto &reporter : reporters) {
-    if (!reporter->is_passed()) {
-      return false;
+  void write_to_github_action_output(const runtime_context &context,
+                                     const std::vector<reporter_base_ptr> &reporters) {
+    for (const auto &reporter: reporters) {
+      reporter->write_to_action_output(context);
     }
   }
-  return true;
-}
 
-void write_to_github_step_summary(
-    const runtime_context &context,
-    const std::vector<reporter_base_ptr> &reporters) {
-  auto summary_file = env::get(github_step_summary);
-  auto file = std::fstream{summary_file, std::ios::app};
-  throw_unless(file.is_open(), "failed to open step summary file to write");
-
-  static const auto title = "# The cpp-linter Result"s;
-  static const auto hint_pass = ":rocket: All checks on all file passed."s;
-  static const auto hint_fail =
-      ":warning: Some files didn't pass the cpp-linter checks\n"s;
-
-  if (all_passed(reporters)) {
-    file << (title + hint_pass);
-    return;
+  bool all_passed(const std::vector<reporter_base_ptr> &reporters) {
+    for (const auto &reporter: reporters) {
+      if (!reporter->is_passed()) {
+        return false;
+      }
+    }
+    return true;
   }
 
-  auto summary = std::string{};
-  for (const auto &reporter : reporters) {
-    summary += reporter->make_step_summary(context) + "\n";
-  }
-  file << (title + hint_fail + summary);
-}
+  void write_to_github_step_summary(const runtime_context &context,
+                                    const std::vector<reporter_base_ptr> &reporters) {
+    auto summary_file = env::get(github_step_summary);
+    auto file         = std::fstream{summary_file, std::ios::app};
+    throw_unless(file.is_open(), "failed to open step summary file to write");
 
-void comment_on_github_issue(const runtime_context &context,
-                             const std::vector<reporter_base_ptr> &reporters) {
-  auto github_client = github_api_client{context};
-  github_client.get_issue_comment_id();
-  auto content = ""s;
-  for (const auto &reporter : reporters) {
-    content += reporter->make_issue_comment(context) + "\n";
-  }
-  github_client.add_or_update_issue_comment(content);
-}
+    static const auto title     = "# The cpp-linter Result"s;
+    static const auto hint_pass = ":rocket: All checks on all file passed."s;
+    static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
 
-void comment_on_github_pull_request_review(
-    const runtime_context &context,
-    const std::vector<reporter_base_ptr> &reporters) {
-  auto github_client = github_api_client{context};
-  auto comments = github::review_comments{};
-  for (const auto &reporter : reporters) {
-    auto ret = reporter->make_review_comment(context);
-    comments.insert(comments.end(), ret.begin(), ret.end());
+    if (all_passed(reporters)) {
+      file << (title + hint_pass);
+      return;
+    }
+
+    auto summary = std::string{};
+    for (const auto &reporter: reporters) {
+      summary += reporter->make_step_summary(context) + "\n";
+    }
+    file << (title + hint_fail + summary);
   }
-  auto body = github::make_review_str(comments);
-  github_client.post_pull_request_review(body);
-}
+
+  void comment_on_github_issue(const runtime_context &context,
+                               const std::vector<reporter_base_ptr> &reporters) {
+    auto github_client = github_api_client{context};
+    github_client.get_issue_comment_id();
+    auto content = ""s;
+    for (const auto &reporter: reporters) {
+      content += reporter->make_issue_comment(context) + "\n";
+    }
+    github_client.add_or_update_issue_comment(content);
+  }
+
+  void comment_on_github_pull_request_review(const runtime_context &context,
+                                             const std::vector<reporter_base_ptr> &reporters) {
+    auto github_client = github_api_client{context};
+    auto comments      = github::review_comments{};
+    for (const auto &reporter: reporters) {
+      auto ret = reporter->make_review_comment(context);
+      comments.insert(comments.end(), ret.begin(), ret.end());
+    }
+    auto body = github::make_review_str(comments);
+    github_client.post_pull_request_review(body);
+  }
 } // namespace linter::tool

@@ -16,6 +16,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <spdlog/spdlog.h>
@@ -25,25 +26,33 @@
 #include "tools/clang_tidy/general/result.h"
 
 namespace linter::tool::clang_tidy {
-struct clang_tidy_general : tool_base {
-  bool is_supported(operating_system_t system, arch_t arch) override {
-    return system == operating_system_t::ubuntu && arch == arch_t::x86_64;
-  }
+  struct clang_tidy_general : tool_base {
+    explicit clang_tidy_general(option_t opt)
+      : option(std::move(opt)) {
+    }
 
-  constexpr auto name() -> std::string_view override { return "clang_tidy"; }
+    bool is_supported(operating_system_t system, arch_t arch) override {
+      return system == operating_system_t::ubuntu && arch == arch_t::x86_64;
+    }
 
-  auto version() -> std::string_view override { return "unknown"; }
+    constexpr auto name() -> std::string_view override {
+      return "clang_tidy";
+    }
 
-  auto check_single_file(const runtime_context &context,
-                         const std::string &root_dir,
-                         const std::string &file) const -> per_file_result;
+    auto version() -> std::string_view override {
+      return "unknown";
+    }
 
-  void check(const runtime_context &context) override;
+    auto check_single_file(const runtime_context &context,
+                           const std::string &root_dir,
+                           const std::string &file) const -> per_file_result;
 
-  auto get_reporter() -> reporter_base_ptr override;
+    void check(const runtime_context &context) override;
 
-  option_t option;
-  result_t result;
-};
+    auto get_reporter() -> reporter_base_ptr override;
+
+    option_t option;
+    result_t result;
+  };
 
 } // namespace linter::tool::clang_tidy

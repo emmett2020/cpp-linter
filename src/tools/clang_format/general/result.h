@@ -20,18 +20,18 @@
 #include "tools/base_result.h"
 
 namespace linter::tool::clang_format {
-struct replacement_t {
-  int offset;
-  int length;
-  std::string data;
-};
+  struct replacement_t {
+    int offset;
+    int length;
+    std::string data;
+  };
 
-using replacements_t = std::vector<replacement_t>;
+  using replacements_t = std::vector<replacement_t>;
 
-struct per_file_result : per_file_result_base {
-  replacements_t replacements;
-  std::string formatted_source_code;
-};
+  struct per_file_result : per_file_result_base {
+    replacements_t replacements;
+    std::string formatted_source_code;
+  };
 
-using result_t = multi_files_result_base<per_file_result>;
+  using result_t = multi_files_result_base<per_file_result>;
 } // namespace linter::tool::clang_format
