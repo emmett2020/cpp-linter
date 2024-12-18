@@ -101,9 +101,15 @@ namespace linter {
           || variables.contains(enable_pull_request_review)) {
         must_specify("use cpp-linter on local and enable interactive with GITHUB",
                      variables,
-                     {token, repo});
-        ctx.token = variables[token].as<std::string>();
-        ctx.repo  = variables[repo].as<std::string>();
+                     {token, repo, pr_number});
+        throw_unless(std::ranges::contains(github::github_events_with_pr_number, ctx.event_name),
+                     std::format("Github event: {} doesn't support {} and {} option",
+                                 ctx.event_name,
+                                 enable_comment_on_issue,
+                                 enable_pull_request_review));
+        ctx.token     = variables[token].as<std::string>();
+        ctx.repo      = variables[repo].as<std::string>();
+        ctx.pr_number = variables[pr_number].as<std::int32_t>();
       }
 
       if (variables.contains(enable_comment_on_issue)) {
@@ -112,13 +118,6 @@ namespace linter {
 
       if (variables.contains(enable_pull_request_review)) {
         ctx.enable_pull_request_review = variables[enable_pull_request_review].as<bool>();
-      }
-
-      if (variables.contains(pr_number)) {
-        throw_unless(std::ranges::contains(github::github_events_with_pr_number, ctx.event_name),
-                     std::format("Github event: {} doesn't support pull-request-number option",
-                                 ctx.event_name));
-        ctx.pr_number = variables[pr_number].as<std::int32_t>();
       }
     }
 
