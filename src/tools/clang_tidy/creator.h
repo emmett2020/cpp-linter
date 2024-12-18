@@ -46,6 +46,8 @@ struct creator : public creator_base {
 
   auto create_tool(const runtime_context &context) -> tool_base_ptr override;
 
+  bool tool_is_enabled(const runtime_context &context) override;
+
   option_t option;
 };
 

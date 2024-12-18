@@ -30,6 +30,7 @@ struct creator : creator_base {
   register_option(program_options::options_description &desc) const override;
   void create_option(const program_options::variables_map &variables) override;
   auto create_tool(const runtime_context &context) -> tool_base_ptr override;
+  bool tool_is_enabled(const runtime_context &context) override;
 
 private:
   option_t option;

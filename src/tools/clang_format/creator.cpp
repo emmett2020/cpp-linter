@@ -50,9 +50,15 @@ void creator::register_option(
 }
 
 void creator::create_option(const program_options::variables_map &variables) {
-  if (variables.contains(enable_clang_format)) {
-    option.enabled = variables[enable_clang_format].as<bool>();
+  // Speed up option creation
+  if (!variables.contains(enable_clang_format)) {
+    return;
   }
+  option.enabled = variables[enable_clang_format].as<bool>();
+  if (!option.enabled) {
+    return;
+  }
+
   if (variables.contains(enable_clang_format_fastly_exit)) {
     option.enabled_fastly_exit =
         variables[enable_clang_format_fastly_exit].as<bool>();
@@ -63,37 +69,44 @@ void creator::create_option(const program_options::variables_map &variables) {
              "specify both clang-format-binary and clang-format-version is "
              "ambiguous");
     option.binary = find_clang_tool("clang-format", option.version);
+  } else {
+    auto [ec, std_out, std_err] = shell::which("clang-format");
+    throw_unless(ec == 0, "Can't find clang-format");
+    option.binary = std_out;
   }
+
   if (variables.contains(clang_format_binary)) {
     throw_if(variables.contains(clang_format_version),
              "specify both clang-format-binary and clang-format-version is "
              "ambiguous");
     option.binary = variables[clang_format_binary].as<std::string>();
-    if (option.enabled) {
-      auto [ec, stdout, stderr] = shell::which(option.binary);
-      throw_unless(ec == 0,
-                   std::format("can't find given clang_format_binary: {}",
-                               option.binary));
-    }
+    auto [ec, std_out, std_err] = shell::which(option.binary);
+    throw_unless(
+        ec == 0,
+        std::format("Can't find given clang_format binary: {}", option.binary));
+    spdlog::info("The clang-format executable path: {}", option.binary);
   }
-  spdlog::info("The clang-format executable path: {}", option.binary);
 }
 
 auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
   auto version = option.version;
   auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {
-    tool = std::make_unique<clang_format_v18_1_3>();
+    tool = std::make_unique<clang_format_v18_1_3>(option);
   } else if (version == version_18_1_0) {
-    tool = std::make_unique<clang_format_v18_1_0>();
+    tool = std::make_unique<clang_format_v18_1_0>(option);
   } else {
-    tool = std::make_unique<clang_format_general>();
+    tool = std::make_unique<clang_format_general>(option);
   }
-
   throw_unless(tool->is_supported(context.os, context.arch),
                std::format("Create clang-format {} instance failed since not "
                            "supported on this platform",
                            version));
+
   return tool;
+}
+
+bool creator::tool_is_enabled([[maybe_unused]] const runtime_context &context) {
+  return option.enabled;
 }
 } // namespace linter::tool::clang_format

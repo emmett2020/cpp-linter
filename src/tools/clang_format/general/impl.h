@@ -16,6 +16,7 @@
 #pragma once
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <spdlog/spdlog.h>
@@ -29,6 +30,8 @@
 namespace linter::tool::clang_format {
 
 struct clang_format_general : tool_base {
+  explicit clang_format_general(option_t opt) : option(std::move(opt)) {}
+
   bool is_supported(operating_system_t system, arch_t arch) override {
     return system == operating_system_t::ubuntu && arch == arch_t::x86_64;
   }

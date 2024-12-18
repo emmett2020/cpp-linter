@@ -52,9 +52,15 @@ void creator::register_option(
 }
 
 void creator::create_option(const program_options::variables_map &variables) {
-  if (variables.contains(enable_clang_tidy)) {
-    option.enabled = variables[enable_clang_tidy].as<bool>();
+  // Speed up option creation
+  if (!variables.contains(enable_clang_tidy)) {
+    return;
   }
+  option.enabled = variables[enable_clang_tidy].as<bool>();
+  if (!option.enabled) {
+    return;
+  }
+
   if (variables.contains(enable_clang_tidy_fastly_exit)) {
     option.enabled_fastly_exit =
         variables[enable_clang_tidy_fastly_exit].as<bool>();
@@ -65,20 +71,23 @@ void creator::create_option(const program_options::variables_map &variables) {
         variables.contains(clang_tidy_binary),
         "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
     option.binary = find_clang_tool("clang-tidy", option.version);
+  } else {
+    auto [ec, std_out, std_err] = shell::which("clang-tidy");
+    throw_unless(ec == 0, "Can't find clang-tidy");
+    option.binary = std_out;
   }
+
   if (variables.contains(clang_tidy_binary)) {
     throw_if(
         variables.contains(clang_tidy_version),
         "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
     option.binary = variables[clang_tidy_binary].as<std::string>();
-    if (option.enabled) {
-      auto [ec, stdout, stderr] = shell::which(option.binary);
-      throw_unless(
-          ec == 0,
-          std::format("can't find given clang_tidy_binary: {}", option.binary));
-    }
+    auto [ec, std_out, std_err] = shell::which(option.binary);
+    throw_unless(ec == 0, std::format("Can't find given clang_tidy_binary: {}",
+                                      option.binary));
+    spdlog::info("The clang-tidy executable path: {}", option.binary);
   }
-  spdlog::info("The clang-tidy executable path: {}", option.binary);
+
   if (variables.contains(clang_tidy_allow_no_checks)) {
     option.allow_no_checks = variables[clang_tidy_allow_no_checks].as<bool>();
   }
@@ -127,6 +136,10 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
                            "supported on this platform",
                            version));
   return tool;
+}
+
+bool creator::tool_is_enabled([[maybe_unused]] const runtime_context &context) {
+  return option.enabled;
 }
 
 } // namespace linter::tool::clang_tidy
