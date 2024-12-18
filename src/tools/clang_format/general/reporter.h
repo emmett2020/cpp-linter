@@ -38,11 +38,11 @@ namespace linter::tool::clang_format {
       , result(std::move(res)) {
     }
 
-    auto make_brief_result () -> std::string {
+    auto make_brief_result() -> std::string {
       auto content = ""s;
       for (const auto &[name, failed]: result.fails) {
-          auto one = std::format("- {}\n",name);
-          content += one;
+        auto one  = std::format("- {}\n", name);
+        content  += one;
       }
       return content;
     }
@@ -57,10 +57,10 @@ namespace linter::tool::clang_format {
       return make_brief_result();
     }
 
-    static auto convert_row_number_into_patch_position(int row_number, git_patch& patch)
+    static auto convert_row_number_into_patch_position(int row_number, git_patch &patch)
       -> std::optional<std::size_t> {
       const auto num_hunk = git::patch::num_hunks(patch);
-      auto pos = 0U;
+      auto pos            = 0U;
       for (auto hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
         auto [hunk, num_lines] = git::patch::get_hunk(patch, hunk_idx);
         if (!github::is_row_in_hunk(hunk, row_number)) {
@@ -72,54 +72,59 @@ namespace linter::tool::clang_format {
     }
 
     // The hunk splited rule must be same as github.
-    static void make_per_hunk_review_comment(const runtime_context &context,
-                                             const std::string& file,
-                                             git::patch_raw_ptr patch,
-                                             std::size_t patch_idx,
-                                             github::review_comments& comments) {
-        // The diff patch of source revision to target revision of checking file.
-        const auto &patch_user = context.patches.at(file);
+    static void make_per_hunk_review_comment(
+      const runtime_context &context,
+      const std::string &file,
+      git::patch_raw_ptr patch,
+      std::size_t patch_idx,
+      github::review_comments &comments) {
+      // The diff patch of source revision to target revision of checking file.
+      const auto &patch_user = context.patches.at(file);
 
-        const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch, patch_idx);
-        const auto row  = hunk.old_start;
-        auto pos = convert_row_number_into_patch_position(row, *patch_user);
-        if (pos) {
-          auto comment     = github::review_comment{};
-          comment.path     = file;
-          comment.position = *pos;
+      const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch, patch_idx);
+      const auto row                   = hunk.old_start;
+      auto pos                         = convert_row_number_into_patch_position(row, *patch_user);
+      if (pos) {
+        auto comment     = github::review_comment{};
+        comment.path     = file;
+        comment.position = *pos;
 
-          auto temp = git::patch::get_lines_in_hunk(patch, patch_idx);
-          comment.body = git::patch::get_source_lines_in_hunk(*patch, patch_idx)
-                        | std::views::join_with(' ')
-                        | std::ranges::to<std::string>();
-          comments.emplace_back(std::move(comment));
-        }
+        auto temp    = git::patch::get_lines_in_hunk(patch, patch_idx);
+        comment.body = git::patch::get_source_lines_in_hunk(*patch, patch_idx)
+                     | std::views::join_with(' ')
+                     | std::ranges::to<std::string>();
+        comments.emplace_back(std::move(comment));
+      }
     }
 
-    static auto get_suggestion_patch(const runtime_context &context, const std::string& file,
-                                     const per_file_result& format_result) {
-        // Compare original content with formatted result of a file.
-        const auto before_format = git::blob::get_raw_content(context.repo.get(),
-                                                              context.source_commit.get(),
-                                                              file);
-        auto opts = git::diff_options{};
-        opts.context_lines = 0;
-        git::diff::init_option(&opts);
-        return git::patch::create_from_buffers(
-          before_format,
-          file,
-          format_result.formatted_source_code,
-          file,
-          opts);
+    static auto get_suggestion_patch(
+      const runtime_context &context,
+      const std::string &file,
+      const per_file_result &format_result) {
+      // Compare original content with formatted result of a file.
+      const auto before_format =
+        git::blob::get_raw_content(context.repo.get(), context.source_commit.get(), file);
+      auto opts          = git::diff_options{};
+      opts.context_lines = 0;
+      git::diff::init_option(&opts);
+      return git::patch::create_from_buffers(
+        before_format,
+        file,
+        format_result.formatted_source_code,
+        file,
+        opts);
     }
 
-    static void make_per_file_review_comment(const runtime_context &context, const std::string& file,
-                                             const per_file_result& format_result, github::review_comments& comments) {
-        auto patch_suggestion = get_suggestion_patch(context, file, format_result);
-        auto num_hunks = git::patch::num_hunks(patch_suggestion.get());
-        for (int hunk_idx = 0; hunk_idx < num_hunks; ++hunk_idx) {
-          make_per_hunk_review_comment(context, file, patch_suggestion.get(), hunk_idx, comments);
-        }
+    static void make_per_file_review_comment(
+      const runtime_context &context,
+      const std::string &file,
+      const per_file_result &format_result,
+      github::review_comments &comments) {
+      auto patch_suggestion = get_suggestion_patch(context, file, format_result);
+      auto num_hunks        = git::patch::num_hunks(patch_suggestion.get());
+      for (int hunk_idx = 0; hunk_idx < num_hunks; ++hunk_idx) {
+        make_per_hunk_review_comment(context, file, patch_suggestion.get(), hunk_idx, comments);
+      }
     }
 
     auto make_review_comment(const runtime_context &context) -> github::review_comments override {
@@ -138,11 +143,15 @@ namespace linter::tool::clang_format {
     }
 
     auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
-      return {result.final_passed, result.passes.size(), result.fails.size(), result.ignored.size()};
+      return {result.final_passed,
+              result.passes.size(),
+              result.fails.size(),
+              result.ignored.size()};
     }
 
     auto tool_name() -> std::string override {
-      auto parts = std::views::split(option.binary, '/') | std::ranges::to<std::vector<std::string>>();
+      auto parts = std::views::split(option.binary, '/')
+                 | std::ranges::to<std::vector<std::string>>();
       return parts.back();
     }
 

@@ -35,10 +35,11 @@ namespace linter::tool::clang_tidy {
     }
 
     auto make_brief() -> std::string {
-    // TODO: replace diagnostic_type with linkable name
+      // TODO: replace diagnostic_type with linkable name
       auto ret = ""s;
       for (const auto &[name, failed]: result.fails) {
         for (const auto &diag: failed.diags) {
+          // use relative file name rather than diag.header.file_name which is absolute name
           auto one = std::format(
             "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
             name,
@@ -71,7 +72,7 @@ namespace linter::tool::clang_tidy {
         assert(per_file_result.file_path == file);
         assert(context.patches.contains(file));
 
-        const auto &patch = context.patches.at(file);
+        const auto &patch   = context.patches.at(file);
         const auto num_hunk = git::patch::num_hunks(patch.get());
 
         // For each clang-tidy diagnostic result in current file:
@@ -106,12 +107,15 @@ namespace linter::tool::clang_tidy {
     }
 
     auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
-      return {result.final_passed, result.passes.size(), result.fails.size(), result.ignored.size()};
+      return {result.final_passed,
+              result.passes.size(),
+              result.fails.size(),
+              result.ignored.size()};
     }
 
-
     auto tool_name() -> std::string override {
-      auto parts = std::views::split(option.binary, '/') | std::ranges::to<std::vector<std::string>>();
+      auto parts = std::views::split(option.binary, '/')
+                 | std::ranges::to<std::vector<std::string>>();
       return parts.back();
     }
 
