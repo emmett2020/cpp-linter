@@ -265,14 +265,14 @@ namespace linter::tool::clang_tidy {
       spdlog::info("The final result of ran clang-tidy on {} is: {}, detailed "
                    "information:\n{}",
                    file,
-                   "PASS",
+                   "PASSED",
                    result.tool_stderr);
     } else {
       spdlog::error(
         "The final result of ran clang-tidy on {} is: {} , detailed "
         "information:\n{}",
         file,
-        "FAIL",
+        "FAILED",
         result.tool_stderr);
     }
     return result;
@@ -284,7 +284,7 @@ namespace linter::tool::clang_tidy {
     for (const auto &file: files) {
       if (filter_file(option.source_filter_iregex, file)) {
         result.ignored_files.push_back(file);
-        spdlog::trace("file is ignored {} by {}", file, option.binary);
+        spdlog::debug("file is ignored {} by {}", file, option.binary);
         continue;
       }
 

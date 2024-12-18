@@ -194,7 +194,7 @@ namespace linter::tool::clang_format {
     for (const auto &file: files) {
       if (filter_file(option.source_filter_iregex, file)) {
         result.ignored_files.push_back(file);
-        spdlog::trace("file is ignored {} by {}", file, option.binary);
+        spdlog::debug("file is ignored {} by {}", file, option.binary);
         continue;
       }
 
