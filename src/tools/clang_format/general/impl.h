@@ -43,7 +43,7 @@ namespace linter::tool::clang_format {
     }
 
     auto version() -> std::string_view override {
-      return "unknown";
+      return option.version;
     }
 
     auto check_single_file(const runtime_context &ctx,

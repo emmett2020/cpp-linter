@@ -95,8 +95,7 @@ auto main(int argc, char **argv) -> int {
   }
 
   // Fill runtime context by user options and environment variables.
-  auto context         = runtime_context{};
-  context.use_on_local = !is_on_github();
+  auto context = runtime_context{};
   fill_context_by_program_options(user_options, context);
   set_log_level(context.log_level);
 

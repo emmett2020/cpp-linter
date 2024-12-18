@@ -40,7 +40,7 @@ namespace linter::tool::clang_tidy {
     }
 
     auto version() -> std::string_view override {
-      return "unknown";
+      return option.version;
     }
 
     auto check_single_file(const runtime_context &context,
