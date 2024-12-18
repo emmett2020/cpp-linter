@@ -20,10 +20,13 @@
 #include <spdlog/spdlog.h>
 
 #include "context.h"
+#include "github/common.h"
 #include "github/utils.h"
 #include "tools/base_reporter.h"
 #include "tools/clang_format/general/option.h"
 #include "tools/clang_format/general/result.h"
+#include "utils/env_manager.h"
+#include "utils/util.h"
 
 namespace linter::tool::clang_format {
 
@@ -91,7 +94,11 @@ namespace linter::tool::clang_format {
       return comments;
     }
 
-    void write_to_action_output(const runtime_context &ctx) override {
+    void write_to_action_output([[maybe_unused]] const runtime_context &ctx) override {
+      auto output = env::get(github_output);
+      auto file   = std::fstream{output, std::ios::app};
+      throw_unless(file.is_open(), "error to open output file to write");
+      file << std::format("clang_format_failed_number={}\n", result.fails.size());
     }
 
     bool is_passed() override {
