@@ -34,12 +34,11 @@ namespace linter::tool::clang_tidy {
       , result(std::move(res)) {
     }
 
-    auto make_issue_comment(const runtime_context &context) -> std::string override {
-      auto res = std::string{};
-      res += std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
-                         option.binary,
-                         result.fails.size());
-      for (const auto &[name, failed]: result.fails) {
+    auto make_brief() -> std::string {
+      auto ret = std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
+                             option.binary,
+                             result.fails.size());
+      for (const auto &[_, failed]: result.fails) {
         for (const auto &diag: failed.diags) {
           auto one = std::format(
             "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
@@ -49,14 +48,20 @@ namespace linter::tool::clang_tidy {
             diag.header.serverity,
             diag.header.diagnostic_type,
             diag.header.brief);
-          res += one;
+          ret += one;
         }
       }
-      return res;
+      return ret;
     }
 
-    auto make_step_summary(const runtime_context &context) -> std::string override {
-      return {};
+    auto make_issue_comment([[maybe_unused]] const runtime_context &context)
+      -> std::string override {
+      return make_brief();
+    }
+
+    auto make_step_summary([[maybe_unused]] const runtime_context &context)
+      -> std::string override {
+      return make_brief();
     }
 
     auto make_review_comment(const runtime_context &context) -> github::review_comments override {
