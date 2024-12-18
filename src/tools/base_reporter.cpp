@@ -19,9 +19,7 @@
 #include <vector>
 
 #include "context.h"
-#include "github/api.h"
-#include "github/common.h"
-#include "github/review_comment.h"
+#include "github/github.h"
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
@@ -46,7 +44,7 @@ namespace linter::tool {
 
   void write_to_github_step_summary(const runtime_context &context,
                                     const std::vector<reporter_base_ptr> &reporters) {
-    auto summary_file = env::get(github_step_summary);
+    auto summary_file = env::get(github::github_step_summary);
     auto file         = std::fstream{summary_file, std::ios::app};
     throw_unless(file.is_open(), "failed to open step summary file to write");
 
@@ -68,24 +66,24 @@ namespace linter::tool {
 
   void comment_on_github_issue(const runtime_context &context,
                                const std::vector<reporter_base_ptr> &reporters) {
-    auto github_client = github_api_client{context};
-    github_client.get_issue_comment_id();
+    auto github_client = github::client{};
+    github_client.get_issue_comment_id(context);
     auto content = ""s;
     for (const auto &reporter: reporters) {
       content += reporter->make_issue_comment(context) + "\n";
     }
-    github_client.add_or_update_issue_comment(content);
+    github_client.add_or_update_issue_comment(context, content);
   }
 
   void comment_on_github_pull_request_review(const runtime_context &context,
                                              const std::vector<reporter_base_ptr> &reporters) {
-    auto github_client = github_api_client{context};
+    auto github_client = github::client{};
     auto comments      = github::review_comments{};
     for (const auto &reporter: reporters) {
       auto ret = reporter->make_review_comment(context);
       comments.insert(comments.end(), ret.begin(), ret.end());
     }
     auto body = github::make_review_str(comments);
-    github_client.post_pull_request_review(body);
+    github_client.post_pull_request_review(context, body);
   }
 } // namespace linter::tool

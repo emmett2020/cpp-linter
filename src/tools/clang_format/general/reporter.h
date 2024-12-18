@@ -36,11 +36,13 @@ namespace linter::tool::clang_format {
       , result(std::move(res)) {
     }
 
-    auto make_issue_comment(const runtime_context &context) -> std::string override {
+    auto make_issue_comment([[maybe_unused]] const runtime_context &context)
+      -> std::string override {
       return "";
     }
 
-    auto make_step_summary(const runtime_context &context) -> std::string override {
+    auto make_step_summary([[maybe_unused]] const runtime_context &context)
+      -> std::string override {
       return {};
     }
 
@@ -95,7 +97,7 @@ namespace linter::tool::clang_format {
     }
 
     void write_to_action_output([[maybe_unused]] const runtime_context &ctx) override {
-      auto output = env::get(github_output);
+      auto output = env::get(github::github_output);
       auto file   = std::fstream{output, std::ios::app};
       throw_unless(file.is_open(), "error to open output file to write");
       file << std::format("clang_format_failed_number={}\n", result.fails.size());

@@ -94,7 +94,7 @@ namespace linter {
       ctx.repo_path  = variables[repo_path].as<std::string>();
       ctx.source     = variables[source].as<std::string>();
       ctx.event_name = variables[event_name].as<std::string>();
-      throw_unless(std::ranges::contains(all_github_events, ctx.event_name),
+      throw_unless(std::ranges::contains(github::all_github_events, ctx.event_name),
                    std::format("unsupported event name: {}", ctx.event_name));
 
       if (variables.contains(enable_comment_on_issue)
@@ -115,7 +115,7 @@ namespace linter {
       }
 
       if (variables.contains(pr_number)) {
-        throw_unless(std::ranges::contains(github_events_with_pr_number, ctx.event_name),
+        throw_unless(std::ranges::contains(github::github_events_with_pr_number, ctx.event_name),
                      std::format("Github event: {} doesn't support pull-request-number option",
                                  ctx.event_name));
         ctx.pr_number = variables[pr_number].as<std::int32_t>();
@@ -197,7 +197,7 @@ namespace linter {
                                        runtime_context &ctx) {
     spdlog::debug("Start to check program_options and fill context by it");
     check_and_fill_context_common(variables, ctx);
-    if (is_on_github()) {
+    if (github::is_on_github()) {
       ctx.use_on_local = false;
       check_and_fill_context_on_ci(variables, ctx);
     } else {

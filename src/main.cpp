@@ -101,9 +101,9 @@ auto main(int argc, char **argv) -> int {
 
   // Fill runtime context by environment variables.
   if (!context.use_on_local) {
-    auto env = read_github_env();
-    check_github_env(env);
-    fill_context_by_env(env, context);
+    auto env = github::read_env();
+    github::check_env(env);
+    github::fill_context_by_env(env, context);
   }
 
   // Fill runtime context by git repositofy informations.

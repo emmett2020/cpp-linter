@@ -100,7 +100,7 @@ namespace linter::tool::clang_tidy {
     }
 
     auto write_to_action_output([[maybe_unused]] const runtime_context &context) -> void override {
-      auto output = env::get(github_output);
+      auto output = env::get(github::github_output);
       auto file   = std::fstream{output, std::ios::app};
       throw_unless(file.is_open(), "error to open output file to write");
       file << std::format("clang_tidy_failed_number={}\n", result.fails.size());
