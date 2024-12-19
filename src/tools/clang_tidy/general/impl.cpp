@@ -306,7 +306,7 @@ namespace linter::tool::clang_tidy {
       }
     }
 
-    result.final_passed = true;
+    result.final_passed = result.fails.empty();
   }
 
   auto clang_tidy_general::get_reporter() -> reporter_base_ptr {

@@ -216,7 +216,7 @@ namespace linter::tool::clang_format {
       }
     }
 
-    result.final_passed = true;
+    result.final_passed = result.fails.empty();
   }
 
   auto clang_format_general::get_reporter() -> reporter_base_ptr {

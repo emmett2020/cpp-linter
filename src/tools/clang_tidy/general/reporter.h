@@ -35,14 +35,12 @@ namespace linter::tool::clang_tidy {
     }
 
     auto make_brief() -> std::string {
-      auto ret = std::format("<details>\n<summary>{} reports:<strong>{} fails</strong></summary>\n",
-                             option.binary,
-                             result.fails.size());
-      for (const auto &[_, failed]: result.fails) {
+      auto ret = ""s;
+      for (const auto &[name, failed]: result.fails) {
         for (const auto &diag: failed.diags) {
           auto one = std::format(
             "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
-            diag.header.file_name,
+            name,
             diag.header.row_idx,
             diag.header.col_idx,
             diag.header.serverity,

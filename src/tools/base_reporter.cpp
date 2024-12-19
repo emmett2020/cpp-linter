@@ -72,12 +72,11 @@ namespace linter::tool {
     auto github_client = github::client{};
     github_client.get_issue_comment_id(context);
 
-    constexpr auto failed_emoji = ":worried:"sv;
-    constexpr auto header = "# cpp-linter results:\n"sv;
-    constexpr auto table_header   = "| tool name | successed | failed | ignored |\n"sv;
+    constexpr auto header = "# :sparkling_heart: cpp-linter result\n"sv;
+    constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
     constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
-    constexpr auto table_row_fmt = "| {} | {} | {} | {} |\n"sv;
-    constexpr auto summary_fmt = "<summary>click here to see the details of {} failed files reported by {}</summary>\n\n"sv;
+    constexpr auto table_row_fmt = "| **{}** | {} | {} | {} |\n"sv;
+    constexpr auto summary_fmt = "<summary>:mag_right: Click here to see the details of <strong>{}</strong> failed {} reported by <strong>{}</strong></summary>\n\n"sv;
     constexpr auto details_fmt = "<details>{}</details>\n"sv;
 
     auto table_rows = ""s;
@@ -87,9 +86,12 @@ namespace linter::tool {
       auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
       auto tool_name = reporter->tool_name();
       table_rows += std::format(table_row_fmt, tool_name, successed, failed, ignored);
-      auto summary = std::format(summary_fmt, failed, tool_name);
-      auto tool_detail = reporter->make_issue_comment(context) + "\n";
-      details += std::format(details_fmt, summary + tool_detail);
+      if (!is_passed) {
+        assert(failed != 0);
+        auto summary = std::format(summary_fmt, failed, failed == 1 ? "file" : "files", tool_name);
+        auto tool_detail = reporter->make_issue_comment(context) + "\n";
+        details += std::format(details_fmt, summary + tool_detail);
+      }
     }
 
     auto final_content = std::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
