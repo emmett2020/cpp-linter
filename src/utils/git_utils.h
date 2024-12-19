@@ -923,12 +923,22 @@ namespace linter::git {
     /// Get the content of a patch as a single diff text.
     auto to_str(patch_raw_ptr patch) -> std::string;
 
+
     /// Get the delta associated with a patch. This delta points to internal
     /// data and you do not have to release it when you are done with it.
     auto get_delta(patch_raw_cptr patch) -> diff_delta_raw_cptr;
 
-    // Get the number of hunks in a patch
+    /// Get the delta associated with a patch. This delta points to internal
+    /// data and you do not have to release it when you are done with it.
+    auto num_hunks(const git_patch& patch) -> std::size_t;
+
+    /// Get the number of hunks in a patch
     auto num_hunks(patch_raw_cptr patch) -> std::size_t;
+
+    /// Get the information about a hunk in a patch
+    /// Given a patch and a hunk index into the patch, this returns detailed
+    /// information about that hunk.
+    auto get_hunk( git_patch& patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t>;
 
     /// Get the information about a hunk in a patch
     // Given a patch and a hunk index into the patch, this returns detailed
@@ -936,14 +946,20 @@ namespace linter::git {
     auto get_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t>;
 
     /// Get the number of lines in a hunk.
-    auto num_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::size_t;
+    auto num_lines_in_hunk(patch_raw_cptr patch, std::size_t hunk_idx) -> std::size_t;
 
     /// Get data about a line in a hunk of a patch.
+    /// Due to libgit2 limitation, patch can't be const qualified.
     auto get_line_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx, std::size_t line_idx)
       -> diff_line;
 
     /// A utility to get all lines in a hunk.
+    /// Due to libgit2 limitation, patch can't be const qualified.
     auto get_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::vector<std::string>;
+
+    /// A utility to get all lines in a hunk.
+  /// Due to libgit2 limitation, patch can't be const qualified.
+    auto get_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
 
   } // namespace patch
 

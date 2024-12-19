@@ -1013,8 +1013,20 @@ namespace linter::git {
       return ::git_patch_get_delta(patch);
     }
 
+    auto num_hunks(const git_patch& patch) -> std::size_t {
+      return ::git_patch_num_hunks(&patch);
+    }
+
     auto num_hunks(patch_raw_cptr patch) -> std::size_t {
       return ::git_patch_num_hunks(patch);
+    }
+
+    auto get_hunk( git_patch& patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
+      const auto *hunk_ptr = diff_hunk_raw_ptr{nullptr};
+      auto line_num        = std::size_t{0};
+      auto ret             = ::git_patch_get_hunk(&hunk_ptr, &line_num, &patch, hunk_idx);
+      throw_if(ret);
+      return {*hunk_ptr, line_num};
     }
 
     auto get_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
@@ -1025,7 +1037,7 @@ namespace linter::git {
       return {*hunk_ptr, line_num};
     }
 
-    auto num_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::size_t {
+    auto num_lines_in_hunk(patch_raw_cptr patch, std::size_t hunk_idx) -> std::size_t {
       return ::git_patch_num_lines_in_hunk(patch, hunk_idx);
     }
 
@@ -1042,6 +1054,16 @@ namespace linter::git {
       size_t num_lines = patch::num_lines_in_hunk(patch, hunk_idx);
       for (size_t i = 0; i < num_lines; i++) {
         auto line = get_line_in_hunk(patch, hunk_idx, i);
+        ret.emplace_back(line.content, line.content_len);
+      }
+      return ret;
+    }
+
+    auto get_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+      auto ret         = std::vector<std::string>{};
+      size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
+      for (size_t i = 0; i < num_lines; i++) {
+        auto line = get_line_in_hunk(&patch, hunk_idx, i);
         ret.emplace_back(line.content, line.content_len);
       }
       return ret;

@@ -26,6 +26,7 @@
 #include "tools/clang_format/general/option.h"
 #include "tools/clang_format/general/result.h"
 #include "utils/env_manager.h"
+#include "utils/git_utils.h"
 #include "utils/util.h"
 
 namespace linter::tool::clang_format {
@@ -56,53 +57,77 @@ namespace linter::tool::clang_format {
       return make_brief_result();
     }
 
-    auto make_review_comment(const runtime_context &context) -> github::review_comments override {
-      auto comments = github::review_comments{};
+    static auto convert_row_number_into_patch_position(int row_number, git_patch& patch)
+      -> std::optional<std::size_t> {
+      const auto num_hunk = git::patch::num_hunks(patch);
+      auto pos = 0U;
+      for (auto hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
+        auto [hunk, num_lines] = git::patch::get_hunk(patch, hunk_idx);
+        if (!github::is_row_in_hunk(hunk, row_number)) {
+          pos += num_lines;
+        }
+        return pos + row_number - hunk.new_start + 1;
+      }
+      return std::nullopt;
+    }
 
-      for (const auto &[file, per_file_result]: result.fails) {
-        // auto old_buffer = git::blob::get_raw_content(ctx_.repo, commit, file);
-        auto old_buffer = ""s;
-        auto opts       = git::diff_options{};
+    // The hunk splited rule must be same as github.
+    static void make_per_hunk_review_comment(const runtime_context &context,
+                                             const std::string& file,
+                                             git::patch_raw_ptr patch,
+                                             std::size_t patch_idx,
+                                             github::review_comments& comments) {
+        // The diff patch of source revision to target revision of checking file.
+        const auto &patch_user = context.patches.at(file);
+
+        const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch, patch_idx);
+        const auto row  = hunk.old_start;
+        auto pos = convert_row_number_into_patch_position(row, *patch_user);
+        if (pos) {
+          auto comment     = github::review_comment{};
+          comment.path     = file;
+          comment.position = *pos;
+          
+
+          auto temp = git::patch::get_lines_in_hunk(patch,patch_idx);
+          comment.body = git::patch::get_lines_in_hunk(patch, patch_idx)
+                        | std::views::join_with(' ')
+                        | std::ranges::to<std::string>();
+          comments.emplace_back(std::move(comment));
+        }
+    }
+
+    static auto get_suggestion_patch(const runtime_context &context, const std::string& file,
+                                     const per_file_result& format_result) {
+        // Compare original content with formatted result of a file.
+        const auto before_format = git::blob::get_raw_content(context.repo.get(),
+                                                              context.source_commit.get(),
+                                                              file);
+        const auto &after_format = format_result.formatted_source_code;
+        auto opts = git::diff_options{};
         git::diff::init_option(&opts);
-        auto format_source_patch = git::patch::create_from_buffers(
-          old_buffer,
+        return git::patch::create_from_buffers(
+          before_format,
           file,
-          per_file_result.formatted_source_code,
+          format_result.formatted_source_code,
           file,
           opts);
-        spdlog::error(git::patch::to_str(format_source_patch.get()));
+    }
 
-        const auto &patch = context.patches.at(file);
-
-        auto format_num_hunk = git::patch::num_hunks(format_source_patch.get());
-        for (int i = 0; i < format_num_hunk; ++i) {
-          auto [format_hunk, format_num_lines] = git::patch::get_hunk(format_source_patch.get(), i);
-          auto row                             = format_hunk.old_start;
-
-          auto pos      = std::size_t{0};
-          auto num_hunk = git::patch::num_hunks(patch.get());
-          for (int j = 0; j < num_hunk; ++j) {
-            auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), j);
-            if (!github::is_row_in_hunk(hunk, row)) {
-              pos += num_lines;
-              continue;
-            }
-            auto comment     = github::review_comment{};
-            comment.path     = file;
-            comment.position = pos + row - hunk.new_start + 1;
-
-            comment.body = git::patch::get_lines_in_hunk(patch.get(), i)
-                         | std::views::join_with(' ')
-                         | std::ranges::to<std::string>();
-            comments.emplace_back(std::move(comment));
-          }
+    static void make_per_file_review_comment(const runtime_context &context, const std::string& file,
+                                             const per_file_result& format_result, github::review_comments& comments) {
+        auto patch_suggestion = get_suggestion_patch(context, file, format_result);
+        auto num_hunks = git::patch::num_hunks(patch_suggestion.get());
+        for (int hunk_idx = 0; hunk_idx < num_hunks; ++hunk_idx) {
+          make_per_hunk_review_comment(context, file, patch_suggestion.get(), hunk_idx, comments);
         }
-      }
+    }
 
-      spdlog::error("Comments XXX:");
-      for (const auto &comment: comments) {
+    auto make_review_comment(const runtime_context &context) -> github::review_comments override {
+      auto comments = github::review_comments{};
+      for (const auto &[file, format_result]: result.fails) {
+        make_per_file_review_comment(context, file, format_result, comments);
       }
-
       return comments;
     }
 

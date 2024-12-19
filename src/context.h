@@ -48,6 +48,8 @@ namespace linter {
     git::repo_ptr repo{nullptr, ::git_repository_free};
     git::commit_ptr target_commit{nullptr, ::git_commit_free};
     git::commit_ptr source_commit{nullptr, ::git_commit_free};
+
+    // The diff patches of source revision to target revision.
     std::unordered_map<std::string, git::patch_ptr> patches;
   };
 
