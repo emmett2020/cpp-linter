@@ -28,6 +28,17 @@
 namespace linter::tool {
   using namespace std::string_view_literals;
 
+  namespace {
+    auto make_usage_specification()->std::string {
+      auto content = "<code>"s;
+      content += "# 1. download cpp-linter\n";
+      content += "TODO\n";
+      content += "# 2. validate\n";
+      content += "TODO\n";
+      return content + "</code>";
+    }
+  }
+
   void write_to_github_action_output(const runtime_context &context,
                                      const std::vector<reporter_base_ptr> &reporters) {
     for (const auto &reporter: reporters) {
@@ -72,7 +83,8 @@ namespace linter::tool {
     auto github_client = github::client{};
     github_client.get_issue_comment_id(context);
 
-    constexpr auto header = "# :sparkling_heart: cpp-linter result\n"sv;
+    constexpr auto website = "";
+    constexpr auto header = "# :100: Code Quality Result by [cpp-linter](https://github.com/emmett2020/cpp-linter)\n"sv;
     constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
     constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
     constexpr auto table_row_fmt = "| **{}** | {} | {} | {} |\n"sv;
@@ -92,6 +104,11 @@ namespace linter::tool {
         auto tool_detail = reporter->make_issue_comment(context) + "\n";
         details += std::format(details_fmt, summary + tool_detail);
       }
+    }
+
+    {
+      static const auto usage_summary = "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
+      details += std::format(details_fmt, usage_summary + make_usage_specification());
     }
 
     auto final_content = std::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
