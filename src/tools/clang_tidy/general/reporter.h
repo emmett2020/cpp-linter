@@ -66,32 +66,32 @@ namespace linter::tool::clang_tidy {
     auto make_review_comment(const runtime_context &context) -> github::review_comments override {
       auto comments = github::review_comments{};
 
+      // For each failed file:
       for (const auto &[file, per_file_result]: result.fails) {
-        // Get the same file's delta and clang-tidy result
         assert(per_file_result.file_path == file);
         assert(context.patches.contains(file));
 
         const auto &patch = context.patches.at(file);
+        const auto num_hunk = git::patch::num_hunks(patch.get());
 
+        // For each clang-tidy diagnostic result in current file:
         for (const auto &diag: per_file_result.diags) {
-          const auto &header = diag.header;
-          auto row           = std::stoi(header.row_idx);
-          auto col           = std::stoi(header.col_idx);
+          auto row = std::stoi(diag.header.row_idx);
+          auto col = std::stoi(diag.header.col_idx);
 
-          // For all clang-tidy result, check is this in hunk.
-          auto pos      = std::size_t{0};
-          auto num_hunk = git::patch::num_hunks(patch.get());
-          for (int i = 0; i < num_hunk; ++i) {
-            auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), i);
+          // Check current diagnostic is in diff hunk.
+          auto pos = std::size_t{0};
+          for (int hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
+            auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), hunk_idx);
             if (!github::is_row_in_hunk(hunk, row)) {
               pos += num_lines;
-              continue;
+            } else {
+              auto comment     = github::review_comment{};
+              comment.path     = file;
+              comment.position = pos + row - hunk.new_start + 1;
+              comment.body     = diag.header.brief + diag.header.diagnostic_type;
+              comments.emplace_back(std::move(comment));
             }
-            auto comment     = github::review_comment{};
-            comment.path     = file;
-            comment.position = pos + row - hunk.new_start + 1;
-            comment.body     = diag.header.brief + diag.header.diagnostic_type;
-            comments.emplace_back(std::move(comment));
           }
         }
       }
