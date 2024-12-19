@@ -297,6 +297,26 @@ TEST_CASE("Get lines in a hunk", "[git2][patch]") {
   RemoveRepoDir();
 }
 
+TEST_CASE("Compare from buffer", "[git2][patch]") {
+  // Compare original content with formatted result of a file.
+    auto before = "  int n = 2;\n"s;
+    auto after  = "int n = 2;\n"s;
+    auto opts = git::diff_options{};
+    opts.context_lines = 0;
+    git::diff::init_option(&opts);
+    auto patch =  git::patch::create_from_buffers(
+      before,
+      "name",
+      after,
+      "name",
+      opts);
+    auto num_hunks = git::patch::num_hunks(patch.get());
+    REQUIRE(num_hunks == 1);
+
+    auto lines = git::patch::get_target_lines_in_hunk(*patch, 0);
+    REQUIRE(lines.size() == 1);
+}
+
 int main(int argc, char* argv[]) {
   git::setup();
   int result = Catch::Session().run(argc, argv);

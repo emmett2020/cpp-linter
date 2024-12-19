@@ -46,4 +46,4 @@ target_link_libraries(cpp-linter ${Boost_LIBRARIES}
 
 
 include(${linter_root}/cmake/FetchCatch2.cmake)
-# add_subdirectory(tests)
+add_subdirectory(tests)

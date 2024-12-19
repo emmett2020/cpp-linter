@@ -19,6 +19,7 @@
 #include <cassert>
 #include <cstring>
 #include <git2/buffer.h>
+#include <git2/diff.h>
 #include <git2/patch.h>
 #include <git2/tree.h>
 #include <iostream>
@@ -1065,6 +1066,30 @@ namespace linter::git {
       for (size_t i = 0; i < num_lines; i++) {
         auto line = get_line_in_hunk(&patch, hunk_idx, i);
         ret.emplace_back(line.content, line.content_len);
+      }
+      return ret;
+    }
+
+    auto get_target_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+      auto ret         = std::vector<std::string>{};
+      size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
+      for (size_t i = 0; i < num_lines; i++) {
+        auto line = get_line_in_hunk(&patch, hunk_idx, i);
+        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin== GIT_DIFF_LINE_DELETION) {
+          ret.emplace_back(line.content, line.content_len);
+        }
+      }
+      return ret;
+    }
+
+    auto get_source_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+      auto ret         = std::vector<std::string>{};
+      size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
+      for (size_t i = 0; i < num_lines; i++) {
+        auto line = get_line_in_hunk(&patch, hunk_idx, i);
+        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin== GIT_DIFF_LINE_ADDITION) {
+          ret.emplace_back(line.content, line.content_len);
+        }
       }
       return ret;
     }

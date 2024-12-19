@@ -154,6 +154,7 @@ namespace linter::tool::clang_format {
 
   } // namespace
 
+  // TODO: we should always use source branch's file, not "current" file.
   auto clang_format_general::check_single_file(
     [[maybe_unused]] const runtime_context &ctx,
     const std::string &root_dir,

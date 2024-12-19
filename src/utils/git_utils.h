@@ -958,8 +958,13 @@ namespace linter::git {
     auto get_lines_in_hunk(patch_raw_ptr patch, std::size_t hunk_idx) -> std::vector<std::string>;
 
     /// A utility to get all lines in a hunk.
-  /// Due to libgit2 limitation, patch can't be const qualified.
+    /// Due to libgit2 limitation, patch can't be const qualified.
     auto get_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
+
+
+    auto get_target_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
+
+    auto get_source_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
 
   } // namespace patch
 

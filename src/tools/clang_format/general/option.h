@@ -20,7 +20,7 @@
 namespace linter::tool::clang_format {
   struct option_t : option_base {
     bool enable_warning_as_error     = false;
-    bool needs_formatted_source_code = false;
+    bool needs_formatted_source_code = true;
   };
 
 } // namespace linter::tool::clang_format
