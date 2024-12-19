@@ -89,7 +89,7 @@ namespace linter::tool::clang_format {
           comment.position = *pos;
 
           auto temp = git::patch::get_lines_in_hunk(patch, patch_idx);
-          comment.body = git::patch::get_lines_in_hunk(patch, patch_idx)
+          comment.body = git::patch::get_source_lines_in_hunk(*patch, patch_idx)
                         | std::views::join_with(' ')
                         | std::ranges::to<std::string>();
           comments.emplace_back(std::move(comment));
@@ -105,25 +105,12 @@ namespace linter::tool::clang_format {
         auto opts = git::diff_options{};
         opts.context_lines = 0;
         git::diff::init_option(&opts);
-        // return git::patch::create_from_buffers(
-        //   before_format,
-        //   file,
-        //   format_result.formatted_source_code,
-        //   file,
-        //   opts);
-        auto patch =  git::patch::create_from_buffers(
+        return git::patch::create_from_buffers(
           before_format,
           file,
           format_result.formatted_source_code,
           file,
           opts);
-        auto num_hunks = git::patch::num_hunks(patch.get());
-        if (num_hunks > 0) {
-            auto str = git::patch::to_str(patch.get());
-            auto lines = git::patch::get_lines_in_hunk(patch.get(), 0);
-            auto num = git::patch::num_lines_in_hunk(patch.get(), 0);
-        }
-        return patch;
     }
 
     static void make_per_file_review_comment(const runtime_context &context, const std::string& file,
