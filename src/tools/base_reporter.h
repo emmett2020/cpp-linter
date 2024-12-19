@@ -34,12 +34,14 @@ namespace linter::tool {
 
     virtual void write_to_action_output(const runtime_context &context) = 0;
 
-    virtual bool is_passed() = 0;
+    // return sequence: is_pass, passed files number, failed files number, ignored files number.
+    virtual auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> = 0;
+
+    // Used for show in result
+    virtual auto tool_name() -> std::string = 0;
   };
 
   using reporter_base_ptr = std ::unique_ptr<reporter_base>;
-
-  bool all_passed(const std::vector<reporter_base_ptr> &reporters);
 
   void write_to_github_action_output(const runtime_context &context,
                                      const std::vector<reporter_base_ptr> &reporters);
@@ -53,4 +55,5 @@ namespace linter::tool {
   void comment_on_github_pull_request_review(const runtime_context &context,
                                              const std::vector<reporter_base_ptr> &reporters);
 
+  bool all_passed(const std::vector<reporter_base_ptr> &reporters);
 } // namespace linter::tool

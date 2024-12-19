@@ -106,8 +106,14 @@ namespace linter::tool::clang_tidy {
       file << std::format("clang_tidy_failed_number={}\n", result.fails.size());
     }
 
-    bool is_passed() override {
-      return result.final_passed;
+    auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
+      return {result.final_passed, result.passes.size(), result.fails.size(), result.ignored.size()};
+    }
+
+
+    auto tool_name() -> std::string override {
+      auto parts = std::views::split(option.binary, '/') | std::ranges::to<std::vector<std::string>>();
+      return parts.back();
     }
 
     option_t option;

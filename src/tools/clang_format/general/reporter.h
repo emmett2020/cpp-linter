@@ -29,6 +29,7 @@
 #include "utils/util.h"
 
 namespace linter::tool::clang_format {
+  using namespace std::string_view_literals;
 
   struct reporter_t : reporter_base {
     reporter_t(option_t opt, result_t res)
@@ -36,14 +37,23 @@ namespace linter::tool::clang_format {
       , result(std::move(res)) {
     }
 
+    auto make_brief_result () -> std::string {
+      auto content = ""s;
+      for (const auto &[name, failed]: result.fails) {
+          auto one = std::format("- {}\n",name);
+          content += one;
+      }
+      return content;
+    }
+
     auto make_issue_comment([[maybe_unused]] const runtime_context &context)
       -> std::string override {
-      return "";
+      return make_brief_result();
     }
 
     auto make_step_summary([[maybe_unused]] const runtime_context &context)
       -> std::string override {
-      return {};
+      return make_brief_result();
     }
 
     auto make_review_comment(const runtime_context &context) -> github::review_comments override {
@@ -103,8 +113,13 @@ namespace linter::tool::clang_format {
       file << std::format("clang_format_failed_number={}\n", result.fails.size());
     }
 
-    bool is_passed() override {
-      return result.final_passed;
+    auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
+      return {result.final_passed, result.passes.size(), result.fails.size(), result.ignored.size()};
+    }
+
+    auto tool_name() -> std::string override {
+      auto parts = std::views::split(option.binary, '/') | std::ranges::to<std::vector<std::string>>();
+      return parts.back();
     }
 
     option_t option;

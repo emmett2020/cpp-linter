@@ -35,8 +35,8 @@ namespace linter::tool {
   struct multi_files_result_base {
     bool final_passed  = false;
     bool fastly_exited = false;
-    std::vector<std::string> ignored_files;
 
+    std::vector<std::string> ignored;
     std::unordered_map<std::string, PerFileResult> passes;
     std::unordered_map<std::string, PerFileResult> fails;
   };

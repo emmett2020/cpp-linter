@@ -283,7 +283,7 @@ namespace linter::tool::clang_tidy {
     const auto files    = context.changed_files;
     for (const auto &file: files) {
       if (filter_file(option.source_filter_iregex, file)) {
-        result.ignored_files.push_back(file);
+        result.ignored.push_back(file);
         spdlog::debug("file is ignored {} by {}", file, option.binary);
         continue;
       }

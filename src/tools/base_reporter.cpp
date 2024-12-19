@@ -17,6 +17,8 @@
 #include "tools/base_reporter.h"
 
 #include <vector>
+#include <string>
+#include <string_view>
 
 #include "context.h"
 #include "github/github.h"
@@ -24,7 +26,7 @@
 #include "utils/util.h"
 
 namespace linter::tool {
-  using namespace std::string_literals;
+  using namespace std::string_view_literals;
 
   void write_to_github_action_output(const runtime_context &context,
                                      const std::vector<reporter_base_ptr> &reporters) {
@@ -35,7 +37,8 @@ namespace linter::tool {
 
   bool all_passed(const std::vector<reporter_base_ptr> &reporters) {
     for (const auto &reporter: reporters) {
-      if (!reporter->is_passed()) {
+      auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
+      if (is_passed) {
         return false;
       }
     }
@@ -68,11 +71,29 @@ namespace linter::tool {
                                const std::vector<reporter_base_ptr> &reporters) {
     auto github_client = github::client{};
     github_client.get_issue_comment_id(context);
-    auto content = ""s;
+
+    constexpr auto failed_emoji = ":worried:"sv;
+    constexpr auto header = "# cpp-linter results:\n"sv;
+    constexpr auto table_header   = "| tool name | successed | failed | ignored |\n"sv;
+    constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
+    constexpr auto table_row_fmt = "| {} | {} | {} | {} |\n"sv;
+    constexpr auto summary_fmt = "<summary>click here to see the details of {} failed files reported by {}</summary>\n\n"sv;
+    constexpr auto details_fmt = "<details>{}</details>\n"sv;
+
+    auto table_rows = ""s;
+    auto details = ""s;
+
     for (const auto &reporter: reporters) {
-      content += reporter->make_issue_comment(context) + "\n";
+      auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
+      auto tool_name = reporter->tool_name();
+      table_rows += std::format(table_row_fmt, tool_name, successed, failed, ignored);
+      auto summary = std::format(summary_fmt, failed, tool_name);
+      auto tool_detail = reporter->make_issue_comment(context) + "\n";
+      details += std::format(details_fmt, summary + tool_detail);
     }
-    github_client.add_or_update_issue_comment(context, content);
+
+    auto final_content = std::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
+    github_client.add_or_update_issue_comment(context, final_content);
   }
 
   void comment_on_github_pull_request_review(const runtime_context &context,
