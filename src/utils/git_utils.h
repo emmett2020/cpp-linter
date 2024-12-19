@@ -631,6 +631,9 @@ namespace linter::git {
     auto get(git_repository &repo, git_commit &commit1, git_commit &commit2) -> diff_ptr;
 
     /// Initialize diff options structure
+    auto init_option() -> git::diff_options;
+
+    /// Initialize diff options structure
     void init_option(diff_options_raw_ptr opts);
 
     /// Query how many diff records are there in a diff.
@@ -930,7 +933,7 @@ namespace linter::git {
 
     /// Get the delta associated with a patch. This delta points to internal
     /// data and you do not have to release it when you are done with it.
-    auto num_hunks(const git_patch& patch) -> std::size_t;
+    auto num_hunks(const git_patch &patch) -> std::size_t;
 
     /// Get the number of hunks in a patch
     auto num_hunks(patch_raw_cptr patch) -> std::size_t;
@@ -938,7 +941,7 @@ namespace linter::git {
     /// Get the information about a hunk in a patch
     /// Given a patch and a hunk index into the patch, this returns detailed
     /// information about that hunk.
-    auto get_hunk( git_patch& patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t>;
+    auto get_hunk(git_patch &patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t>;
 
     /// Get the information about a hunk in a patch
     // Given a patch and a hunk index into the patch, this returns detailed
@@ -959,12 +962,14 @@ namespace linter::git {
 
     /// A utility to get all lines in a hunk.
     /// Due to libgit2 limitation, patch can't be const qualified.
-    auto get_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
+    auto get_lines_in_hunk(git_patch &patch, std::size_t hunk_idx) -> std::vector<std::string>;
 
 
-    auto get_target_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
+    auto get_target_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
+      -> std::vector<std::string>;
 
-    auto get_source_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string>;
+    auto get_source_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
+      -> std::vector<std::string>;
 
   } // namespace patch
 

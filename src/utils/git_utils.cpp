@@ -525,6 +525,13 @@ namespace linter::git {
       return commit_to_commit(&repo, &commit1, &commit2);
     }
 
+    auto init_option() -> git::diff_options {
+      auto opts = git::diff_options{};
+      auto ret  = ::git_diff_options_init(&opts, GIT_DIFF_OPTIONS_VERSION);
+      throw_if(ret);
+      return opts;
+    }
+
     void init_option(diff_options_raw_ptr opts) {
       auto ret = ::git_diff_options_init(opts, GIT_DIFF_OPTIONS_VERSION);
       throw_if(ret);
@@ -1005,7 +1012,7 @@ namespace linter::git {
       auto buf = ::git_buf{};
       auto ret = ::git_patch_to_buf(&buf, patch);
       throw_if(ret);
-      auto data = std::string{buf.ptr, buf.size};
+      auto data = std::string(buf.ptr, buf.size);
       ::git_buf_dispose(&buf);
       return data;
     }
@@ -1014,7 +1021,7 @@ namespace linter::git {
       return ::git_patch_get_delta(patch);
     }
 
-    auto num_hunks(const git_patch& patch) -> std::size_t {
+    auto num_hunks(const git_patch &patch) -> std::size_t {
       return ::git_patch_num_hunks(&patch);
     }
 
@@ -1022,7 +1029,7 @@ namespace linter::git {
       return ::git_patch_num_hunks(patch);
     }
 
-    auto get_hunk( git_patch& patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
+    auto get_hunk(git_patch &patch, std::size_t hunk_idx) -> std::tuple<diff_hunk, std::size_t> {
       const auto *hunk_ptr = diff_hunk_raw_ptr{nullptr};
       auto line_num        = std::size_t{0};
       auto ret             = ::git_patch_get_hunk(&hunk_ptr, &line_num, &patch, hunk_idx);
@@ -1060,7 +1067,7 @@ namespace linter::git {
       return ret;
     }
 
-    auto get_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+    auto get_lines_in_hunk(git_patch &patch, std::size_t hunk_idx) -> std::vector<std::string> {
       auto ret         = std::vector<std::string>{};
       size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
       for (size_t i = 0; i < num_lines; i++) {
@@ -1070,24 +1077,26 @@ namespace linter::git {
       return ret;
     }
 
-    auto get_target_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+    auto get_target_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
+      -> std::vector<std::string> {
       auto ret         = std::vector<std::string>{};
       size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
       for (size_t i = 0; i < num_lines; i++) {
         auto line = get_line_in_hunk(&patch, hunk_idx, i);
-        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin== GIT_DIFF_LINE_DELETION) {
+        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin == GIT_DIFF_LINE_DELETION) {
           ret.emplace_back(line.content, line.content_len);
         }
       }
       return ret;
     }
 
-    auto get_source_lines_in_hunk(git_patch& patch, std::size_t hunk_idx) -> std::vector<std::string> {
+    auto get_source_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
+      -> std::vector<std::string> {
       auto ret         = std::vector<std::string>{};
       size_t num_lines = patch::num_lines_in_hunk(&patch, hunk_idx);
       for (size_t i = 0; i < num_lines; i++) {
         auto line = get_line_in_hunk(&patch, hunk_idx, i);
-        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin== GIT_DIFF_LINE_ADDITION) {
+        if (line.origin == GIT_DIFF_LINE_CONTEXT || line.origin == GIT_DIFF_LINE_ADDITION) {
           ret.emplace_back(line.content, line.content_len);
         }
       }
