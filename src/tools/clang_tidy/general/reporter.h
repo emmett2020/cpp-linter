@@ -35,6 +35,7 @@ namespace linter::tool::clang_tidy {
     }
 
     auto make_brief() -> std::string {
+    // TODO: replace diagnostic_type with linkable 
       auto ret = ""s;
       for (const auto &[name, failed]: result.fails) {
         for (const auto &diag: failed.diags) {
