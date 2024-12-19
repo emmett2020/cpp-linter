@@ -16,6 +16,7 @@
 #pragma once
 
 #include <cstdint>
+#include <git2/repository.h>
 #include <string>
 #include <unordered_map>
 
@@ -33,7 +34,7 @@ namespace linter {
     bool enable_action_output       = false;
 
     std::string repo_path;
-    std::string repo;
+    std::string repo_pair;
     std::string token;
     std::string event_name;
     std::string target;
@@ -44,6 +45,9 @@ namespace linter {
     arch_t arch           = arch_t::x86_64;
 
     std::vector<std::string> changed_files;
+    git::repo_ptr repo{nullptr, ::git_repository_free};
+    git::commit_ptr target_commit{nullptr, ::git_commit_free};
+    git::commit_ptr source_commit{nullptr, ::git_commit_free};
     std::unordered_map<std::string, git::patch_ptr> patches;
   };
 

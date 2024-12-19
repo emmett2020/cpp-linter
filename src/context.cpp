@@ -29,7 +29,7 @@ namespace linter {
     spdlog::info("\tenable pull request review: {}", ctx.enable_pull_request_review);
     spdlog::info("\tenable action outptu: {}", ctx.enable_action_output);
     spdlog::info("\trepository path: {}", ctx.repo_path);
-    spdlog::info("\trepository: {}", ctx.repo);
+    spdlog::info("\trepository: {}", ctx.repo_pair);
     spdlog::info("\trepository token: {}", ctx.token.empty() ? "" : "***");
     spdlog::info("\trepository event_name: {}", ctx.event_name);
     spdlog::info("\trepository target: {}", ctx.target);

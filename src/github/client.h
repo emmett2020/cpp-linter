@@ -63,7 +63,7 @@ namespace linter::github {
       spdlog::info("Start to get issue comment id for pull request: {}.", ctx.pr_number);
       assert(std::ranges::contains(github_events_support_comments, ctx.event_name));
 
-      auto path    = std::format("/repos/{}/issues/{}/comments", ctx.repo, ctx.pr_number);
+      auto path    = std::format("/repos/{}/issues/{}/comments", ctx.repo_pair, ctx.pr_number);
       auto headers = httplib::Headers{
         {"Accept", "application/vnd.github+json"},
         {"Authorization", std::format("token {}", ctx.token)}
@@ -100,7 +100,7 @@ namespace linter::github {
     void add_issue_comment(const runtime_context &ctx, const std::string &body) {
       spdlog::info("Start to add issue comment for pr {}", ctx.pr_number);
 
-      const auto path    = std::format("/repos/{}/issues/{}/comments", ctx.repo, ctx.pr_number);
+      const auto path    = std::format("/repos/{}/issues/{}/comments", ctx.repo_pair, ctx.pr_number);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx.token)}
@@ -130,7 +130,7 @@ namespace linter::github {
       throw_if(ctx.pr_number == -1, "the context doesn't have pr-number yet");
       spdlog::info("Start to update issue comment");
 
-      const auto path    = std::format("/repos/{}/issues/comments/{}", ctx.repo, comment_id_);
+      const auto path    = std::format("/repos/{}/issues/comments/{}", ctx.repo_pair, comment_id_);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx.token)}
@@ -158,7 +158,7 @@ namespace linter::github {
     void post_pull_request_review(const runtime_context &ctx, const std::string &body) {
       spdlog::info("Start to post pull request review for pr number {}", ctx.pr_number);
 
-      const auto path    = std::format("/repos/{}/pulls/{}/reviews", ctx.repo, ctx.pr_number);
+      const auto path    = std::format("/repos/{}/pulls/{}/reviews", ctx.repo_pair, ctx.pr_number);
       const auto headers = httplib::Headers{
         {"Accept", "application/vnd.github.use_diff"},
         {"Authorization", std::format("token {}", ctx.token)}

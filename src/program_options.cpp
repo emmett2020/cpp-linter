@@ -108,7 +108,7 @@ namespace linter {
                                  enable_comment_on_issue,
                                  enable_pull_request_review));
         ctx.token     = variables[token].as<std::string>();
-        ctx.repo      = variables[repo].as<std::string>();
+        ctx.repo_pair      = variables[repo].as<std::string>();
         ctx.pr_number = variables[pr_number].as<std::int32_t>();
       }
 

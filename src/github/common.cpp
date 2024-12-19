@@ -88,7 +88,7 @@ namespace linter::github {
              "called only on Github CI environment.");
 
     ctx.token      = env.token;
-    ctx.repo       = env.repository;
+    ctx.repo_pair       = env.repository;
     ctx.repo_path  = env.workspace;
     ctx.event_name = env.event_name;
     ctx.source     = env.github_sha;

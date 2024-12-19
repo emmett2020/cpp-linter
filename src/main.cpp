@@ -108,10 +108,10 @@ auto main(int argc, char **argv) -> int {
 
   // Fill runtime context by git repositofy informations.
   git::setup();
-  auto repo             = git::repo::open(context.repo_path);
-  auto target_commit    = git::revparse::commit(*repo, context.target);
-  auto source_commit    = git::revparse::commit(*repo, context.source);
-  auto diff             = git::diff::get(*repo, *target_commit, *source_commit);
+  context.repo          = git::repo::open(context.repo_path);
+  context.target_commit    = git::revparse::commit(*context.repo, context.target);
+  context.source_commit    = git::revparse::commit(*context.repo, context.source);
+  auto diff             = git::diff::get(*context.repo, *context.target_commit, *context.source_commit);
   context.patches       = git::patch::create_from_diff(*diff);
   context.changed_files = git::patch::changed_files(context.patches);
   print_context(context);
