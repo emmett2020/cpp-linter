@@ -21,7 +21,8 @@
 #include <nlohmann/json.hpp>
 
 namespace linter::github {
-  // A class represent Github pull request review comment.
+  /// A class represent Github pull request review comment.
+  /// Details: https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#about-pull-request-reviews
   struct review_comment {
     std::string path;
     std::size_t position;
@@ -31,8 +32,16 @@ namespace linter::github {
     std::size_t start_line;
     std::string start_side;
   };
-  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(review_comment, path, position, body)
 
+  NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE(
+    review_comment,
+    path,
+    position,
+    body,
+    line,
+    side,
+    start_line,
+    start_side)
 
   using review_comments = std::vector<review_comment>;
 

@@ -16,10 +16,15 @@
 #include "review_comment.h"
 
 namespace linter::github {
+  using namespace std::string_view_literals;
+
+  constexpr auto review_event_comment         = "COMMENT"sv;
+  constexpr auto review_event_request_changes = "REQUEST_CHANGES"sv;
+
   auto make_review_str(const review_comments &comments) -> std::string {
     auto res        = nlohmann::json{};
     res["body"]     = "cpp-linter suggestion";
-    res["event"]    = "COMMENT"; // TODO: DEBUG
+    res["event"]    = review_event_comment; // TODO:DEBUG
     res["comments"] = comments;
     return res.dump();
   }
