@@ -24,9 +24,14 @@ namespace linter::tool::clang_format {
     int offset;
     int length;
     std::string data;
+    int row;
+    int col;
   };
 
-  using replacements_t = std::vector<replacement_t>;
+  // using replacements_t = std::vector<replacement_t>;
+
+  // row -> replacements
+  using replacements_t = std::unordered_map<int, std::vector<replacement_t>>;
 
   struct per_file_result : per_file_result_base {
     replacements_t replacements;

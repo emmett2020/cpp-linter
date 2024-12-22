@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <fstream>
 #include <ranges>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -36,12 +37,26 @@ namespace linter::tool::clang_format {
   namespace {
 
     // Read a file and get this
-    auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
+    // auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
+    //   spdlog::trace("Enter clang_format::get_line_lens()");
+    //   constexpr auto line_feed_len = 1;
+    //
+    //   auto lines = std::vector<uint32_t>{};
+    //   auto file  = std::ifstream{file_path.data()};
+    //   auto temp  = std::string{};
+    //   while (std::getline(file, temp)) {
+    //     lines.emplace_back(temp.size() + line_feed_len);
+    //   }
+    //   return lines;
+    // }
+
+    // Read a file and get this
+    auto get_line_lens(std::string_view file_content) -> std::vector<uint32_t> {
       spdlog::trace("Enter clang_format::get_line_lens()");
       constexpr auto line_feed_len = 1;
 
       auto lines = std::vector<uint32_t>{};
-      auto file  = std::ifstream{file_path.data()};
+      auto file  = std::stringstream{file_content.data()};
       auto temp  = std::string{};
       while (std::getline(file, temp)) {
         lines.emplace_back(temp.size() + line_feed_len);
@@ -75,7 +90,10 @@ namespace linter::tool::clang_format {
       return err != tinyxml2::XMLError::XML_SUCCESS;
     }
 
-    auto parse_replacements_xml(std::string_view data) -> replacements_t {
+    auto parse_replacements_xml(
+      const runtime_context &ctx,
+      std::string_view data,
+      std::string_view file) -> replacements_t {
       spdlog::trace("Enter clang_format::parse_replacements_xml()");
 
       // Names in replacements xml file.
@@ -99,6 +117,11 @@ namespace linter::tool::clang_format {
                "Parse replacements xml failed since no child names 'replacements'");
       auto replacements = replacements_t{};
 
+
+      auto content =
+        git::blob::get_raw_content(ctx.repo.get(), ctx.source_commit.get(), file.data());
+      auto lens = get_line_lens(content);
+
       // Empty replacement node is allowd here.
       auto *replacement_ele = replacements_ele->FirstChildElement(replacement_str);
       while (replacement_ele != nullptr) {
@@ -110,8 +133,13 @@ namespace linter::tool::clang_format {
           replacement.data = text;
         }
 
-        replacements.emplace_back(std::move(replacement));
-
+        auto [row, col] = get_position(lens, replacement.offset);
+        replacement.row = row;
+        replacement.col = col;
+        if (!replacements.contains(row)) {
+          replacements[row] = std::vector<replacement_t>{};
+        }
+        replacements[row].emplace_back(replacement);
         replacement_ele = replacement_ele->NextSiblingElement(replacement_str);
       }
       return replacements;
@@ -156,10 +184,10 @@ namespace linter::tool::clang_format {
 
   // TODO: we should always use source branch's file, not "current" file.
   auto clang_format_general::check_single_file(
-    [[maybe_unused]] const runtime_context &ctx,
+    const runtime_context &ctx,
     const std::string &root_dir,
     const std::string &file) const -> per_file_result {
-    spdlog::trace("Enter base_clang_format::apply_on_single_file()");
+    spdlog::trace("Enter clang_format_general::check_single_file()");
 
     auto xml_res       = execute(option, output_style_t::replacement_xml, root_dir, file);
     auto result        = per_file_result{};
@@ -171,7 +199,7 @@ namespace linter::tool::clang_format {
       return result;
     }
 
-    auto replacements   = parse_replacements_xml(xml_res.std_out);
+    auto replacements   = parse_replacements_xml(ctx, xml_res.std_out, file);
     result.replacements = std::move(replacements);
 
     if (option.needs_formatted_source_code) {

@@ -15,7 +15,9 @@
  */
 #pragma once
 
+#include <algorithm>
 #include <utility>
+#include <ranges>
 
 #include <spdlog/spdlog.h>
 
@@ -71,31 +73,95 @@ namespace linter::tool::clang_format {
       return std::nullopt;
     }
 
+    // The replacements associated with same line.
+    static auto
+    apply_replacement(const std::string &line, int row, const replacements_t &replacements)
+      -> std::string {
+      auto ret = std::string{};
+
+      auto row_replacements = replacements.at(row);
+      std::ranges::sort(row_replacements, {}, &replacement_t::col);
+
+      std::size_t cur_pos = 0;
+      for (const auto &[offset, length, data, row, col]: row_replacements) {
+        ret     += line.substr(cur_pos, col - cur_pos);
+        ret     += data;
+        cur_pos += length;
+      }
+      return ret;
+    }
+
     // The hunk splited rule must be same as github.
     static void make_per_hunk_review_comment(
       const runtime_context &context,
       const std::string &file,
       git::patch_raw_ptr patch,
-      std::size_t patch_idx,
+      std::size_t hunk_idx,
       github::review_comments &comments) {
       // The diff patch of source revision to target revision of checking file.
       const auto &patch_user = context.patches.at(file);
 
-      const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch, patch_idx);
+      const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch_user.get(), hunk_idx);
       const auto row                   = hunk.old_start;
-      auto pos                         = convert_row_number_into_patch_position(row, *patch_user);
+
+      for (std::size_t line;) {
+      }
+      const auto line = git::patch::get_line_in_hunk(patch_user.get(), hunk_idx, line_idx);
+      auto pos        = convert_row_number_into_patch_position(row, *patch_user);
       if (pos) {
         auto comment     = github::review_comment{};
         comment.path     = file;
         comment.position = *pos;
 
-        auto temp    = git::patch::get_lines_in_hunk(patch, patch_idx);
-        comment.body = git::patch::get_source_lines_in_hunk(*patch, patch_idx)
+        auto temp    = git::patch::get_lines_in_hunk(patch, hunk_idx);
+        comment.body = git::patch::get_source_lines_in_hunk(*patch, hunk_idx)
                      | std::views::join_with(' ')
                      | std::ranges::to<std::string>();
         comments.emplace_back(std::move(comment));
       }
     }
+
+    // Return [start_line, end_line]
+    // static auto convert_row_number_into_patch_position2(int row_number, git_patch &patch)
+    //   -> std::tuple<int, int> {
+    //   const auto num_hunk = git::patch::num_hunks(patch);
+    //   auto pos            = 0U;
+    //   for (auto hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
+    //     auto [hunk, num_lines] = git::patch::get_hunk(patch, hunk_idx);
+    //     if (!github::is_row_in_hunk(hunk, row_number)) {
+    //       pos += num_lines;
+    //     }
+    //     return pos + row_number - hunk.new_start + 1;
+    //   }
+    //   return std::nullopt;
+    //   return {};
+    // }
+
+    // The hunk splited rule must be same as github.
+    // static void make_per_hunk_review_comment(
+    //   const runtime_context &context,
+    //   const std::string &file,
+    //   git::patch_raw_ptr patch,
+    //   std::size_t patch_idx,
+    //   github::review_comments &comments) {
+    //   // The diff patch of source revision to target revision of checking file.
+    //   const auto &patch_user = context.patches.at(file);
+    //
+    //   const auto [hunk, hunk_line_num] = git::patch::get_hunk(patch, patch_idx);
+    //   const auto row                   = hunk.old_start;
+    //   auto pos                         = convert_row_number_into_patch_position(row, *patch_user);
+    //   if (pos) {
+    //     auto comment     = github::review_comment{};
+    //     comment.path     = file;
+    //     comment.position = *pos;
+    //
+    //     auto temp    = git::patch::get_lines_in_hunk(patch, patch_idx);
+    //     comment.body = git::patch::get_source_lines_in_hunk(*patch, patch_idx)
+    //                  | std::views::join_with(' ')
+    //                  | std::ranges::to<std::string>();
+    //     comments.emplace_back(std::move(comment));
+    //   }
+    // }
 
     static auto get_suggestion_patch(
       const runtime_context &context,
