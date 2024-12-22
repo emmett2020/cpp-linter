@@ -27,7 +27,7 @@ namespace linter::github {
     std::string path;
     std::size_t position;
     std::string body;
-    std::size_t line;
+    std::size_t line; // end_line
     std::string side;
     std::size_t start_line;
     std::string start_side;

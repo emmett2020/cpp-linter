@@ -21,9 +21,10 @@ export LD_LIBRARY_PATH=/path/to/linter-xxx/lib:$LD_LIBRARY_PATH
 2. support windows [hold]
 3. support macos
 4. refine code:
-  5.1 make some classes abstract
+  5.1 make some classes abstract [done]
   5.2 refine log
-  5.3 copyright
+  5.3 copyright [done]
+  5.4 print usage rather exception when meets invalid program options
 5. add 100% code coverage
 6. document
 7. support cpplint
