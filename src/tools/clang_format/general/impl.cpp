@@ -170,7 +170,7 @@ namespace linter::tool::clang_format {
                  output_style_t output_style,
                  std::string_view repo,
                  std::string_view file) -> shell::result {
-      spdlog::trace("Enter clang_format::execute()");
+      spdlog::trace("Enter clang_format_general::execute()");
 
       auto tool_opt     = output_style == output_style_t::formatted_source_code
                           ? make_source_code_options(file)

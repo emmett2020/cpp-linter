@@ -76,6 +76,14 @@ namespace {
     return ret;
   }
 
+  void check_repo_is_on_source(const runtime_context& ctx) {
+    auto head = git::repo::head_commit(ctx.repo.get());
+    throw_unless(head == ctx.source_commit,
+                 std::format("Head of repository isn't equal to source commit: {} != {}",
+                              git::commit::id_str(head.get()),
+                              git::commit::id_str(ctx.source_commit.get())));
+  }
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -116,6 +124,7 @@ auto main(int argc, char **argv) -> int {
   context.deltas = git::diff::deltas(diff.get());
   context.changed_files = git::patch::changed_files(context.patches);
   print_context(context);
+  check_repo_is_on_source(context);
 
   tool::create_tool_options(tool_creators, user_options);
   auto tools     = tool::create_enabled_tools(tool_creators, context);
