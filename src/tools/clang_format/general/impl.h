@@ -17,7 +17,6 @@
 
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <spdlog/spdlog.h>
 
@@ -46,7 +45,7 @@ namespace linter::tool::clang_format {
       return option.version;
     }
 
-    auto check_single_file(const runtime_context &ctx,
+    auto check_single_file(const runtime_context& context,
                            const std::string &root_dir,
                            const std::string &file) const -> per_file_result;
 

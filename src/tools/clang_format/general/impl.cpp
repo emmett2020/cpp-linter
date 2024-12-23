@@ -19,7 +19,6 @@
 #include <cstdint>
 #include <fstream>
 #include <ranges>
-#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -28,9 +27,8 @@
 #include <spdlog/spdlog.h>
 #include <tinyxml2.h>
 
+#include "context.h"
 #include "tools/clang_format/general/reporter.h"
-#include "tools/util.h"
-#include "utils/git_utils.h"
 #include "utils/shell.h"
 #include "utils/util.h"
 
@@ -38,26 +36,14 @@ namespace linter::tool::clang_format {
   namespace {
 
     // Read a file and get this
-    // auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
-    //   spdlog::trace("Enter clang_format::get_line_lens()");
-    //   constexpr auto line_feed_len = 1;
-    //
-    //   auto lines = std::vector<uint32_t>{};
-    //   auto file  = std::ifstream{file_path.data()};
-    //   auto temp  = std::string{};
-    //   while (std::getline(file, temp)) {
-    //     lines.emplace_back(temp.size() + line_feed_len);
-    //   }
-    //   return lines;
-    // }
-
-    // Read a file and get this
-    auto get_line_lens(std::string_view file_content) -> std::vector<uint32_t> {
+    auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
       spdlog::trace("Enter clang_format::get_line_lens()");
       constexpr auto line_feed_len = 1;
 
       auto lines = std::vector<uint32_t>{};
-      auto file  = std::stringstream{file_content.data()};
+      auto file  = std::ifstream{file_path.data()};
+      throw_unless(file.is_open(), std::format("open file {} error", file_path));
+
       auto temp  = std::string{};
       while (std::getline(file, temp)) {
         lines.emplace_back(temp.size() + line_feed_len);
@@ -70,13 +56,13 @@ namespace linter::tool::clang_format {
       -> std::tuple<int32_t, int32_t> {
       spdlog::trace("Enter clang_format::get_position()");
 
-      auto cur = uint32_t{0};
-      for (int row = 0; row < lens.size(); ++row) {
-        auto len = lens[row];
-        if (offset >= cur && offset < cur + len) {
-          return {row + 1, offset - cur + 1};
+      auto cur_offset = uint32_t{0};
+      for (int i = 0; i < lens.size(); ++i) {
+        auto len = lens[i];
+        if (offset >= cur_offset && offset < cur_offset + len) {
+          return {i + 1, offset - cur_offset + 1};
         }
-        cur += len;
+        cur_offset += len;
       }
       return {-1, -1};
     }
@@ -92,10 +78,10 @@ namespace linter::tool::clang_format {
     }
 
     auto parse_replacements_xml(
-      const runtime_context &ctx,
+      const runtime_context& ctx,
       std::string_view data,
       std::string_view file) -> replacements_t {
-      spdlog::trace("Enter clang_format::parse_replacements_xml()");
+      spdlog::trace("Enter clang_format_general::parse_replacements_xml()");
 
       // Names in replacements xml file.
       static constexpr auto offset_str       = "offset";
@@ -104,7 +90,7 @@ namespace linter::tool::clang_format {
       static constexpr auto replacement_str  = "replacement";
 
       // Start to parse given data to xml tree.
-      auto doc = tinyxml2::XMLDocument{};
+      auto doc = tinyxml2::XMLDocument{true, tinyxml2::PEDANTIC_WHITESPACE};
       auto err = doc.Parse(data.data());
       throw_if(xml_has_error(err),
                std::format("Parse replacements xml failed since: {}", xml_error(err)));
@@ -118,10 +104,7 @@ namespace linter::tool::clang_format {
                "Parse replacements xml failed since no child names 'replacements'");
       auto replacements = replacements_t{};
 
-
-      auto content =
-        git::blob::get_raw_content(ctx.repo.get(), ctx.source_commit.get(), file.data());
-      auto lens = get_line_lens(content);
+      const auto lens = get_line_lens(std::format("{}/{}", ctx.repo_path, file));
 
       // Empty replacement node is allowd here.
       auto *replacement_ele = replacements_ele->FirstChildElement(replacement_str);
@@ -184,7 +167,7 @@ namespace linter::tool::clang_format {
   } // namespace
 
   auto clang_format_general::check_single_file(
-    const runtime_context &ctx,
+    const runtime_context& context,
     const std::string &root_dir,
     const std::string &file) const -> per_file_result {
     spdlog::trace("Enter clang_format_general::check_single_file()");
@@ -199,7 +182,7 @@ namespace linter::tool::clang_format {
       return result;
     }
 
-    auto replacements   = parse_replacements_xml(ctx, xml_res.std_out, file);
+    auto replacements   = parse_replacements_xml(context, xml_res.std_out, file);
     result.replacements = std::move(replacements);
 
     if (option.needs_formatted_source_code) {

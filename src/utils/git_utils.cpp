@@ -1077,6 +1077,7 @@ namespace linter::git {
       return ret;
     }
 
+    // TODO: rename
     auto get_target_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
       -> std::vector<std::string> {
       auto ret         = std::vector<std::string>{};
@@ -1090,6 +1091,7 @@ namespace linter::git {
       return ret;
     }
 
+    // TODO: rename
     auto get_source_lines_in_hunk(git_patch &patch, std::size_t hunk_idx)
       -> std::vector<std::string> {
       auto ret         = std::vector<std::string>{};

@@ -112,9 +112,11 @@ namespace linter::tool::clang_format {
           auto content = git::hunk::get_line_content(line);
           auto row_number = git::hunk::get_new_line_number(line);
           assert(row_number);
-          auto formatted = apply_replacements(content, replacements, *row_number);
-          spdlog::error("before: {}", content);
-          spdlog::error("after : {}", formatted);
+          if (replacements.contains(*row_number)) {
+            auto formatted = apply_replacements(content, replacements, *row_number);
+            spdlog::error("before: {}", content);
+            spdlog::error("after : {}", formatted);
+          }
         }
       }
 
