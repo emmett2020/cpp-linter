@@ -973,6 +973,19 @@ namespace linter::git {
 
   } // namespace patch
 
+
+  namespace hunk {
+    auto is_old_line(const git::diff_line& line) -> bool;
+
+    auto is_new_line(const git::diff_line& line) -> bool;
+
+    auto get_line_content(const git::diff_line& line) -> std::string;
+
+    auto get_old_line_number(const git::diff_line& line) -> std::optional<std::size_t>;
+
+    auto get_new_line_number(const git::diff_line& line) -> std::optional<std::size_t>;
+  }  // namespace hunk
+
   namespace blob {
     /// Lookup a blob object from a repository.
     auto lookup(repo_raw_ptr repo, oid_raw_cptr oid) -> blob_ptr;

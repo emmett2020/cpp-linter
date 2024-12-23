@@ -282,9 +282,13 @@ namespace linter::tool::clang_tidy {
     const auto root_dir = context.repo_path;
     const auto files    = context.changed_files;
     for (const auto &file: files) {
+      const auto& delta = context.deltas.at(file);
+      if (delta.status == GIT_DELTA_DELETED) {
+        continue;
+      }
       if (filter_file(option.source_filter_iregex, file)) {
         result.ignored.push_back(file);
-        spdlog::debug("file is ignored {} by {}", file, option.binary);
+        spdlog::debug("file {} is ignored by {}", file, option.binary);
         continue;
       }
 

@@ -51,6 +51,7 @@ namespace linter {
 
     // The diff patches of source revision to target revision.
     std::unordered_map<std::string, git::patch_ptr> patches;
+    std::unordered_map<std::string, git::diff_delta> deltas;
   };
 
   void print_context(const runtime_context &ctx);

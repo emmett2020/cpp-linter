@@ -30,6 +30,7 @@
 
 #include "tools/clang_format/general/reporter.h"
 #include "tools/util.h"
+#include "utils/git_utils.h"
 #include "utils/shell.h"
 #include "utils/util.h"
 
@@ -182,7 +183,6 @@ namespace linter::tool::clang_format {
 
   } // namespace
 
-  // TODO: we should always use source branch's file, not "current" file.
   auto clang_format_general::check_single_file(
     const runtime_context &ctx,
     const std::string &root_dir,
@@ -221,9 +221,13 @@ namespace linter::tool::clang_format {
     const auto root_dir = context.repo_path;
     const auto files    = context.changed_files;
     for (const auto &file: files) {
+      const auto& delta = context.deltas.at(file);
+      if (delta.status == GIT_DELTA_DELETED) {
+        continue;
+      }
       if (filter_file(option.source_filter_iregex, file)) {
         result.ignored.push_back(file);
-        spdlog::debug("file is ignored {} by {}", file, option.binary);
+        spdlog::debug("file {} is ignored by {}", file, option.binary);
         continue;
       }
 
