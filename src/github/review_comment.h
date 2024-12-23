@@ -37,11 +37,12 @@ namespace linter::github {
     review_comment,
     path,
     position,
-    body,
-    line,
-    side,
-    start_line,
-    start_side)
+    body
+    // line,
+    // side,
+    // start_side,
+    // start_line
+    )
 
   using review_comments = std::vector<review_comment>;
 
