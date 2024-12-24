@@ -16,7 +16,7 @@ set(SRC_DIR "${linter_root}/src")
 FILE(GLOB_RECURSE DEP_FILES "${SRC_DIR}/github/*.cpp"
                             "${SRC_DIR}/tools/*.cpp"
                             "${SRC_DIR}/utils/*.cpp"
-                            "${SRC_DIR}/progrom_options.cpp"
+                            "${SRC_DIR}/program_options.cpp"
                             "${SRC_DIR}/context.cpp"
 )
 
