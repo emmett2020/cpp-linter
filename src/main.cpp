@@ -108,11 +108,9 @@ auto main(int argc, char **argv) -> int {
   set_log_level(context.log_level);
 
   // Fill runtime context by environment variables.
-  if (!context.use_on_local) {
-    auto env = github::read_env();
-    github::check_env(env);
-    github::fill_context_by_env(env, context);
-  }
+  auto env = github::read_env();
+  github::check_env(env);
+  github::fill_context_by_env(env, context);
 
   // Fill runtime context by git repositofy informations.
   git::setup();

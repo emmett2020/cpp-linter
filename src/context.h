@@ -26,8 +26,7 @@
 namespace linter {
   /// The runtime context for all tools.
   struct runtime_context {
-    bool use_on_local               = false;
-    std::string log_level           = "debug";
+    std::string log_level;
     bool enable_step_summary        = false;
     bool enable_comment_on_issue    = false;
     bool enable_pull_request_review = false;

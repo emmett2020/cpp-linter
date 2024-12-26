@@ -204,13 +204,7 @@ namespace linter {
                                        runtime_context &ctx) {
     spdlog::debug("Start to check program_options and fill context by it");
     check_and_fill_context_common(variables, ctx);
-    if (github::is_on_github()) {
-      ctx.use_on_local = false;
-      check_and_fill_context_on_ci(variables, ctx);
-    } else {
-      ctx.use_on_local = true;
-      check_and_fill_context_on_local(variables, ctx);
-    }
+    check_and_fill_context_on_ci(variables, ctx);
   }
 
 } // namespace linter

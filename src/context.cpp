@@ -22,7 +22,6 @@ namespace linter {
   void print_context(const runtime_context& ctx) {
     spdlog::info("Runtime Context:");
     spdlog::info("--------------------------------------------------");
-    spdlog::info("\tuse on local: {}", ctx.use_on_local);
     spdlog::info("\tlog level: {}", ctx.log_level);
     spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
     spdlog::info("\tenable update issue comment: {}", ctx.enable_comment_on_issue);
