@@ -121,6 +121,7 @@ namespace linter {
       }
     }
 
+
   } // namespace
 
   auto create_program_options_desc() -> program_options::options_description {
@@ -128,24 +129,27 @@ namespace linter {
     using std::string;
     auto desc = program_options::options_description{"cpp-linter options"};
 
+    const auto *level = value<string>()->value_name("level")->default_value("info");
+    const auto *revision = value<string>()->value_name("revision")->default_value("main")->required();
+   
+    auto boolean = [](bool def){
+      return value<bool>()->value_name("boolean")->default_value(def);
+    };
+
     // clang-format off
     desc.add_options()
-      (help,                                           "Produce help message")
-      (version,                                        "Print current cpp-linter version")
-      (log_level,                   value<string>(),   "Set the log verbose level of cpp-linter")
-      (repo_path,                   value<string>(),   "Set the full path of git repository")
-      (repo,                        value<string>(),   "Set the owner/repo pair of git repository")
-      (token,                       value<string>(),   "Set github token of git repository")
-      (target,                      value<string>(),   "Set the target refs/commit/branch of git repository")
-      (source,                      value<string>(),   "Set the source refs/commit/branch of git repository")
-      (event_name,                  value<string>(),   "Set the event name of git repository. e.g. pull_request")
-      (pr_number,                   value<int32_t>(),  "Set the pull-request number of git repository")
-      (enable_comment_on_issue,     value<bool>(),     "Enable comment on Github issues")
-      (enable_pull_request_review,  value<bool>(),     "Enable Github pull-request reivew comment")
-      (enable_step_summary,         value<bool>(),     "Enable write step summary to Github action")
-      (enable_action_output,        value<bool>(),     "Enable write output to Github action")
+      (help,                                         "Display help message")
+      (version,                                      "Display current cpp-linter version")
+      (log_level,                   level,           "Set the log verbose level of cpp-linter. "
+                                                     "Supports: [trace, debug, info, error]")
+      (target,                      revision,        "Set the target revision of git repository")
+      (enable_comment_on_issue,     boolean(true),   "Whether enable comment on Github issues")
+      (enable_pull_request_review,  boolean(false),  "Whether enable Github pull-request reivew comment")
+      (enable_step_summary,         boolean(true),   "Whether enable write step summary to Github action")
+      (enable_action_output,        boolean(true),   "Whether enable write output to Github action")
     ;
     // clang-format on
+
     return desc;
   }
 
