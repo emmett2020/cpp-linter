@@ -21,53 +21,60 @@
 
 using namespace linter;
 
+template <class... Opts>
+auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
+  return {const_cast<char *>("CppLintAction"), // NOLINT
+          const_cast<char *>(opts)...};        // NOLINT
+}
+
 TEST_CASE("Test create program options descriptions",
           "[cpp-linter][program_options]") {
   auto desc = create_program_options_desc();
 
   SECTION("help") {
-    int argc = 2;
-    char cpp_name[] = "./cpp-linter";
-    char help_opt[] = "--help";
-    char *argv[] = {cpp_name, help_opt};
-    auto user_options = parse_program_options(argc, argv, desc);
+    auto opts = make_opt("--help");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
     REQUIRE(user_options.contains("help"));
   }
 
   SECTION("version") {
-    int argc = 2;
-    char cpp_name[] = "./cpp-linter";
-    char help_opt[] = "--version";
-    char *argv[] = {cpp_name, help_opt};
-    auto user_options = parse_program_options(argc, argv, desc);
+    auto opts = make_opt("--version");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
     REQUIRE(user_options.contains("version"));
   }
 }
 
-TEST_CASE("Test must_specify could throw",
-          "[cpp-linter][program_options][must_specify]") {
+TEST_CASE("Test must_specify could throw", "[cpp-linter][program_options]") {
   auto desc = create_program_options_desc();
-
-  int argc = 2;
-  char name[] = "./cpp-linter";
-  char help_opt[] = "--help";
-  char *argv[] = {name, help_opt};
-  auto user_options = parse_program_options(argc, argv, desc);
-
+  auto opts = make_opt("--help");
+  auto user_options = parse_program_options(opts.size(), opts.data(), desc);
   REQUIRE_NOTHROW(must_specify("test", user_options, {"help"}));
   REQUIRE_THROWS(must_specify("test", user_options, {"version"}));
 }
 
 TEST_CASE("Test must_not_specify could throw",
-          "[cpp-linter][program_options][must_specify]") {
+          "[cpp-linter][program_options]") {
   auto desc = create_program_options_desc();
-
-  int argc = 2;
-  char name[] = "./cpp-linter";
-  char help_opt[] = "--help";
-  char *argv[] = {name, help_opt};
-  auto user_options = parse_program_options(argc, argv, desc);
-
+  auto opts = make_opt("--help");
+  auto user_options = parse_program_options(opts.size(), opts.data(), desc);
   REQUIRE_THROWS(must_not_specify("test", user_options, {"help"}));
   REQUIRE_NOTHROW(must_not_specify("test", user_options, {"version"}));
+}
+
+TEST_CASE("Test fill context by program options",
+          "[cpp-linter][program_options]") {
+  auto desc = create_program_options_desc();
+  auto context = runtime_context{};
+
+  SECTION("user not specify target will cause exception thrown") {
+    auto desc = create_program_options_desc();
+    auto opts = make_opt("--log-level=info");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_THROWS(fill_context_by_program_options(user_options, context));
+  }
+
+  SECTION("user not specify target will cause exception thrown") {
+    auto opts = make_opt("--target=main");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+  }
 }
