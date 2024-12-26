@@ -74,34 +74,34 @@ TEST_CASE("Test fill context by program options",
   }
 
   SECTION("user not specifies unsupported log level should throw exception") {
-    auto opts = make_opt("--target-ref=main", "--log-level=WARN");
+    auto opts = make_opt("--target-revision=main", "--log-level=WARN");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_THROWS(context = create_context(user_options));
   }
 
   SECTION("user specifies supported log level shouldn't cause exception") {
-    auto opts = make_opt("--target-ref=main", "--log-level=iNfo");
+    auto opts = make_opt("--target-revision=main", "--log-level=iNfo");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.log_level == "info");
   }
 
   SECTION("enable_step_summary should be passed into context") {
-    auto opts = make_opt("--target-ref=main", "--enable-step-summary=false");
+    auto opts = make_opt("--target-revision=main", "--enable-step-summary=false");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.enable_step_summary == false);
   }
 
   SECTION("enable_action_output should be passed into context") {
-    auto opts = make_opt("--target-ref=main", "--enable-action-output=false");
+    auto opts = make_opt("--target-revision=main", "--enable-action-output=false");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.enable_action_output == false);
   }
 
   SECTION("enable_comment_on_issue should be passed into context") {
-    auto opts = make_opt("--target-ref=main", "--enable-step-summary=true");
+    auto opts = make_opt("--target-revision=main", "--enable-step-summary=true");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.enable_step_summary == true);
@@ -109,14 +109,14 @@ TEST_CASE("Test fill context by program options",
 
   SECTION("enable_pull_request_review should be passed into context") {
     auto opts =
-        make_opt("--target-ref=main", "--enable-pull-request-review=true");
+        make_opt("--target-revision=main", "--enable-pull-request-review=true");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.enable_pull_request_review == true);
   }
 
   SECTION("default values should be passed into context") {
-    auto opts = make_opt("--target-ref=main");
+    auto opts = make_opt("--target-revision=main");
     auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE_NOTHROW(context = create_context(user_options));
     REQUIRE(context.enable_step_summary == true);
