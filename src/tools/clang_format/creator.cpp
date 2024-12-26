@@ -15,6 +15,7 @@
  */
 #include "tools/clang_format/creator.h"
 
+#include "program_options.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/general/impl.h"
 #include "tools/clang_format/version/v18.h"
@@ -29,6 +30,24 @@ constexpr auto enable_fastly_exit = "enable-clang-format-fastly-exit";
 constexpr auto version = "clang-format-version";
 constexpr auto binary = "clang-format-binary";
 constexpr auto file_iregex = "clang-format-file-iregex";
+
+// example:
+// Ubuntu clang-format version 18.1.3 (1ubuntu1)
+auto get_clang_format_version(std::string_view binary) -> std::string {
+  auto [ec, std_out, std_err] = shell::execute(binary, {"--version"});
+  if (ec != 0) {
+    return "";
+  }
+  constexpr auto version_regex = R"(version\ (\d+\.\d+\.\d+))";
+  auto regex = boost::regex{version_regex};
+  auto match = boost::smatch{};
+  auto matched = boost::regex_search(std_out, match, regex, boost::match_extra);
+  if (matched) {
+    return match[1].str();
+  }
+  return "";
+}
+
 } // namespace
 
 void creator::register_option(
@@ -37,8 +56,7 @@ void creator::register_option(
   using std::string;
 
   const auto *ver = value<string>()->value_name("version");
-  const auto *bin = value<string>()->value_name("path")->default_value(
-      "/usr/bin/clang-format");
+  const auto *bin = value<string>()->value_name("path");
   const auto *iregex = value<string>()->value_name("iregex")->default_value(
       option.file_filter_iregex);
 
@@ -52,12 +70,12 @@ void creator::register_option(
     (enable_fastly_exit,  boolean(false),  "Enabel clang-format fastly exit. This means "
                                            "CppLintAction will stop clang-format as soon "
                                            "as first file error occurs")
-    (version,             ver,             "Set the version of clang-format. You aren't "
-                                           "allowed to specify both this option and "
-                                           "clang-format-binary to avoid ambiguous")
+    (version,             ver,             "Set the version of clang-format. Don't specify "
+                                           "both this option and the clang-format-binary option, "
+                                           "to avoid ambigous")
     (binary,              bin,             "Set the full path of clang-format executable binary. "
-                                           "You are't allowed to specify both this option and "
-                                           "clang-format-version to avoid ambiguous")
+                                           "Don't spefify both this option and the clang-format-version "
+                                           "option, to avoid ambigous")
     (file_iregex,         iregex,          "Set the source file filter for clang-format.")
   ;
   // clang-format on
@@ -77,26 +95,30 @@ void creator::create_option(const program_options::variables_map &variables) {
     option.file_filter_iregex = variables[file_iregex].as<std::string>();
   }
   if (variables.contains(version)) {
+    program_options::must_not_specify("specify clang-format-version", variables,
+                                      {"clang-format-binary"});
+
     option.version = variables[version].as<std::string>();
-    throw_if(variables.contains(binary),
-             "specify both clang-format-binary and clang-format-version is "
-             "ambiguous");
-    option.binary = find_clang_tool("clang-format", option.version);
+    option.binary = find_clang_tool("clang-tidy", option.version);
   } else if (variables.contains(binary)) {
-    throw_if(variables.contains(version),
-             "specify both clang-format-binary and clang-format-version is "
-             "ambiguous");
+    program_options::must_not_specify("specify clang-format-binary", variables,
+                                      {"clang-format-version"});
+
     option.binary = variables[binary].as<std::string>();
     auto [ec, std_out, std_err] = shell::which(option.binary);
     throw_unless(
         ec == 0,
-        std::format("Can't find given clang_format binary: {}", option.binary));
-    spdlog::info("The clang-format executable path: {}", option.binary);
+        std::format("Can't find given clang-format binary: {}", option.binary));
+    option.version = get_clang_format_version(option.binary);
+    throw_if(option.version.empty(), "can't get clang-format version");
   } else {
     auto [ec, std_out, std_err] = shell::which("clang-format");
-    throw_unless(ec == 0, "Can't find clang-format");
+    throw_unless(ec == 0, "can't find clang-format");
     option.binary = std_out;
+    option.version = get_clang_format_version(option.binary);
+    throw_if(option.version.empty(), "can't get clang-format version");
   }
+  spdlog::info("The clang-format executable path: {}", option.binary);
 }
 
 auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {

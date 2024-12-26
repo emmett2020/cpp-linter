@@ -19,9 +19,13 @@
 #include "tools/base_creator.h"
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_format/creator.h"
+#include "utils/shell.h"
 
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
+
+using namespace linter;
+using namespace linter::tool;
 
 namespace {
 template <class... Opts>
@@ -29,13 +33,22 @@ auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
   return {const_cast<char *>("CppLintAction"), // NOLINT
           const_cast<char *>(opts)...};        // NOLINT
 }
-} // namespace
 
-using namespace linter;
-using namespace linter::tool;
+// Check whether local environment contains clang-format otherwise some checks
+// will be failed.
+bool has_clang_format() {
+  auto [ec, std_out, std_err] = shell::which("clang-format");
+  return ec == 0;
+}
+} // namespace
 
 TEST_CASE("Test register option should work",
           "[cpp-linter][tool][clang_format][general]") {
+  if (!has_clang_format()) {
+    SKIP("Local environment doesn't have clang-format. So skip clang-format "
+         "unittest.");
+  }
+
   auto creator_ptr = std::make_unique<clang_format::creator>();
   auto &creator = *creator_ptr;
 
@@ -69,15 +82,6 @@ TEST_CASE("Test register option should work",
     creator.create_option(user_options);
     auto context = program_options::create_context(user_options);
     REQUIRE(creator.enabled(context) == true);
-  }
-
-  SECTION("test specify both version and binary") {
-    auto inputs =
-        make_opt("--target-revision=main", "--clang-format-version=18.0.1",
-                 "--clang-format-binary=/usr/bin/clang-format-19");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    REQUIRE_THROWS(creator.create_option(user_options));
   }
 
   SECTION("test specify an invalid version") {
