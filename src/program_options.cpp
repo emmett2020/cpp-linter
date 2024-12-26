@@ -67,7 +67,8 @@ auto create_desc() -> options_description {
       (version,                                      "Display current cpp-linter version")
       (log_level,                   level,           "Set the log verbose level of cpp-linter. "
                                                      "Supports: [trace, debug, info, error]")
-      (target,                      revision,        "Set the target revision of git repository")
+      (target,                      revision,        "Set the target revision of git repository "
+                                                     "which is usually the branch name you want to merged into")
       (enable_comment_on_issue,     boolean(true),   "Whether enable comment on Github issues")
       (enable_pull_request_review,  boolean(false),  "Whether enable Github pull-request reivew comment")
       (enable_step_summary,         boolean(true),   "Whether enable write step summary to Github action")
