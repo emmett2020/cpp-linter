@@ -90,9 +90,9 @@ auto main(int argc, char **argv) -> int {
   auto tool_creators = collect_tool_creators();
 
   // Handle user options.
-  auto desc = create_program_options_desc();
+  auto desc = program_options::create_desc();
   tool::register_tool_options(tool_creators, desc);
-  auto user_options = parse_program_options(argc, argv, desc);
+  auto user_options = program_options::parse(argc, argv, desc);
   if (user_options.contains("help")) {
     std::cout << desc << "\n";
     return 0;
@@ -102,9 +102,8 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  // Fill runtime context by user options and environment variables.
-  auto context = runtime_context{};
-  fill_context_by_program_options(user_options, context);
+  // Create runtime context by program options.
+  auto context = program_options::create_context(user_options);
   set_log_level(context.log_level);
 
   // Fill runtime context by environment variables.

@@ -28,28 +28,23 @@ using boost::program_options::notify;
 using boost::program_options::parse_command_line;
 using boost::program_options::store;
 using boost::program_options::value;
-} // namespace linter::program_options
 
-namespace linter {
 /// Create description of CppLintAction command line options.
-auto create_program_options_desc() -> program_options::options_description;
+auto create_desc() -> options_description;
 
 /// Parse user inputs based on the given options description.
-auto parse_program_options(int argc, char **argv,
-                           const program_options::options_description &desc)
-    -> program_options::variables_map;
+auto parse(int argc, char **argv,
+           const options_description &desc) -> variables_map;
 
 /// Fill runtime context by program options.
-void fill_context_by_program_options(
-    const program_options::variables_map &variables, runtime_context &ctx);
+auto create_context(const variables_map &variables) -> runtime_context;
 
 /// Some options must be specified on the given condition, check it.
-void must_specify(const std::string &condition,
-                  const program_options::variables_map &variables,
+void must_specify(const std::string &condition, const variables_map &variables,
                   const std::initializer_list<const char *> &options);
 
 /// Some options mustn't be specified on the given condition, check it.
 void must_not_specify(const std::string &condition,
-                      const program_options::variables_map &variables,
+                      const variables_map &variables,
                       const std::initializer_list<const char *> &options);
-} // namespace linter
+} // namespace linter::program_options

@@ -52,7 +52,7 @@ void creator::register_option(
     (enable_fastly_exit,  boolean(false),  "Enabel clang-format fastly exit. This means "
                                            "CppLintAction will stop clang-format as soon "
                                            "as first file error occurs")
-    (version,             ver,             "Set the version of clang-format You aren't "
+    (version,             ver,             "Set the version of clang-format. You aren't "
                                            "allowed to specify both this option and "
                                            "clang-format-binary to avoid ambiguous")
     (binary,              bin,             "Set the full path of clang-format executable binary. "

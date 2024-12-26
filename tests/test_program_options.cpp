@@ -20,6 +20,7 @@
 #include <catch2/catch_test_macros.hpp>
 
 using namespace linter;
+using namespace linter::program_options;
 
 template <class... Opts>
 auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
@@ -29,94 +30,94 @@ auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
 
 TEST_CASE("Test create program options descriptions",
           "[cpp-linter][program_options]") {
-  auto desc = create_program_options_desc();
+  auto desc = create_desc();
 
   SECTION("help") {
     auto opts = make_opt("--help");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE(user_options.contains("help"));
   }
 
   SECTION("version") {
     auto opts = make_opt("--version");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    auto user_options = parse(opts.size(), opts.data(), desc);
     REQUIRE(user_options.contains("version"));
   }
 }
 
 TEST_CASE("Test must_specify could throw", "[cpp-linter][program_options]") {
-  auto desc = create_program_options_desc();
+  auto desc = program_options::create_desc();
   auto opts = make_opt("--help");
-  auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+  auto user_options = parse(opts.size(), opts.data(), desc);
   REQUIRE_NOTHROW(must_specify("test", user_options, {"help"}));
   REQUIRE_THROWS(must_specify("test", user_options, {"version"}));
 }
 
 TEST_CASE("Test must_not_specify could throw",
           "[cpp-linter][program_options]") {
-  auto desc = create_program_options_desc();
+  auto desc = create_desc();
   auto opts = make_opt("--help");
-  auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+  auto user_options = parse(opts.size(), opts.data(), desc);
   REQUIRE_THROWS(must_not_specify("test", user_options, {"help"}));
   REQUIRE_NOTHROW(must_not_specify("test", user_options, {"version"}));
 }
 
 TEST_CASE("Test fill context by program options",
           "[cpp-linter][program_options]") {
-  auto desc = create_program_options_desc();
+  auto desc = create_desc();
   auto context = runtime_context{};
 
   SECTION("user not specifies target should throw exception") {
     auto opts = make_opt("--log-level=info");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_THROWS(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_THROWS(create_context(user_options));
   }
 
   SECTION("user not specifies unsupported log level should throw exception") {
     auto opts = make_opt("--target=main", "--log-level=WARN");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_THROWS(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_THROWS(create_context(user_options));
   }
 
   SECTION("user specifies supported log level shouldn't cause exception") {
     auto opts = make_opt("--target=main", "--log-level=iNfo");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.log_level == "info");
   }
 
   SECTION("enable_step_summary should be passed into context") {
     auto opts = make_opt("--target=main", "--enable-step-summary=false");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.enable_step_summary == false);
   }
 
   SECTION("enable_action_output should be passed into context") {
     auto opts = make_opt("--target=main", "--enable-action-output=false");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.enable_action_output == false);
   }
 
   SECTION("enable_comment_on_issue should be passed into context") {
     auto opts = make_opt("--target=main", "--enable-step-summary=true");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.enable_step_summary == true);
   }
 
   SECTION("enable_pull_request_review should be passed into context") {
     auto opts = make_opt("--target=main", "--enable-pull-request-review=true");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.enable_pull_request_review == true);
   }
 
   SECTION("default values should be passed into context") {
     auto opts = make_opt("--target=main");
-    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    auto user_options = parse(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(create_context(user_options));
     REQUIRE(context.enable_step_summary == true);
     REQUIRE(context.enable_comment_on_issue == true);
     REQUIRE(context.enable_pull_request_review == false);
