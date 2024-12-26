@@ -20,19 +20,20 @@
 #include "tools/clang_format/general/option.h"
 
 namespace linter::tool::clang_format {
+/// The creator to create clang-format instance.
+struct creator : creator_base {
+  creator() = default;
+  ~creator() override = default;
+  creator(creator &&other) = default;
 
-  struct creator : creator_base {
-    creator()                = default;
-    ~creator() override      = default;
-    creator(creator &&other) = default;
+  void
+  register_option(program_options::options_description &desc) const override;
+  void create_option(const program_options::variables_map &variables) override;
+  auto create_tool(const runtime_context &context) -> tool_base_ptr override;
+  bool enabled(const runtime_context &context) override;
 
-    void register_option(program_options::options_description &desc) const override;
-    void create_option(const program_options::variables_map &variables) override;
-    auto create_tool(const runtime_context &context) -> tool_base_ptr override;
-    bool tool_is_enabled(const runtime_context &context) override;
-
-  private:
-    option_t option;
-  };
+private:
+  option_t option;
+};
 
 } // namespace linter::tool::clang_format

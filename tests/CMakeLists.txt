@@ -22,4 +22,5 @@ FILE(GLOB_RECURSE DEP_FILES "${SRC_DIR}/github/*.cpp"
 
 add_executable(test_git test_git.cpp ${DEP_FILES})
 add_executable(test_program_options test_program_options.cpp ${DEP_FILES})
+add_executable(test_clang_format_general clang_format/test_clang_format_general.cpp ${DEP_FILES})
 

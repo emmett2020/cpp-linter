@@ -135,7 +135,7 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
   return tool;
 }
 
-bool creator::tool_is_enabled([[maybe_unused]] const runtime_context &context) {
+bool creator::enabled([[maybe_unused]] const runtime_context &context) {
   return option.enabled;
 }
 

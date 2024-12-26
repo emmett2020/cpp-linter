@@ -23,30 +23,32 @@
 
 namespace linter::tool::clang_tidy {
 
-  constexpr auto enable_clang_tidy               = "enable-clang-tidy";
-  constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
-  constexpr auto clang_tidy_version              = "clang-tidy-version";
-  constexpr auto clang_tidy_binary               = "clang-tidy-binary";
-  constexpr auto clang_tidy_allow_no_checks      = "clang-tidy-allow-no-checks";
-  constexpr auto clang_tidy_enable_check_profile = "clang-tidy-enable-check-profile";
-  constexpr auto clang_tidy_checks               = "clang-tidy-checks";
-  constexpr auto clang_tidy_config               = "clang-tidy-config";
-  constexpr auto clang_tidy_config_file          = "clang-tidy-config-file";
-  constexpr auto clang_tidy_database             = "clang-tidy-database";
-  constexpr auto clang_tidy_header_filter        = "clang-tidy-header-filter";
-  constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
-  constexpr auto clang_tidy_iregex               = "clang-tidy-iregex";
+constexpr auto enable_clang_tidy = "enable-clang-tidy";
+constexpr auto enable_clang_tidy_fastly_exit = "enable-clang-tidy-fastly-exit";
+constexpr auto clang_tidy_version = "clang-tidy-version";
+constexpr auto clang_tidy_binary = "clang-tidy-binary";
+constexpr auto clang_tidy_allow_no_checks = "clang-tidy-allow-no-checks";
+constexpr auto clang_tidy_enable_check_profile =
+    "clang-tidy-enable-check-profile";
+constexpr auto clang_tidy_checks = "clang-tidy-checks";
+constexpr auto clang_tidy_config = "clang-tidy-config";
+constexpr auto clang_tidy_config_file = "clang-tidy-config-file";
+constexpr auto clang_tidy_database = "clang-tidy-database";
+constexpr auto clang_tidy_header_filter = "clang-tidy-header-filter";
+constexpr auto clang_tidy_line_filter = "clang-tidy-line-filter";
+constexpr auto clang_tidy_iregex = "clang-tidy-iregex";
 
-  struct creator : public creator_base {
-    void register_option(program_options::options_description &desc) const override;
+struct creator : public creator_base {
+  void
+  register_option(program_options::options_description &desc) const override;
 
-    void create_option(const program_options::variables_map &variables) override;
+  void create_option(const program_options::variables_map &variables) override;
 
-    auto create_tool(const runtime_context &context) -> tool_base_ptr override;
+  auto create_tool(const runtime_context &context) -> tool_base_ptr override;
 
-    bool tool_is_enabled(const runtime_context &context) override;
+  bool enabled(const runtime_context &context) override;
 
-    option_t option;
-  };
+  option_t option;
+};
 
 } // namespace linter::tool::clang_tidy

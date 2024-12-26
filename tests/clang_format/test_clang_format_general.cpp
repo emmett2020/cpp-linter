@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
 
-#include "tools/base_option.h"
+#include "tools/clang_format/clang_format.h"
 
-namespace linter::tool::clang_format {
-struct option_t : option_base {
-  bool enable_warning_as_error = false;
-};
+#include <catch2/catch_all.hpp>
+#include <catch2/catch_test_macros.hpp>
 
-} // namespace linter::tool::clang_format
+using namespace linter;
+
+TEST_CASE("Test create program options descriptions",
+          "[cpp-linter][tool][clang_format][general]") {}

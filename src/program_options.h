@@ -16,13 +16,21 @@
 #pragma once
 
 #include <boost/program_options.hpp>
+#include <boost/program_options/detail/parsers.hpp>
 #include <spdlog/spdlog.h>
 
 #include "context.h"
 
-namespace linter {
-namespace program_options = boost::program_options;
+namespace linter::program_options {
+using options_description = boost::program_options::options_description;
+using variables_map = boost::program_options::variables_map;
+using boost::program_options::notify;
+using boost::program_options::parse_command_line;
+using boost::program_options::store;
+using boost::program_options::value;
+} // namespace linter::program_options
 
+namespace linter {
 /// Create description of CppLintAction command line options.
 auto create_program_options_desc() -> program_options::options_description;
 

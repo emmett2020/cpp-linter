@@ -187,20 +187,6 @@ auto clang_format_general::check_single_file(
 
   auto replacements = parse_replacements_xml(context, xml_res.std_out, file);
   result.replacements = std::move(replacements);
-
-  if (option.needs_formatted_source_code) {
-    spdlog::debug("Execute clang-format again to get formatted source code.");
-    auto code_res =
-        execute(option, output_style_t::formatted_source_code, root_dir, file);
-    result.tool_stdout += "\n" + code_res.std_out;
-    result.tool_stderr += "\n" + code_res.std_err;
-    if (code_res.exit_code != 0) {
-      result.passed = false;
-      return result;
-    }
-    result.formatted_source_code = code_res.std_out;
-  }
-
   return result;
 }
 
