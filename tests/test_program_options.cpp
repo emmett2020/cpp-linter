@@ -22,7 +22,7 @@
 using namespace linter;
 
 TEST_CASE("Test create program options descriptions",
-          "[cpp-linter][program_options][create]") {
+          "[cpp-linter][program_options]") {
   auto desc = create_program_options_desc();
 
   SECTION("help") {
@@ -44,9 +44,30 @@ TEST_CASE("Test create program options descriptions",
   }
 }
 
-TEST_CASE("Test must_specify could report error",
+TEST_CASE("Test must_specify could throw",
           "[cpp-linter][program_options][must_specify]") {
   auto desc = create_program_options_desc();
-  auto vars = program_options::variables_map{};
-  vars[""];
+
+  int argc = 2;
+  char name[] = "./cpp-linter";
+  char help_opt[] = "--help";
+  char *argv[] = {name, help_opt};
+  auto user_options = parse_program_options(argc, argv, desc);
+
+  REQUIRE_NOTHROW(must_specify("test", user_options, {"help"}));
+  REQUIRE_THROWS(must_specify("test", user_options, {"version"}));
+}
+
+TEST_CASE("Test must_not_specify could throw",
+          "[cpp-linter][program_options][must_specify]") {
+  auto desc = create_program_options_desc();
+
+  int argc = 2;
+  char name[] = "./cpp-linter";
+  char help_opt[] = "--help";
+  char *argv[] = {name, help_opt};
+  auto user_options = parse_program_options(argc, argv, desc);
+
+  REQUIRE_THROWS(must_not_specify("test", user_options, {"help"}));
+  REQUIRE_NOTHROW(must_not_specify("test", user_options, {"version"}));
 }

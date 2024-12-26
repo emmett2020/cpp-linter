@@ -131,7 +131,7 @@ namespace linter {
 
     const auto *level = value<string>()->value_name("level")->default_value("info");
     const auto *revision = value<string>()->value_name("revision")->default_value("main")->required();
-   
+  
     auto boolean = [](bool def){
       return value<bool>()->value_name("boolean")->default_value(def);
     };
@@ -172,8 +172,10 @@ namespace linter {
         lacks.push_back(option);
       }
     });
-    auto lacks_str = lacks | std::views::join_with(',') | std::ranges::to<std::string>();
     throw_unless(lacks.empty(), [&] noexcept {
+      auto lacks_str = lacks
+                     | std::views::join_with(',')
+                     | std::ranges::to<std::string>();
       return std::format("must specify {} when {}", std::move(lacks_str), condition);
     });
   }
@@ -188,8 +190,10 @@ namespace linter {
       }
     });
 
-    auto forbidden_str = forbidden | std::views::join_with(',') | std::ranges::to<std::string>();
     throw_unless(forbidden.empty(), [&] noexcept {
+      auto forbidden_str = forbidden
+                         | std::views::join_with(',')
+                         | std::ranges::to<std::string>();
       return std::format("must not specify {} when {}", forbidden_str, condition);
     });
   }
