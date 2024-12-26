@@ -32,6 +32,8 @@ struct creator : creator_base {
   auto create_tool(const runtime_context &context) -> tool_base_ptr override;
   bool enabled(const runtime_context &context) override;
 
+  [[nodiscard]] auto get_option() const -> const option_t &;
+
 private:
   option_t option;
 };

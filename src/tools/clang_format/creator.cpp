@@ -64,17 +64,17 @@ void creator::register_option(
 }
 
 void creator::create_option(const program_options::variables_map &variables) {
-  // Speed up option creation
-  if (!variables.contains(enable)) {
-    return;
-  }
   option.enabled = variables[enable].as<bool>();
   if (!option.enabled) {
+    // Speed up option creation
     return;
   }
 
   if (variables.contains(enable_fastly_exit)) {
     option.enabled_fastly_exit = variables[enable_fastly_exit].as<bool>();
+  }
+  if (variables.contains(file_iregex)) {
+    option.file_filter_iregex = variables[file_iregex].as<std::string>();
   }
   if (variables.contains(version)) {
     option.version = variables[version].as<std::string>();
@@ -119,5 +119,9 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
 
 bool creator::enabled([[maybe_unused]] const runtime_context &context) {
   return option.enabled;
+}
+
+[[nodiscard]] auto creator::get_option() const -> const option_t & {
+  return option;
 }
 } // namespace linter::tool::clang_format
