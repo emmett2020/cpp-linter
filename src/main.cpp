@@ -42,47 +42,47 @@ using namespace std::string_view_literals;
 
 namespace {
 
-  // This function must be called before any spdlog operations.
-  void set_log_level(std::string_view log_level_str) {
-    static constexpr auto valid_log_levels = {"trace", "debug", "error", "info"};
-    assert(std::ranges::contains(valid_log_levels, log_level_str));
+// This function must be called before any spdlog operations.
+void set_log_level(std::string_view log_level_str) {
+  static constexpr auto valid_log_levels = {"trace", "debug", "error", "info"};
+  assert(std::ranges::contains(valid_log_levels, log_level_str));
 
-    auto log_level = spdlog::level::info;
-    if (log_level_str == "trace") {
-      log_level = spdlog::level::trace;
-    } else if (log_level_str == "debug") {
-      log_level = spdlog::level::debug;
-    } else {
-      log_level = spdlog::level::err;
-    }
-    spdlog::set_level(log_level);
+  auto log_level = spdlog::level::info;
+  if (log_level_str == "trace") {
+    log_level = spdlog::level::trace;
+  } else if (log_level_str == "debug") {
+    log_level = spdlog::level::debug;
+  } else {
+    log_level = spdlog::level::err;
   }
+  spdlog::set_level(log_level);
+}
 
-  auto print_changed_files(const std::vector<std::string> &files) {
-    spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
-  }
+auto print_changed_files(const std::vector<std::string> &files) {
+  spdlog::info("Got {} changed files. File list:\n{}", files.size(),
+               concat(files));
+}
 
-  void print_version() {
-    std::print("{}.{}.{}",
-               cpp_linter_VERSION_MAJOR,
-               cpp_linter_VERSION_MINOR,
-               cpp_linter_VERSION_PATCH);
-  }
+void print_version() {
+  std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
+             cpp_linter_VERSION_PATCH);
+}
 
-  auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
-    auto ret = std::vector<tool::creator_base_ptr>{};
-    ret.push_back(std::make_unique<tool::clang_format::creator>());
-    ret.push_back(std::make_unique<tool::clang_tidy::creator>());
-    return ret;
-  }
+auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
+  auto ret = std::vector<tool::creator_base_ptr>{};
+  ret.push_back(std::make_unique<tool::clang_format::creator>());
+  ret.push_back(std::make_unique<tool::clang_tidy::creator>());
+  return ret;
+}
 
-  void check_repo_is_on_source(const runtime_context& ctx) {
-    auto head = git::repo::head_commit(ctx.repo.get());
-    throw_unless(head == ctx.source_commit,
-                 std::format("Head of repository isn't equal to source commit: {} != {}",
-                              git::commit::id_str(head.get()),
-                              git::commit::id_str(ctx.source_commit.get())));
-  }
+void check_repo_is_on_source(const runtime_context &ctx) {
+  auto head = git::repo::head_commit(ctx.repo.get());
+  throw_unless(
+      head == ctx.source_commit,
+      std::format("Head of repository isn't equal to source commit: {} != {}",
+                  git::commit::id_str(head.get()),
+                  git::commit::id_str(ctx.source_commit.get())));
+}
 
 } // namespace
 
@@ -114,10 +114,11 @@ auto main(int argc, char **argv) -> int {
 
   // Fill runtime context by git repositofy informations.
   git::setup();
-  context.repo          = git::repo::open(context.repo_path);
+  context.repo = git::repo::open(context.repo_path);
   context.target_commit = git::revparse::commit(*context.repo, context.target);
   context.source_commit = git::revparse::commit(*context.repo, context.source);
-  auto diff       = git::diff::get(*context.repo, *context.target_commit, *context.source_commit);
+  auto diff = git::diff::get(*context.repo, *context.target_commit,
+                             *context.source_commit);
   context.patches = git::patch::create_from_diff(*diff);
   context.deltas = git::diff::deltas(diff.get());
   context.changed_files = git::patch::changed_files(context.patches);
@@ -125,7 +126,7 @@ auto main(int argc, char **argv) -> int {
   check_repo_is_on_source(context);
 
   tool::create_tool_options(tool_creators, user_options);
-  auto tools     = tool::create_enabled_tools(tool_creators, context);
+  auto tools = tool::create_enabled_tools(tool_creators, context);
   auto reporters = tool::check_then_get_reporters(tools, context);
 
   if (context.enable_action_output) {

@@ -21,29 +21,27 @@
 #include "context.h"
 
 namespace linter {
-  namespace program_options = boost::program_options;
+namespace program_options = boost::program_options;
 
-  /// Create the options description of cpp-linter command line.
-  auto create_program_options_desc() -> program_options::options_description;
+/// Create description of CppLintAction command line options.
+auto create_program_options_desc() -> program_options::options_description;
 
-  /// Parse the given options_description with user inputs.
-  auto parse_program_options(
-    int argc,
-    char **argv,
-    const program_options::options_description &desc) -> program_options::variables_map;
+/// Parse user inputs based on the given options description.
+auto parse_program_options(int argc, char **argv,
+                           const program_options::options_description &desc)
+    -> program_options::variables_map;
 
-  /// Fill runtime context by program options.
-  void fill_context_by_program_options(const program_options::variables_map &variables,
-                                       runtime_context &ctx);
+/// Fill runtime context by program options.
+void fill_context_by_program_options(
+    const program_options::variables_map &variables, runtime_context &ctx);
 
+/// Some options must be specified on the given condition, check it.
+void must_specify(const std::string &condition,
+                  const program_options::variables_map &variables,
+                  const std::initializer_list<const char *> &options);
 
-  /// Some options must be specified on the given condition, check it.
-  void must_specify(const std::string &condition,
-                    const program_options::variables_map &variables,
-                    const std::initializer_list<const char *> &options);
-
-  /// Some options mustn't be specified on the given condition, check it.
-  void must_not_specify(const std::string &condition,
-                        const program_options::variables_map &variables,
-                        const std::initializer_list<const char *> &options);
+/// Some options mustn't be specified on the given condition, check it.
+void must_not_specify(const std::string &condition,
+                      const program_options::variables_map &variables,
+                      const std::initializer_list<const char *> &options);
 } // namespace linter
