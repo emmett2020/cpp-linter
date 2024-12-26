@@ -66,15 +66,60 @@ TEST_CASE("Test fill context by program options",
   auto desc = create_program_options_desc();
   auto context = runtime_context{};
 
-  SECTION("user not specify target will cause exception thrown") {
-    auto desc = create_program_options_desc();
+  SECTION("user not specifies target should throw exception") {
     auto opts = make_opt("--log-level=info");
     auto user_options = parse_program_options(opts.size(), opts.data(), desc);
     REQUIRE_THROWS(fill_context_by_program_options(user_options, context));
   }
 
-  SECTION("user not specify target will cause exception thrown") {
+  SECTION("user not specifies unsupported log level should throw exception") {
+    auto opts = make_opt("--target=main", "--log-level=WARN");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_THROWS(fill_context_by_program_options(user_options, context));
+  }
+
+  SECTION("user specifies supported log level shouldn't cause exception") {
+    auto opts = make_opt("--target=main", "--log-level=iNfo");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.log_level == "info");
+  }
+
+  SECTION("enable_step_summary should be passed into context") {
+    auto opts = make_opt("--target=main", "--enable-step-summary=false");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.enable_step_summary == false);
+  }
+
+  SECTION("enable_action_output should be passed into context") {
+    auto opts = make_opt("--target=main", "--enable-action-output=false");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.enable_action_output == false);
+  }
+
+  SECTION("enable_comment_on_issue should be passed into context") {
+    auto opts = make_opt("--target=main", "--enable-step-summary=true");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.enable_step_summary == true);
+  }
+
+  SECTION("enable_pull_request_review should be passed into context") {
+    auto opts = make_opt("--target=main", "--enable-pull-request-review=true");
+    auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.enable_pull_request_review == true);
+  }
+
+  SECTION("default values should be passed into context") {
     auto opts = make_opt("--target=main");
     auto user_options = parse_program_options(opts.size(), opts.data(), desc);
+    REQUIRE_NOTHROW(fill_context_by_program_options(user_options, context));
+    REQUIRE(context.enable_step_summary == true);
+    REQUIRE(context.enable_comment_on_issue == true);
+    REQUIRE(context.enable_pull_request_review == false);
+    REQUIRE(context.enable_action_output == true);
   }
 }
