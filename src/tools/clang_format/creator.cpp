@@ -139,9 +139,7 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
   return tool;
 }
 
-bool creator::enabled([[maybe_unused]] const runtime_context &context) {
-  return option.enabled;
-}
+bool creator::enabled() { return option.enabled; }
 
 [[nodiscard]] auto creator::get_option() const -> const option_t & {
   return option;

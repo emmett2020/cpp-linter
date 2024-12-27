@@ -35,7 +35,7 @@ struct creator_base {
   virtual auto create_tool(const runtime_context &context) -> tool_base_ptr = 0;
 
   /// Whether enabled underlying tool.
-  virtual bool enabled(const runtime_context &context) = 0;
+  virtual bool enabled() = 0;
 };
 
 using creator_base_ptr = std::unique_ptr<creator_base>;
