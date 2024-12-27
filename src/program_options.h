@@ -17,7 +17,6 @@
 
 #include <boost/program_options.hpp>
 #include <boost/program_options/detail/parsers.hpp>
-#include <spdlog/spdlog.h>
 
 #include "context.h"
 

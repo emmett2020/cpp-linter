@@ -17,10 +17,10 @@
 
 #include <algorithm>
 #include <initializer_list>
-#include <ranges>
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options/options_description.hpp>
+#include <spdlog/spdlog.h>
 
 #include "context.h"
 #include "github/github.h"

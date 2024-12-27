@@ -18,7 +18,6 @@
 #include <cctype>
 #include <cstdint>
 #include <fstream>
-#include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
