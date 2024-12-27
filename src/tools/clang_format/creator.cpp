@@ -108,7 +108,7 @@ void creator::create_option(const program_options::variables_map &variables) {
     auto [ec, std_out, std_err] = shell::which(option.binary);
     throw_unless(
         ec == 0,
-        std::format("Can't find given clang-format binary: {}", option.binary));
+        fmt::format("Can't find given clang-format binary: {}", option.binary));
     option.version = get_clang_format_version(option.binary);
     throw_if(option.version.empty(), "can't get clang-format version");
   } else {
@@ -132,7 +132,7 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
     tool = std::make_unique<clang_format_general>(option);
   }
   throw_unless(tool->is_supported(context.os, context.arch),
-               std::format("Create clang-format {} instance failed since not "
+               fmt::format("Create clang-format {} instance failed since not "
                            "supported on this platform",
                            version));
 

@@ -16,7 +16,6 @@
 #include <cctype>
 #include <git2/oid.h>
 #include <memory>
-#include <print>
 #include <string>
 #include <vector>
 
@@ -45,7 +44,7 @@ namespace {
 // This function must be called before any spdlog operations.
 void set_log_level(std::string_view log_level_str) {
   static constexpr auto valid_log_levels = {"trace", "debug", "error", "info"};
-  assert(std::ranges::contains(valid_log_levels, log_level_str));
+  assert(ranges::contains(valid_log_levels, log_level_str));
 
   auto log_level = spdlog::level::info;
   if (log_level_str == "trace") {
@@ -64,7 +63,7 @@ auto print_changed_files(const std::vector<std::string> &files) {
 }
 
 void print_version() {
-  std::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
+  fmt::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
              cpp_linter_VERSION_PATCH);
 }
 
@@ -79,7 +78,7 @@ void check_repo_is_on_source(const runtime_context &ctx) {
   auto head = git::repo::head_commit(ctx.repo.get());
   throw_unless(
       head == ctx.source_commit,
-      std::format("Head of repository isn't equal to source commit: {} != {}",
+      fmt::format("Head of repository isn't equal to source commit: {} != {}",
                   git::commit::id_str(head.get()),
                   git::commit::id_str(ctx.source_commit.get())));
 }

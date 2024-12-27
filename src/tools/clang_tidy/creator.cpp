@@ -77,7 +77,7 @@ void creator::create_option(const program_options::variables_map &variables) {
         "specify both clang-tidy-binary and clang-tidy-version is ambiguous");
     option.binary = variables[clang_tidy_binary].as<std::string>();
     auto [ec, std_out, std_err] = shell::which(option.binary);
-    throw_unless(ec == 0, std::format("Can't find given clang_tidy_binary: {}",
+    throw_unless(ec == 0, fmt::format("Can't find given clang_tidy_binary: {}",
                                       option.binary));
     spdlog::info("The clang-tidy executable path: {}", option.binary);
   } else {
@@ -129,7 +129,7 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
   }
 
   throw_unless(tool->is_supported(context.os, context.arch),
-               std::format("Create clang-tidy {} instance failed since not "
+               fmt::format("Create clang-tidy {} instance failed since not "
                            "supported on this platform",
                            version));
   return tool;

@@ -42,7 +42,7 @@ auto get_line_lens(std::string_view file_path) -> std::vector<uint32_t> {
 
   auto lines = std::vector<uint32_t>{};
   auto file = std::ifstream{file_path.data()};
-  throw_unless(file.is_open(), std::format("open file {} error", file_path));
+  throw_unless(file.is_open(), fmt::format("open file {} error", file_path));
 
   auto temp = std::string{};
   while (std::getline(file, temp)) {
@@ -94,7 +94,7 @@ auto parse_replacements_xml(const runtime_context &ctx, std::string_view data,
   auto err = doc.Parse(data.data());
   throw_if(
       xml_has_error(err),
-      std::format("Parse replacements xml failed since: {}", xml_error(err)));
+      fmt::format("Parse replacements xml failed since: {}", xml_error(err)));
   throw_if(
       doc.NoChildren(),
       "Parse replacements xml failed since no children in replacements xml");
@@ -106,7 +106,7 @@ auto parse_replacements_xml(const runtime_context &ctx, std::string_view data,
            "Parse replacements xml failed since no child names 'replacements'");
   auto replacements = replacements_t{};
 
-  const auto lens = get_line_lens(std::format("{}/{}", ctx.repo_path, file));
+  const auto lens = get_line_lens(fmt::format("{}/{}", ctx.repo_path, file));
 
   // Empty replacement node is allowd here.
   auto *replacement_ele = replacements_ele->FirstChildElement(replacement_str);
@@ -160,8 +160,7 @@ auto execute(const option_t &opt, output_style_t output_style,
   auto tool_opt = output_style == output_style_t::formatted_source_code
                       ? make_source_code_options(file)
                       : make_replacements_options(file);
-  auto tool_opt_str =
-      tool_opt | std::views::join_with(' ') | std::ranges::to<std::string>();
+  auto tool_opt_str = concat(tool_opt);
   spdlog::info("Running command: {} {}", opt.binary, tool_opt_str);
 
   return shell::execute(opt.binary, tool_opt, repo);

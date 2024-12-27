@@ -97,21 +97,21 @@ namespace linter::tool {
     for (const auto &reporter: reporters) {
       auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
       auto tool_name = reporter->tool_name();
-      table_rows += std::format(table_row_fmt, tool_name, successed, failed, ignored);
+      table_rows += fmt::format(table_row_fmt, tool_name, successed, failed, ignored);
       if (!is_passed) {
         assert(failed != 0);
-        auto summary = std::format(summary_fmt, failed, failed == 1 ? "file" : "files", tool_name);
+        auto summary = fmt::format(summary_fmt, failed, failed == 1 ? "file" : "files", tool_name);
         auto tool_detail = reporter->make_issue_comment(context) + "\n";
-        details += std::format(details_fmt, summary + tool_detail);
+        details += fmt::format(details_fmt, summary + tool_detail);
       }
     }
 
     {
       static const auto usage_summary = "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
-      details += std::format(details_fmt, usage_summary + make_usage_specification());
+      details += fmt::format(details_fmt, usage_summary + make_usage_specification());
     }
 
-    auto final_content = std::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
+    auto final_content = fmt::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
     github_client.add_or_update_issue_comment(context, final_content);
   }
 

@@ -17,7 +17,6 @@
 
 #include <algorithm>
 #include <cctype>
-#include <format>
 #include <iterator>
 #include <optional>
 #include <ranges>
@@ -47,7 +46,8 @@ constexpr auto supported_serverity = {"warning"sv, "info"sv, "error"sv};
 // rule, parse it. Otherwise return std::nullopt.
 auto parse_diagnostic_header(std::string_view line)
     -> std::optional<diagnostic_header> {
-  auto parts = line | std::views::split(':');
+  auto parts =
+      line | ranges::views::split(':') | ranges::to<std::vector<std::string>>();
 
   if (std::distance(parts.begin(), parts.end()) != 5) {
     return std::nullopt;
@@ -59,17 +59,17 @@ auto parse_diagnostic_header(std::string_view line)
   auto serverity = trim_left(std::string_view{*iter++});
   auto diagnostic_type = std::string_view{*iter++};
 
-  if (!std::ranges::all_of(row_idx, ::isdigit)) {
+  if (!ranges::all_of(row_idx, ::isdigit)) {
     return std::nullopt;
   }
-  if (!std::ranges::all_of(col_idx, ::isdigit)) {
+  if (!ranges::all_of(col_idx, ::isdigit)) {
     return std::nullopt;
   }
-  if (!std::ranges::contains(supported_serverity, serverity)) {
+  if (!ranges::contains(supported_serverity, serverity)) {
     return std::nullopt;
   }
 
-  const auto *square_brackets = std::ranges::find(diagnostic_type, '[');
+  const auto *square_brackets = ranges::find(diagnostic_type, '[');
   if ((square_brackets == diagnostic_type.end()) ||
       (diagnostic_type.size() < 3) || (diagnostic_type.back() != ']')) {
     return std::nullopt;
@@ -91,34 +91,33 @@ auto execute(const option_t &option, std::string_view repo,
              std::string_view file) -> shell::result {
   auto opts = std::vector<std::string>{};
   if (!option.database.empty()) {
-    opts.emplace_back(std::format("-p={}", option.database));
+    opts.emplace_back(fmt::format("-p={}", option.database));
   }
   if (!option.checks.empty()) {
-    opts.emplace_back(std::format("-checks={}", option.checks));
+    opts.emplace_back(fmt::format("-checks={}", option.checks));
   }
   if (option.allow_no_checks) {
     opts.emplace_back("--allow-no-checks");
   }
   if (!option.config.empty()) {
-    opts.emplace_back(std::format("--config={}", option.config));
+    opts.emplace_back(fmt::format("--config={}", option.config));
   }
   if (!option.config_file.empty()) {
-    opts.emplace_back(std::format("--config-file={}", option.config_file));
+    opts.emplace_back(fmt::format("--config-file={}", option.config_file));
   }
   if (option.enable_check_profile) {
     opts.emplace_back("--enable-check-profile");
   }
   if (!option.header_filter.empty()) {
-    opts.emplace_back(std::format("--header-filter={}", option.header_filter));
+    opts.emplace_back(fmt::format("--header-filter={}", option.header_filter));
   }
   if (!option.line_filter.empty()) {
-    opts.emplace_back(std::format("--line-filter={}", option.line_filter));
+    opts.emplace_back(fmt::format("--line-filter={}", option.line_filter));
   }
 
   opts.emplace_back(file);
 
-  auto arg_str =
-      opts | std::views::join_with(' ') | std::ranges::to<std::string>();
+  auto arg_str = concat(opts);
   spdlog::info("Running command: {} {}", option.binary, arg_str);
 
   return shell::execute(option.binary, opts, repo);

@@ -95,10 +95,9 @@ void must_specify(const std::string &condition, const variables_map &variables,
       lacks.push_back(option);
     }
   });
-  throw_unless(lacks.empty(), [&] noexcept {
-    auto lacks_str =
-        lacks | std::views::join_with(',') | std::ranges::to<std::string>();
-    return std::format("must specify {} when {}", std::move(lacks_str),
+  throw_unless(lacks.empty(), [&]() noexcept {
+    auto lacks_str = concat(lacks, ',');
+    return fmt::format("must specify {} when {}", std::move(lacks_str),
                        condition);
   });
 }
@@ -113,10 +112,9 @@ void must_not_specify(const std::string &condition,
     }
   });
 
-  throw_unless(forbidden.empty(), [&] noexcept {
-    auto forbidden_str =
-        forbidden | std::views::join_with(',') | std::ranges::to<std::string>();
-    return std::format("must not specify {} when {}", forbidden_str, condition);
+  throw_unless(forbidden.empty(), [&]() noexcept {
+    auto forbidden_str = concat(forbidden, ',');
+    return fmt::format("must not specify {} when {}", forbidden_str, condition);
   });
 }
 
@@ -133,8 +131,8 @@ auto create_context(const variables_map &variables) -> runtime_context {
   if (variables.contains(log_level)) {
     auto level = variables[log_level].as<std::string>();
     ctx.log_level = boost::algorithm::to_lower_copy(level);
-    throw_unless(std::ranges::contains(supported_log_level, ctx.log_level),
-                 std::format("unsupported log level: {}", level));
+    throw_unless(ranges::contains(supported_log_level, ctx.log_level),
+                 fmt::format("unsupported log level: {}", level));
   }
 
   if (variables.contains(enable_step_summary)) {

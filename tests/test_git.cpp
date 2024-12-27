@@ -20,7 +20,6 @@
 #include <git2/diff.h>
 #include <ios>
 #include <iostream>
-#include <print>
 
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
