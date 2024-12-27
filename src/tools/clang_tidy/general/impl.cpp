@@ -15,7 +15,6 @@
  */
 #include "tools/clang_tidy/general/impl.h"
 
-#include <algorithm>
 #include <cctype>
 #include <iterator>
 #include <optional>
@@ -28,11 +27,7 @@
 #include <spdlog/spdlog.h>
 #include <tinyxml2.h>
 
-#include "github/common.h"
-#include "github/review_comment.h"
-#include "github/utils.h"
 #include "tools/clang_tidy/general/reporter.h"
-#include "utils/env_manager.h"
 #include "utils/shell.h"
 #include "utils/util.h"
 
@@ -136,8 +131,9 @@ auto parse_stdout(std::string_view std_out) -> diagnostics {
   auto diags = diagnostics{};
   auto needs_details = false;
 
-  for (auto part : std::views::split(std_out, '\n')) {
-    auto line = std::string{part.data(), part.size()};
+  for (auto part : ranges::views::split(std_out, '\n')) {
+    auto line = ranges::to<std::string>(part);
+
     spdlog::trace("Parsing: {}", line);
 
     auto header_line = parse_diagnostic_header(line);
@@ -213,7 +209,7 @@ auto parse_stderr(std::string_view std_err) -> statistic {
   };
 
   for (auto part : std::views::split(std_err, '\n')) {
-    auto line = std::string{part.data(), part.size()};
+    auto line = ranges::to<std::string>(part);
     spdlog::trace("Parsing: {}", line);
     try_match(line, warning_and_error, warning_and_error_cb);
     try_match(line, warnings_generated, warnings_generated_cb);
