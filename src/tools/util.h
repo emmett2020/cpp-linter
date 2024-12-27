@@ -22,14 +22,15 @@
 #include "utils/util.h"
 
 namespace linter::tool {
-  // Find the full executable path of clang tools with specific version.
-  inline auto find_clang_tool(std::string_view tool, std::string_view version) -> std::string {
-    auto command                = fmt::format("{}-{}", tool, version);
-    auto [ec, std_out, std_err] = shell::which(command);
-    throw_unless(ec == 0,
-                 fmt::format("find {}-{} failed, error message: {}", tool, version, std_err));
-    auto trimmed = trim(std_out);
-    throw_if(trimmed.empty(), "got empty clang tool path");
-    return {trimmed.data(), trimmed.size()};
-  }
+// Find the full executable path of clang tools with specific version.
+inline auto find_clang_tool(std::string_view tool,
+                            std::string_view version) -> std::string {
+  auto command = fmt::format("{}-{}", tool, version);
+  auto [ec, std_out, std_err] = shell::which(command);
+  throw_if(ec != 0, fmt::format("find {}-{} failed, error message: {}", tool,
+                                version, std_err));
+  auto trimmed = trim(std_out);
+  throw_if(trimmed.empty(), "got empty clang tool path");
+  return {trimmed.data(), trimmed.size()};
+}
 } // namespace linter::tool

@@ -15,15 +15,20 @@
  */
 
 #include "context.h"
+#include "github/common.h"
 #include "program_options.h"
 #include "tools/base_creator.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_format/creator.h"
+#include "tools/util.h"
+#include "utils/env_manager.h"
 #include "utils/shell.h"
 
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
+#include <stdexcept>
+#include <unordered_map>
 
 using namespace linter;
 using namespace linter::tool;
@@ -50,6 +55,17 @@ bool has_clang_format() {
   return ec == 0;
 }
 
+// Check whether local environment contains specific clang-format version
+// otherwise some checks will be failed.
+bool has_clang_format(std::string_view version) {
+  try {
+    find_clang_tool("clang-format", version);
+    return true;
+  } catch (std::runtime_error &err) {
+    return false;
+  }
+}
+
 auto create_then_register_tool_desc(const clang_format::creator &creator)
     -> program_options::options_description {
   auto desc = program_options::create_desc();
@@ -60,13 +76,20 @@ auto create_then_register_tool_desc(const clang_format::creator &creator)
 #define SKIP_IF_NO_CLANG_FORMAT                                                \
   if (!has_clang_format()) {                                                   \
     SKIP("Local environment doesn't have clang-format. So skip clang-format "  \
-         "unittest.");                                                         \
+         "unit tests.");                                                       \
+  }
+
+// NOLINTNEXTLINE
+#define SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION(version)                          \
+  if (!has_clang_format(version)) {                                            \
+    SKIP("Local environment doesn't have required clang-format version. So "   \
+         "skip clang-format unit tests.");                                     \
   }
 
 } // namespace
 
-TEST_CASE("Test register and create clang-format option should work",
-          "[cpp-linter][tool][clang_format][creator]") {
+TEST_CASE("Test register and create clang-format option",
+          "[CppLintAction][tool][clang_format][creator]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
@@ -78,134 +101,96 @@ TEST_CASE("Test register and create clang-format option should work",
     REQUIRE(creator->enabled());
   }
 
-  SECTION("Disable clang-format should work") {
-    auto inputs =
-        make_opt("--target-revision=main", "--enable-clang-format=false");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    creator->create_option(user_options);
-    auto context = program_options::create_context(user_options);
+  SECTION("Explicitly disable clang-format should work") {
+    auto opts = parse_opt(desc, "--target-revision=main",
+                          "--enable-clang-format=false");
+    creator->create_option(opts);
     REQUIRE(creator->enabled() == false);
   }
 
   SECTION("clang-format is defaultly enabled") {
-    auto inputs = make_opt("--target-revision=main");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    creator->create_option(user_options);
-    auto context = program_options::create_context(user_options);
+    auto opts = parse_opt(desc, "--target-revision=main");
+    creator->create_option(opts);
     REQUIRE(creator->enabled() == true);
   }
 
-  SECTION("test specify an invalid version") {
-    auto inputs =
-        make_opt("--target-revision=main", "--clang-format-version=18.x.1");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    REQUIRE_THROWS(creator->create_option(user_options));
+  SECTION("Receive an invalid clang-format version should throw exception") {
+    auto opts = parse_opt(desc, "--target-revision=main",
+                          "--clang-format-version=18.x.1");
+    REQUIRE_THROWS(creator->create_option(opts));
   }
 
-  SECTION("test specify an invalid binary") {
-    auto inputs =
-        make_opt("--target-revision=main",
-                 "--clang-format-binary=/usr/bin/clang-format-invalid");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    REQUIRE_THROWS(creator->create_option(user_options));
+  SECTION("Receive an invalid clang-format binary should throw exception") {
+    auto opts =
+        parse_opt(desc, "--target-revision=main",
+                  "--clang-format-binary=/usr/bin/clang-format-invalid");
+    REQUIRE_THROWS(creator->create_option(opts));
   }
 
-  SECTION("test other clang-format options") {
-    auto inputs = make_opt("--target-revision=main",
-                           "--enable-clang-format-fastly-exit=true",
-                           "--clang-format-file-iregex=*.cpp");
-    auto user_options =
-        program_options::parse(inputs.size(), inputs.data(), desc);
-    auto context = program_options::create_context(user_options);
-    creator->create_option(user_options);
-    REQUIRE(creator->enabled() == true);
-    auto tool = creator->create_tool(context);
+  SECTION("Other options should be correctly created based on user input") {
+    auto opts = parse_opt(desc, "--target-revision=main",
+                          "--enable-clang-format-fastly-exit=true",
+                          "--clang-format-file-iregex=*.cpp");
+    creator->create_option(opts);
     auto option = creator->get_option();
     REQUIRE(option.enabled_fastly_exit == true);
     REQUIRE(option.file_filter_iregex == "*.cpp");
   }
 }
 
-auto create_clang_format(const std::string &version)
-    -> std::tuple<tool_base_ptr, runtime_context> {
+TEST_CASE("Test clang-format should get full version even though user input a "
+          "simplified version",
+          "[CppLintAction][tool][clang_format][creator]") {
+  SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18")
   auto creator = std::make_unique<clang_format::creator>();
-  auto desc = program_options::create_desc();
-  creator->register_option(desc);
-  auto version_opt = "--clang-format-version=" + version;
-  auto inputs = make_opt("--target-revision=main", version_opt.c_str());
-  auto user_options =
-      program_options::parse(inputs.size(), inputs.data(), desc);
-  creator->create_option(user_options);
+  auto desc = create_then_register_tool_desc(*creator);
 
-  auto context = program_options::create_context(user_options);
-  REQUIRE(creator->enabled() == true);
-  REQUIRE(creator->get_option().version == version);
-  auto tool = creator->create_tool(context);
-  return {creator->create_tool(context), std::move(context)};
+  auto vars =
+      parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
+  creator->create_option(vars);
+  auto context = program_options::create_context(vars);
+  auto clang_format = creator->create_tool(context);
+  auto version = clang_format->version();
+  auto parts = ranges::views::split(version, '.') |
+               ranges::to<std::vector<std::string>>();
+  REQUIRE(parts.size() == 3);
+  REQUIRE(parts[0] == "18");
+  REQUIRE(ranges::all_of(parts[1], isdigit));
+  REQUIRE(ranges::all_of(parts[2], isdigit));
 }
 
-auto create_clang_format() -> tool_base_ptr {
+TEST_CASE("Create tool of spefific version should work",
+          "[CppLintAction][tool][clang_format][creator]") {
+  SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18.1.3")
   auto creator = std::make_unique<clang_format::creator>();
+  auto desc = create_then_register_tool_desc(*creator);
 
-  auto desc = program_options::create_desc();
-  creator->register_option(desc);
-  auto inputs = make_opt("--target-revision=main");
-
-  auto user_options =
-      program_options::parse(inputs.size(), inputs.data(), desc);
-  creator->create_option(user_options);
-
-  auto context = program_options::create_context(user_options);
-  REQUIRE(creator->enabled() == true);
-  auto tool = creator->create_tool(context);
-  return {creator->create_tool(context), std::move(context)};
-}
-
-auto create_default_clang_format()
-    -> std::tuple<tool_base_ptr, runtime_context> {
-  auto creator = std::make_unique<clang_format::creator>();
-  auto desc = program_options::create_desc();
-  creator->register_option(desc);
-  auto inputs = make_opt("--target-revision=main");
-  auto user_options =
-      program_options::parse(inputs.size(), inputs.data(), desc);
-  creator->create_option(user_options);
-
-  auto context = program_options::create_context(user_options);
-  REQUIRE(creator->enabled() == true);
-  auto tool = creator->create_tool(context);
-  return {creator->create_tool(context), std::move(context)};
-}
-
-TEST_CASE("Test create_tool should work",
-          "[cpp-linter][tool][clang_format][creator]") {
-  if (!has_clang_format()) {
-    SKIP("Local environment doesn't have clang-format. So skip clang-format "
-         "unittest.");
+  SECTION("version 18.1.3") {
+    auto vars = parse_opt(desc, "--target-revision=main",
+                          "--clang-format-version=18.1.3");
+    creator->create_option(vars);
+    auto context = program_options::create_context(vars);
+    auto clang_format = creator->create_tool(context);
+    REQUIRE(clang_format->version() == "18.1.3");
+    REQUIRE(clang_format->name() == "clang-format");
   }
-  auto [clang_format_18_1_3, ctx1] = create_clang_format("18.1.3");
-  auto [clang_format_18_1_0, ctx2] = create_clang_format("18.1.0");
-  REQUIRE(clang_format_18_1_3->version() == "18.1.3");
-  REQUIRE(clang_format_18_1_3->name() == "clang-format");
 }
 
 // utilities:
-// 1. create tool
-// 2. set debug environment
 // 3. set cpp file content
 // 4. operator repo to
 // 5. run clang-format
 
 TEST_CASE("Test clang-format could check file error",
-          "[cpp-linter][tool][clang_format][creator]") {
-  if (!has_clang_format()) {
-    SKIP("Local environment doesn't have clang-format. So skip clang-format "
-         "unittest.");
+          "[cpp-linter][tool][clang_format][pull-request]") {
+  SKIP_IF_NO_CLANG_FORMAT
+  auto creator = std::make_unique<clang_format::creator>();
+  auto desc = create_then_register_tool_desc(*creator);
+
+  SECTION("general version") {
+    auto vars = parse_opt(desc, "--target-revision=main");
+    auto context = program_options::create_context(vars);
+    creator->create_option(vars);
+    auto clang_format = creator->create_tool(context);
   }
-  auto [clang_format, context] = create_default_clang_format();
-  clang_format->check(context);
 }

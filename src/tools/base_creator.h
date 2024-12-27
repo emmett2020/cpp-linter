@@ -48,21 +48,15 @@ inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
   }
 }
 
-/// An utility to create options for multiple creators.
-inline auto create_tool_options(const std::vector<creator_base_ptr> &creators,
-                                program_options::variables_map &variables) {
-  for (const auto &creator : creators) {
-    creator->create_option(variables);
-  }
-}
-
 /// An utility to create enabled tools for multiple creators.
 inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
-                                 const runtime_context &context)
+                                 const runtime_context &context,
+                                 program_options::variables_map &variables)
     -> std::vector<tool_base_ptr> {
   auto res = std::vector<tool_base_ptr>{};
   for (const auto &creator : creators) {
-    if (creator->enabled(context)) {
+    creator->create_option(variables);
+    if (creator->enabled()) {
       res.emplace_back(creator->create_tool(context));
     }
   }

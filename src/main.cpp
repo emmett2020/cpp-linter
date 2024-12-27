@@ -123,8 +123,7 @@ auto main(int argc, char **argv) -> int {
   print_context(context);
   check_repo_is_on_source(context);
 
-  tool::create_tool_options(tool_creators, user_options);
-  auto tools = tool::create_enabled_tools(tool_creators, context);
+  auto tools = tool::create_enabled_tools(tool_creators, context, user_options);
   auto reporters = tool::check_then_get_reporters(tools, context);
 
   if (context.enable_action_output) {

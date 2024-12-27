@@ -46,4 +46,7 @@ private:
   option_t option;
 };
 
+/// Get clang-format version based on clang-format output
+auto get_version(const std::string &binary) -> std::string;
+
 } // namespace linter::tool::clang_format

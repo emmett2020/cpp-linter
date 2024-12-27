@@ -27,7 +27,7 @@ struct option_base {
   /// Exited check process as soon as error occurs.
   bool enabled_fastly_exit = false;
 
-  /// The version of this tool.
+  /// The version of this tool. It's usually the full version of tool.
   std::string version;
 
   /// The executable binary of this tool.
