@@ -17,6 +17,7 @@
 #include "context.h"
 #include "github/common.h"
 #include "program_options.h"
+#include "test_common.h"
 #include "tools/base_creator.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
@@ -71,11 +72,6 @@ auto create_then_register_tool_desc(const clang_format::creator &creator)
   auto desc = program_options::create_desc();
   creator.register_option(desc);
   return desc;
-}
-
-// Create a git repository to test clang-format could work.
-auto create_git_repo() {
-  //
 }
 
 #define SKIP_IF_NO_CLANG_FORMAT                                                \
@@ -181,21 +177,22 @@ TEST_CASE("Create tool of spefific version should work",
   }
 }
 
-// utilities:
-// 3. set cpp file content
-// 4. operator repo to
-// 5. run clang-format
-
 TEST_CASE("Test clang-format could check file error",
           "[cpp-linter][tool][clang_format][pull-request]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
+  auto vars = parse_opt(desc, "--target-revision=main");
+  auto context = program_options::create_context(vars);
+  creator->create_option(vars);
+  auto clang_format = creator->create_tool(context);
+
+  auto repo = repo_t{};
 
   SECTION("general version") {
-    auto vars = parse_opt(desc, "--target-revision=main");
-    auto context = program_options::create_context(vars);
-    creator->create_option(vars);
-    auto clang_format = creator->create_tool(context);
+    repo.add_file("file.cpp", "int    n = 0;");
+    auto [target, target_commit] = repo.commit_changes();
+    repo.rewrite_exist_file("file.cpp", "int n = 0;");
+    auto [source, source_commit] = repo.commit_changes();
   }
 }
