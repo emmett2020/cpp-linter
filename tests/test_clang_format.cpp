@@ -192,7 +192,17 @@ TEST_CASE("Test clang-format could check file error",
   SECTION("general version") {
     repo.add_file("file.cpp", "int    n = 0;");
     auto [target, target_commit] = repo.commit_changes();
-    repo.rewrite_exist_file("file.cpp", "int n = 0;");
+    repo.rewrite_exist_file("file.cpp", "int       n = 0;");
     auto [source, source_commit] = repo.commit_changes();
+
+    context.repo_path = repo.get_path();
+    context.target = target;
+    context.source = source;
+    // context.changed_files = {"file.cpp"}; // TODO
+    clang_format->check(context);
+    auto ret = clang_format->get_reporter()->get_brief_result();
+    std::cout << target << "\n";
+    std::cout << source << "\n";
+    REQUIRE(std::get<0>(ret));
   }
 }
