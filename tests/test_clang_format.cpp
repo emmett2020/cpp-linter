@@ -73,6 +73,11 @@ auto create_then_register_tool_desc(const clang_format::creator &creator)
   return desc;
 }
 
+// Create a git repository to test clang-format could work.
+auto create_git_repo() {
+  //
+}
+
 #define SKIP_IF_NO_CLANG_FORMAT                                                \
   if (!has_clang_format()) {                                                   \
     SKIP("Local environment doesn't have clang-format. So skip clang-format "  \
