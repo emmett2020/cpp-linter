@@ -187,6 +187,7 @@ TEST_CASE("Test clang-format could check file error",
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
   auto vars = parse_opt(desc, "--target-revision=main");
+
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
   creator->create_option(vars);
@@ -194,12 +195,20 @@ TEST_CASE("Test clang-format could check file error",
 
   auto repo = repo_t{};
 
+  auto debug_env = github::github_env{};
+  debug_env.workspace = get_temp_repo_dir();
+  debug_env.base_ref = "master";
+
   SECTION("general version") {
     {
       repo.add_file("file.cpp", "int    n = 0;");
       auto [target, target_commit] = repo.commit_changes();
       repo.rewrite_exist_file("file.cpp", "int       n = 0;");
       auto [source, source_commit] = repo.commit_changes();
+
+      debug_env.github_sha = source;
+      github::fill_context(debug_env, context);
+      context.target = "master";
       fill_git_info(context);
 
       std::cout << target << "\n";

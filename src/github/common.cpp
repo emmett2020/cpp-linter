@@ -86,10 +86,6 @@ auto read_env() -> github_env {
 
 void fill_context(const github_env &env, runtime_context &ctx) {
   spdlog::trace("Fill context by Github environment variables");
-  throw_unless(github::is_on_github(),
-               "The `fill_context_by_env` function must be "
-               "called only on Github CI environment.");
-
   ctx.token = env.token;
   ctx.repo_pair = env.repository;
   ctx.repo_path = env.workspace;
