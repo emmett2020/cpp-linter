@@ -91,20 +91,6 @@ struct repo_t {
     return {git::oid::to_str(commit_oid), std::move(commit)};
   }
 
-  // auto commit_changes(const std::vector<std::string> &files,
-  //                     const std::string &commit_message = "")
-  //     -> linter::git::commit_ptr {
-  //   auto [index_oid, index] = git::index::add_files(repo.get(), files);
-  //
-  //   auto message = commit_message;
-  //   if (message.empty()) {
-  //     message = fmt::format("Commit Index {}", commit_idx);
-  //   }
-  //   auto [commit_oid, commit] =
-  //       git::commit::create_head(repo.get(), message, index.get());
-  //   return std::move(commit);
-  // }
-
   void remove() {
     if (std::filesystem::exists(repo_path)) {
       std::filesystem::remove_all(repo_path);

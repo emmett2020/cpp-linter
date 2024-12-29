@@ -24,10 +24,14 @@ struct creator_base {
   virtual ~creator_base() = default;
 
   /// Register program options.
+  /// WARN: Should only call spdlog with error log level here since we don't
+  /// known what log level user want to use.
   virtual void
   register_option(program_options::options_description &desc) const = 0;
 
   /// Create option by program options.
+  /// WARN: Should only call spdlog with error log level here since we don't
+  /// known what log level user want to use.
   virtual void
   create_option(const program_options::variables_map &variables) = 0;
 

@@ -149,7 +149,7 @@ TEST_CASE("Test clang-format should get full version even though user input a "
   auto vars =
       parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
   creator->create_option(vars);
-  auto context = program_options::create_context(vars);
+  auto context = program_options::fill_context(vars);
   auto clang_format = creator->create_tool(context);
   auto version = clang_format->version();
   auto parts = ranges::views::split(version, '.') |
@@ -170,7 +170,7 @@ TEST_CASE("Create tool of spefific version should work",
     auto vars = parse_opt(desc, "--target-revision=main",
                           "--clang-format-version=18.1.3");
     creator->create_option(vars);
-    auto context = program_options::create_context(vars);
+    auto context = program_options::fill_context(vars);
     auto clang_format = creator->create_tool(context);
     REQUIRE(clang_format->version() == "18.1.3");
     REQUIRE(clang_format->name() == "clang-format");
@@ -183,26 +183,27 @@ TEST_CASE("Test clang-format could check file error",
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
   auto vars = parse_opt(desc, "--target-revision=main");
-  auto context = program_options::create_context(vars);
+  auto context = program_options::fill_context(vars);
   creator->create_option(vars);
   auto clang_format = creator->create_tool(context);
 
   auto repo = repo_t{};
 
   SECTION("general version") {
-    repo.add_file("file.cpp", "int    n = 0;");
-    auto [target, target_commit] = repo.commit_changes();
-    repo.rewrite_exist_file("file.cpp", "int       n = 0;");
-    auto [source, source_commit] = repo.commit_changes();
+    {
+      repo.add_file("file.cpp", "int    n = 0;");
+      auto [target, target_commit] = repo.commit_changes();
+      repo.rewrite_exist_file("file.cpp", "int       n = 0;");
+      auto [source, source_commit] = repo.commit_changes();
+      fill_git_info(context);
 
-    context.repo_path = repo.get_path();
-    context.target = target;
-    context.source = source;
+      std::cout << target << "\n";
+      std::cout << source << "\n";
+    }
+
     // context.changed_files = {"file.cpp"}; // TODO
     clang_format->check(context);
     auto ret = clang_format->get_reporter()->get_brief_result();
-    std::cout << target << "\n";
-    std::cout << source << "\n";
     REQUIRE(std::get<0>(ret));
   }
 }

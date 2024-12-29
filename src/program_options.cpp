@@ -120,9 +120,8 @@ void must_not_specify(const std::string &condition,
 
 // This function will be called after check context. So there's no need to do
 // same check.
-auto create_context(const variables_map &variables) -> runtime_context {
+void fill_context(const variables_map &variables, runtime_context &ctx) {
   spdlog::debug("Start to check program options and fill context by it");
-  auto ctx = runtime_context{};
 
   auto must_specify_option = {target};
   must_specify("using CppLintAction", variables, must_specify_option);
@@ -148,7 +147,6 @@ auto create_context(const variables_map &variables) -> runtime_context {
   if (variables.contains(enable_action_output)) {
     ctx.enable_action_output = variables[enable_action_output].as<bool>();
   }
-  return ctx;
 }
 
 } // namespace linter::program_options

@@ -15,31 +15,45 @@
  */
 #include "context.h"
 
-#include <spdlog/spdlog.h>
 #include <magic_enum/magic_enum.hpp>
+#include <spdlog/spdlog.h>
 
 namespace linter {
-  void print_context(const runtime_context& ctx) {
-    spdlog::info("Runtime Context:");
-    spdlog::info("--------------------------------------------------");
-    spdlog::info("\tlog level: {}", ctx.log_level);
-    spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
-    spdlog::info("\tenable update issue comment: {}", ctx.enable_comment_on_issue);
-    spdlog::info("\tenable pull request review: {}", ctx.enable_pull_request_review);
-    spdlog::info("\tenable action outptu: {}", ctx.enable_action_output);
-    spdlog::info("\trepository path: {}", ctx.repo_path);
-    spdlog::info("\trepository: {}", ctx.repo_pair);
-    spdlog::info("\trepository token: {}", ctx.token.empty() ? "" : "***");
-    spdlog::info("\trepository event_name: {}", ctx.event_name);
-    spdlog::info("\trepository target: {}", ctx.target);
-    spdlog::info("\trepository source: {}", ctx.source);
-    spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
-    spdlog::info("\tcurrent operating system: {}", magic_enum::enum_name(ctx.os));
-    spdlog::info("\tcurrent archecture: {}", magic_enum::enum_name(ctx.arch));
-    spdlog::info("\tchanged files:");
-    for (const auto& file: ctx.changed_files) {
-      spdlog::info("\t\t{}", file);
-    }
-    spdlog::info("");
+
+void fill_git_info(runtime_context &context) {
+  context.repo = git::repo::open(context.repo_path);
+  context.target_commit = git::revparse::commit(*context.repo, context.target);
+  context.source_commit = git::revparse::commit(*context.repo, context.source);
+  auto diff = git::diff::get(*context.repo, *context.target_commit,
+                             *context.source_commit);
+  context.patches = git::patch::create_from_diff(*diff);
+  context.deltas = git::diff::deltas(diff.get());
+  context.changed_files = git::patch::changed_files(context.patches);
+}
+
+void print_context(const runtime_context &ctx) {
+  spdlog::info("Runtime Context:");
+  spdlog::info("--------------------------------------------------");
+  spdlog::info("\tlog level: {}", ctx.log_level);
+  spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
+  spdlog::info("\tenable update issue comment: {}",
+               ctx.enable_comment_on_issue);
+  spdlog::info("\tenable pull request review: {}",
+               ctx.enable_pull_request_review);
+  spdlog::info("\tenable action outptu: {}", ctx.enable_action_output);
+  spdlog::info("\trepository path: {}", ctx.repo_path);
+  spdlog::info("\trepository: {}", ctx.repo_pair);
+  spdlog::info("\trepository token: {}", ctx.token.empty() ? "" : "***");
+  spdlog::info("\trepository event_name: {}", ctx.event_name);
+  spdlog::info("\trepository target: {}", ctx.target);
+  spdlog::info("\trepository source: {}", ctx.source);
+  spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
+  spdlog::info("\tcurrent operating system: {}", magic_enum::enum_name(ctx.os));
+  spdlog::info("\tcurrent archecture: {}", magic_enum::enum_name(ctx.arch));
+  spdlog::info("\tchanged files:");
+  for (const auto &file : ctx.changed_files) {
+    spdlog::info("\t\t{}", file);
   }
+  spdlog::info("");
+}
 } // namespace linter

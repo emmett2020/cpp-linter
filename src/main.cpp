@@ -101,25 +101,21 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
 
-  // Create runtime context by program options.
-  auto context = program_options::create_context(user_options);
+  // Create runtime context.
+  auto context = runtime_context{};
+
+  // Fill runtime context by program options.
+  program_options::fill_context(user_options, context);
   set_log_level(context.log_level);
 
   // Fill runtime context by environment variables.
   auto env = github::read_env();
-  github::check_env(env);
-  github::fill_context_by_env(env, context);
+  github::fill_context(env, context);
 
   // Fill runtime context by git repositofy informations.
   git::setup();
-  context.repo = git::repo::open(context.repo_path);
-  context.target_commit = git::revparse::commit(*context.repo, context.target);
-  context.source_commit = git::revparse::commit(*context.repo, context.source);
-  auto diff = git::diff::get(*context.repo, *context.target_commit,
-                             *context.source_commit);
-  context.patches = git::patch::create_from_diff(*diff);
-  context.deltas = git::diff::deltas(diff.get());
-  context.changed_files = git::patch::changed_files(context.patches);
+  fill_git_info(context);
+
   print_context(context);
   check_repo_is_on_source(context);
 

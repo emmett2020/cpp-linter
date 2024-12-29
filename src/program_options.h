@@ -36,7 +36,7 @@ auto parse(int argc, char **argv,
            const options_description &desc) -> variables_map;
 
 /// Fill runtime context by program options.
-auto create_context(const variables_map &variables) -> runtime_context;
+void fill_context(const variables_map &variables, runtime_context &ctx);
 
 /// Some options must be specified on the given condition, check it.
 void must_specify(const std::string &condition, const variables_map &variables,
