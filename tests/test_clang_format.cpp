@@ -206,6 +206,7 @@ TEST_CASE("Test clang-format could check file error",
     spdlog::debug(target_id);
     spdlog::debug(source_id);
 
+    context.target = target_id;
     debug_env.github_sha = source_id;
     github::fill_context(debug_env, context);
     fill_git_info(context);
