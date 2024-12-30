@@ -184,6 +184,7 @@ auto clang_format_general::check_single_file(
   }
 
   auto replacements = parse_replacements_xml(context, xml_res.std_out, file);
+  result.passed = replacements.empty();
   result.replacements = std::move(replacements);
   return result;
 }

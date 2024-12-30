@@ -179,32 +179,38 @@ TEST_CASE("Create tool of spefific version should work",
 }
 
 TEST_CASE("Test clang-format could check file error",
-          "[cpp-linter][tool][clang_format][use]") {
+          "[cpp-linter][tool][clang_format][general_version][use]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
-  auto vars = parse_opt(desc, "--target-revision=master",
-                              "--enable-pull-request-review=false",
-                              "--enable-comment-on-issue=false",
-                              "--enable-action-output=false",
-                              "--enable-step-summary=false");
+  auto vars = parse_opt(
+      desc, "--target-revision=master", "--enable-pull-request-review=false",
+      "--enable-comment-on-issue=false", "--enable-action-output=false",
+      "--enable-step-summary=false");
   auto clang_format = creator->create_tool(vars);
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
 
+  auto repo = repo_t{};
+
   auto debug_env = github::github_env{};
-  debug_env.workspace = get_temp_repo_dir();
+  debug_env.workspace = repo.get_path();
   debug_env.event_name = github::github_event_pull_request;
 
-  auto repo = repo_t{};
-  SECTION("general version") {
-    repo.add_file("file.cpp", "int n = 0;");
+  constexpr auto *clang_format_content = R"(
+    BasedOnStyle: Google
+    AllowShortBlocksOnASingleLine: Never
+  )";
+  repo.add_file(".clang-format", clang_format_content);
+  repo.commit_changes();
+
+  SECTION("basic example") {
+    repo.add_file("file.cpp", "int   n = 0;");
     auto [target_id, target] = repo.commit_changes();
-    repo.rewrite_file("file.cpp", "int  n = 0;");
+    repo.rewrite_file("file.cpp", "int n = 0;");
     auto [source_id, source] = repo.commit_changes();
-    spdlog::debug(target_id);
-    spdlog::debug(source_id);
+    spdlog::info("target_id: {}, source_id: {}", target_id, source_id);
 
     context.target = target_id;
     debug_env.github_sha = source_id;
@@ -212,7 +218,11 @@ TEST_CASE("Test clang-format could check file error",
     fill_git_info(context);
 
     clang_format->check(context);
-    auto ret = clang_format->get_reporter()->get_brief_result();
-    REQUIRE(!std::get<0>(ret));
+    auto [pass, passed, failed, ignored] =
+        clang_format->get_reporter()->get_brief_result();
+    REQUIRE(pass);
+    REQUIRE(passed == 1);
+    REQUIRE(failed == 0);
+    REQUIRE(ignored == 0);
   }
 }
