@@ -22,9 +22,9 @@ namespace linter {
 
 void fill_git_info(runtime_context &context) {
   spdlog::trace("Enter fill_git_info");
-  assert(context.repo && "given context already has a repository" );
-  assert(context.target_commit && "given context already has a target commit" );
-  assert(context.source_commit && "given context already has a source commit" );
+  assert(context.repo == nullptr && "given context already has a repository" );
+  assert(context.target_commit == nullptr && "given context already has a target commit" );
+  assert(context.source_commit == nullptr && "given context already has a source commit" );
   assert(context.patches.empty() && "given context already has patches" );
   assert(context.deltas.empty() && "given context already has deltas" );
   assert(context.changed_files.empty() && "given context already has changed files" );

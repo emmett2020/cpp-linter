@@ -95,7 +95,9 @@ void fill_context(const github_env &env, runtime_context &ctx) {
   // For reporter
   ctx.token = env.token;
   ctx.repo_pair = env.repository;
-  if (ranges::contains(github_events_with_pr_number, ctx.event_name)) {
+  bool needs_parse_pr_number = ranges::contains(github_events_with_pr_number, ctx.event_name) 
+                            && (ctx.enable_comment_on_issue || ctx.enable_pull_request_review);
+  if (needs_parse_pr_number) {
     ctx.pr_number = parse_pr_number(env.github_ref);
   }
 }

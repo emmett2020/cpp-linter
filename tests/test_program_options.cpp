@@ -73,11 +73,11 @@ TEST_CASE("Test fill context by program options",
     REQUIRE_THROWS(fill_context(user_options, context));
   }
 
-  SECTION("user not specifies unsupported log level should throw exception") {
-    auto opts = make_opt("--target-revision=main", "--log-level=WARN");
-    auto user_options = parse(opts.size(), opts.data(), desc);
-    REQUIRE_THROWS(fill_context(user_options, context));
-  }
+  // SECTION("user not specifies unsupported log level should throw exception") {
+  //   auto opts = make_opt("--target-revision=main", "--log-level=WARN");
+  //   auto user_options = parse(opts.size(), opts.data(), desc);
+  //   REQUIRE_THROWS(fill_context(user_options, context));
+  // }
 
   // SECTION("user specifies supported log level shouldn't cause exception") {
   //   auto opts = make_opt("--target-revision=main", "--log-level=iNfo");

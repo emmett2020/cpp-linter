@@ -186,8 +186,13 @@ TEST_CASE("Test clang-format could check file error",
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
-  auto vars = parse_opt(desc, "--target-revision=master");
+  auto vars = parse_opt(desc, "--target-revision=master",
+                              "--enable-pull-request-review=false",
+                              "--enable-comment-on-issue=false",
+                              "--enable-action-output=false",
+                              "--enable-step-summary=false");
   creator->create_option(vars);
+  auto clang_format = creator->create_tool();
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
@@ -197,7 +202,6 @@ TEST_CASE("Test clang-format could check file error",
   debug_env.event_name = github::github_event_pull_request;
 
   auto repo = repo_t{};
-  auto clang_format = creator->create_tool();
   SECTION("general version") {
     repo.add_file("file.cpp", "int n = 0;");
     auto [target_id, target] = repo.commit_changes();
@@ -209,7 +213,6 @@ TEST_CASE("Test clang-format could check file error",
     debug_env.github_sha = source_id;
     github::fill_context(debug_env, context);
     fill_git_info(context);
-
 
     clang_format->check(context);
     auto ret = clang_format->get_reporter()->get_brief_result();
