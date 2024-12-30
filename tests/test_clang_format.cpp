@@ -152,7 +152,7 @@ TEST_CASE("Test clang-format should get full version even though user input a "
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
-  auto clang_format = creator->create_tool(context);
+  auto clang_format = creator->create_tool();
   auto version = clang_format->version();
   auto parts = ranges::views::split(version, '.') |
                ranges::to<std::vector<std::string>>();
@@ -175,49 +175,44 @@ TEST_CASE("Create tool of spefific version should work",
 
     auto context = runtime_context{};
     program_options::fill_context(vars, context);
-    auto clang_format = creator->create_tool(context);
+    auto clang_format = creator->create_tool();
     REQUIRE(clang_format->version() == "18.1.3");
     REQUIRE(clang_format->name() == "clang-format");
   }
 }
 
 TEST_CASE("Test clang-format could check file error",
-          "[cpp-linter][tool][clang_format][pull-request]") {
+          "[cpp-linter][tool][clang_format][use]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
-  auto vars = parse_opt(desc, "--target-revision=main");
+  auto vars = parse_opt(desc, "--target-revision=master");
+  creator->create_option(vars);
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
-  creator->create_option(vars);
-  auto clang_format = creator->create_tool(context);
-
-  auto repo = repo_t{};
 
   auto debug_env = github::github_env{};
   debug_env.workspace = get_temp_repo_dir();
-  debug_env.base_ref = "master";
+  debug_env.event_name = github::github_event_pull_request;
 
+  auto repo = repo_t{};
+  auto clang_format = creator->create_tool();
   SECTION("general version") {
-    {
-      repo.add_file("file.cpp", "int    n = 0;");
-      auto [target, target_commit] = repo.commit_changes();
-      repo.rewrite_exist_file("file.cpp", "int       n = 0;");
-      auto [source, source_commit] = repo.commit_changes();
+    repo.add_file("file.cpp", "int n = 0;");
+    auto [target_id, target] = repo.commit_changes();
+    repo.rewrite_file("file.cpp", "int  n = 0;");
+    auto [source_id, source] = repo.commit_changes();
+    spdlog::debug(target_id);
+    spdlog::debug(source_id);
 
-      debug_env.github_sha = source;
-      github::fill_context(debug_env, context);
-      context.target = "master";
-      fill_git_info(context);
+    debug_env.github_sha = source_id;
+    github::fill_context(debug_env, context);
+    fill_git_info(context);
 
-      std::cout << target << "\n";
-      std::cout << source << "\n";
-    }
 
-    // context.changed_files = {"file.cpp"}; // TODO
     clang_format->check(context);
     auto ret = clang_format->get_reporter()->get_brief_result();
-    REQUIRE(std::get<0>(ret));
+    REQUIRE(!std::get<0>(ret));
   }
 }

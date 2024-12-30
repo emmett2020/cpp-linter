@@ -117,7 +117,7 @@ void creator::create_option(const program_options::variables_map &variables) {
   }
 }
 
-auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
+auto creator::create_tool() -> tool_base_ptr {
   auto version = option.version;
   auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {
@@ -128,7 +128,9 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
     tool = std::make_unique<clang_tidy_general>(option);
   }
 
-  throw_unless(tool->is_supported(context.os, context.arch),
+  const auto os = operating_system_t::ubuntu;
+  const auto arch = arch_t::x86_64;
+  throw_unless(tool->is_supported(os, arch),
                fmt::format("Create clang-tidy {} instance failed since not "
                            "supported on this platform",
                            version));

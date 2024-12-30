@@ -26,12 +26,13 @@
 namespace linter {
 /// The runtime context for all tools.
 struct runtime_context {
-  std::string log_level;
+  // Theses will be filled by [ program_options::fill_context() ]
   bool enable_step_summary = false;
   bool enable_comment_on_issue = false;
   bool enable_pull_request_review = false;
   bool enable_action_output = false;
 
+  // Theses will be filled by [ github::fill_context() ]
   std::string repo_path;
   std::string repo_pair;
   std::string token;
@@ -40,9 +41,7 @@ struct runtime_context {
   std::string source;
   std::int32_t pr_number = -1;
 
-  operating_system_t os = operating_system_t::ubuntu;
-  arch_t arch = arch_t::x86_64;
-
+  // Theses will be filled by [ fill_git_info ]
   git::repo_ptr repo{nullptr, ::git_repository_free};
   git::commit_ptr target_commit{nullptr, ::git_commit_free};
   git::commit_ptr source_commit{nullptr, ::git_commit_free};
@@ -51,6 +50,8 @@ struct runtime_context {
   std::unordered_map<std::string, git::patch_ptr> patches;
   std::unordered_map<std::string, git::diff_delta> deltas;
   std::vector<std::string> changed_files;
+
+
 };
 
 void fill_git_info(runtime_context &context);

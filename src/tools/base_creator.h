@@ -36,7 +36,7 @@ struct creator_base {
   create_option(const program_options::variables_map &variables) = 0;
 
   /// Create tool instance.
-  virtual auto create_tool(const runtime_context &context) -> tool_base_ptr = 0;
+  virtual auto create_tool() -> tool_base_ptr = 0;
 
   /// Whether enabled underlying tool.
   virtual bool enabled() = 0;
@@ -54,14 +54,13 @@ inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
 
 /// An utility to create enabled tools for multiple creators.
 inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
-                                 const runtime_context &context,
                                  program_options::variables_map &variables)
     -> std::vector<tool_base_ptr> {
   auto res = std::vector<tool_base_ptr>{};
   for (const auto &creator : creators) {
     creator->create_option(variables);
     if (creator->enabled()) {
-      res.emplace_back(creator->create_tool(context));
+      res.emplace_back(creator->create_tool());
     }
   }
   return res;

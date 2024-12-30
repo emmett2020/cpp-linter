@@ -42,9 +42,6 @@ constexpr auto github_event_workflow_dispatch = "workflow_dispatch";
 constexpr auto all_github_events = {
     github_event_push, github_event_pull_request,
     github_event_pull_request_target, github_event_workflow_dispatch};
-// constexpr auto github_events_with_additional_ref =
-// {github_event_pull_request,
-//                                                     github_event_pull_request_target};
 constexpr auto github_events_with_pr_number = {
     github_event_pull_request, github_event_pull_request_target};
 constexpr auto github_events_support_comments = {
@@ -102,15 +99,20 @@ constexpr auto github_ref_type = "GITHUB_REF";
 
 /// Reads from the actual Github runner.
 struct github_env {
-  std::string repository;
-  std::string token;
-  std::string event_name;
+  // Basic environment variables which must be set.
+  std::string workspace;  // The full path of the repository that needs to be checked.
+  std::string event_name; // Event name
+  std::string github_sha; // Source commit
+
+  // Used for reporter
+  std::string repository; // The pair of owner/repo_name
+  std::string token;      // Github token
+
+  // Others
   std::string base_ref;
   std::string head_ref;
   std::string github_ref;
-  std::string github_sha;
   std::string github_ref_type;
-  std::string workspace;
 };
 
 auto read_env() -> github_env;

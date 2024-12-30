@@ -14,11 +14,12 @@
  * limitations under the License.
  */
 #include <cctype>
-#include <git2/oid.h>
 #include <memory>
 #include <string>
 #include <vector>
 
+#include <git2/oid.h>
+#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options/variables_map.hpp>
 #include <spdlog/spdlog.h>
 
@@ -31,7 +32,6 @@
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_tidy/clang_tidy.h"
-#include "utils/env_manager.h"
 #include "utils/git_utils.h"
 #include "utils/util.h"
 
@@ -40,21 +40,28 @@ using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 namespace {
+constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
 // This function must be called before any spdlog operations.
-void set_log_level(std::string_view log_level_str) {
-  static constexpr auto valid_log_levels = {"trace", "debug", "error", "info"};
-  assert(ranges::contains(valid_log_levels, log_level_str));
+void set_log_level(const program_options::variables_map& vars) {
+  // This name must be samed with the one we registered.
+  constexpr auto log_level_opt = "log-level";
+  assert(vars.contains(log_level_opt));
 
-  auto log_level = spdlog::level::info;
-  if (log_level_str == "trace") {
-    log_level = spdlog::level::trace;
-  } else if (log_level_str == "debug") {
-    log_level = spdlog::level::debug;
+  auto level = vars[log_level_opt].as<std::string>();
+  auto log_level = boost::algorithm::to_lower_copy(level);
+  throw_unless(ranges::contains(supported_log_level, log_level),
+                fmt::format("unsupported log level: {}", level));
+
+  if (log_level == "trace") {
+    spdlog::set_level(spdlog::level::trace);
+  } else if (log_level == "debug") {
+    spdlog::set_level(spdlog::level::debug);
+  } else if (log_level == "info") {
+    spdlog::set_level(spdlog::level::info);
   } else {
-    log_level = spdlog::level::err;
+    spdlog::set_level(spdlog::level::err);
   }
-  spdlog::set_level(log_level);
 }
 
 auto print_changed_files(const std::vector<std::string> &files) {
@@ -88,7 +95,7 @@ void check_repo_is_on_source(const runtime_context &ctx) {
 auto main(int argc, char **argv) -> int {
   auto tool_creators = collect_tool_creators();
 
-  // Handle user options.
+  // Handle program options.
   auto desc = program_options::create_desc();
   tool::register_tool_options(tool_creators, desc);
   auto user_options = program_options::parse(argc, argv, desc);
@@ -100,13 +107,14 @@ auto main(int argc, char **argv) -> int {
     print_version();
     return 0;
   }
+  set_log_level(user_options);
+  auto tools = tool::create_enabled_tools(tool_creators, user_options);
 
   // Create runtime context.
   auto context = runtime_context{};
 
   // Fill runtime context by program options.
   program_options::fill_context(user_options, context);
-  set_log_level(context.log_level);
 
   // Fill runtime context by environment variables.
   auto env = github::read_env();
@@ -119,9 +127,8 @@ auto main(int argc, char **argv) -> int {
   print_context(context);
   check_repo_is_on_source(context);
 
-  auto tools = tool::create_enabled_tools(tool_creators, context, user_options);
-  auto reporters = tool::check_then_get_reporters(tools, context);
-
+  // Run tools within the given context and get reporters.
+  auto reporters = tool::run_tools(tools, context);
   if (context.enable_action_output) {
     write_to_github_action_output(context, reporters);
   }

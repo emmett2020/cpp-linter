@@ -34,7 +34,7 @@ struct creator : creator_base {
   void create_option(const program_options::variables_map &variables) override;
 
   /// Create clang-format tool instance.
-  auto create_tool(const runtime_context &context) -> tool_base_ptr override;
+  auto create_tool() -> tool_base_ptr override;
 
   /// Return whether enables clang-format. Clang-format is enabled on default
   /// and could be disabled by user.

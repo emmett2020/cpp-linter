@@ -28,7 +28,6 @@
 
 namespace linter::program_options {
 namespace {
-constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
 constexpr auto help = "help";
 constexpr auto version = "version";
@@ -126,13 +125,6 @@ void fill_context(const variables_map &variables, runtime_context &ctx) {
   auto must_specify_option = {target};
   must_specify("using CppLintAction", variables, must_specify_option);
   ctx.target = variables[target].as<std::string>();
-
-  if (variables.contains(log_level)) {
-    auto level = variables[log_level].as<std::string>();
-    ctx.log_level = boost::algorithm::to_lower_copy(level);
-    throw_unless(ranges::contains(supported_log_level, ctx.log_level),
-                 fmt::format("unsupported log level: {}", level));
-  }
 
   if (variables.contains(enable_step_summary)) {
     ctx.enable_step_summary = variables[enable_step_summary].as<bool>();

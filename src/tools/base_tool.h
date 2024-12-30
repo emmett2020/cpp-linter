@@ -15,10 +15,6 @@
  */
 #pragma once
 
-#include <cstdint>
-#include <spdlog/spdlog.h>
-#include <string>
-
 #include "context.h"
 #include "tools/base_reporter.h"
 
@@ -40,29 +36,16 @@ namespace linter::tool {
     /// Apply this tool to a single file.
     virtual void check(const runtime_context &context) = 0;
 
+    /// Return the result reporter. To get the result, you must first call check().
     virtual auto get_reporter() -> reporter_base_ptr = 0;
   };
 
   /// An unique pointer for base tool.
   using tool_base_ptr = std::unique_ptr<tool_base>;
 
-  inline void do_check(const std::vector<tool_base_ptr> &tools, const runtime_context &context) {
-    for (const auto &tool: tools) {
-      tool->check(context);
-    }
-  }
-
+  /// Run the given tools one by one and return the reporter of each tool in order.
   inline auto
-  get_reporters(const std::vector<tool_base_ptr> &tools) -> std::vector<reporter_base_ptr> {
-    auto ret = std::vector<reporter_base_ptr>{};
-    for (const auto &tool: tools) {
-      ret.emplace_back(tool->get_reporter());
-    }
-    return ret;
-  }
-
-  inline auto
-  check_then_get_reporters(const std::vector<tool_base_ptr> &tools, const runtime_context &context)
+  run_tools(const std::vector<tool_base_ptr> &tools, const runtime_context &context)
     -> std::vector<reporter_base_ptr> {
     auto ret = std::vector<reporter_base_ptr>{};
     for (const auto &tool: tools) {

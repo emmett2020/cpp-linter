@@ -21,6 +21,18 @@
 namespace linter {
 
 void fill_git_info(runtime_context &context) {
+  spdlog::trace("Enter fill_git_info");
+  assert(context.repo && "given context already has a repository" );
+  assert(context.target_commit && "given context already has a target commit" );
+  assert(context.source_commit && "given context already has a source commit" );
+  assert(context.patches.empty() && "given context already has patches" );
+  assert(context.deltas.empty() && "given context already has deltas" );
+  assert(context.changed_files.empty() && "given context already has changed files" );
+
+  assert(!context.repo_path.empty() && "repo_path of context is empty()");
+  assert(!context.target.empty() && "target of context is empty()");
+  assert(!context.source.empty() && "source of context is empty()");
+
   context.repo = git::repo::open(context.repo_path);
   context.target_commit = git::revparse::commit(*context.repo, context.target);
   context.source_commit = git::revparse::commit(*context.repo, context.source);
@@ -34,7 +46,6 @@ void fill_git_info(runtime_context &context) {
 void print_context(const runtime_context &ctx) {
   spdlog::info("Runtime Context:");
   spdlog::info("--------------------------------------------------");
-  spdlog::info("\tlog level: {}", ctx.log_level);
   spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
   spdlog::info("\tenable update issue comment: {}",
                ctx.enable_comment_on_issue);
@@ -48,8 +59,6 @@ void print_context(const runtime_context &ctx) {
   spdlog::info("\trepository target: {}", ctx.target);
   spdlog::info("\trepository source: {}", ctx.source);
   spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
-  spdlog::info("\tcurrent operating system: {}", magic_enum::enum_name(ctx.os));
-  spdlog::info("\tcurrent archecture: {}", magic_enum::enum_name(ctx.arch));
   spdlog::info("\tchanged files:");
   for (const auto &file : ctx.changed_files) {
     spdlog::info("\t\t{}", file);

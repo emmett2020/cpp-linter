@@ -79,12 +79,12 @@ TEST_CASE("Test fill context by program options",
     REQUIRE_THROWS(fill_context(user_options, context));
   }
 
-  SECTION("user specifies supported log level shouldn't cause exception") {
-    auto opts = make_opt("--target-revision=main", "--log-level=iNfo");
-    auto user_options = parse(opts.size(), opts.data(), desc);
-    REQUIRE_NOTHROW(fill_context(user_options, context));
-    REQUIRE(context.log_level == "info");
-  }
+  // SECTION("user specifies supported log level shouldn't cause exception") {
+  //   auto opts = make_opt("--target-revision=main", "--log-level=iNfo");
+  //   auto user_options = parse(opts.size(), opts.data(), desc);
+  //   REQUIRE_NOTHROW(fill_context(user_options, context));
+  //   REQUIRE(context.log_level == "info");
+  // }
 
   SECTION("enable_step_summary should be passed into context") {
     auto opts =

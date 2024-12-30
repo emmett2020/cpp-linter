@@ -68,7 +68,7 @@ struct repo_t {
 
   // Rewrite exist file's content. This could be safely called by user multiple
   // times. And the last version of it will be finally used.
-  auto rewrite_exist_file(const std::string &file_path,
+  auto rewrite_file(const std::string &file_path,
                           const std::string &content) {
     auto file_full_path = repo_path / file_path;
     REQUIRE(std::filesystem::exists(file_full_path));

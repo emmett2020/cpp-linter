@@ -122,7 +122,7 @@ void creator::create_option(const program_options::variables_map &variables) {
   spdlog::info("The clang-format executable path: {}", option.binary);
 }
 
-auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
+auto creator::create_tool() -> tool_base_ptr {
   auto version = option.version;
   auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {
@@ -132,7 +132,11 @@ auto creator::create_tool(const runtime_context &context) -> tool_base_ptr {
   } else {
     tool = std::make_unique<clang_format_general>(option);
   }
-  throw_unless(tool->is_supported(context.os, context.arch),
+
+  // TODO: support get os and arch
+  const auto os = operating_system_t::ubuntu;
+  const auto arch = arch_t::x86_64;
+  throw_unless(tool->is_supported(os, arch),
                fmt::format("Create clang-format {} instance failed since not "
                            "supported on this platform",
                            version));

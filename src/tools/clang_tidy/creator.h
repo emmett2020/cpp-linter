@@ -44,7 +44,7 @@ struct creator : public creator_base {
 
   void create_option(const program_options::variables_map &variables) override;
 
-  auto create_tool(const runtime_context &context) -> tool_base_ptr override;
+  auto create_tool() -> tool_base_ptr override;
 
   bool enabled() override;
 

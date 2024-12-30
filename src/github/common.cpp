@@ -85,12 +85,16 @@ auto read_env() -> github_env {
 }
 
 void fill_context(const github_env &env, runtime_context &ctx) {
-  spdlog::trace("Fill context by Github environment variables");
-  ctx.token = env.token;
-  ctx.repo_pair = env.repository;
+  spdlog::trace("Enter fill_context");
+
+  // Basic
   ctx.repo_path = env.workspace;
   ctx.event_name = env.event_name;
   ctx.source = env.github_sha;
+
+  // For reporter
+  ctx.token = env.token;
+  ctx.repo_pair = env.repository;
   if (ranges::contains(github_events_with_pr_number, ctx.event_name)) {
     ctx.pr_number = parse_pr_number(env.github_ref);
   }
