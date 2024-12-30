@@ -31,10 +31,10 @@ struct creator : creator_base {
   register_option(program_options::options_description &desc) const override;
 
   /// Create clang-format option struct by user input program options.
-  void create_option(const program_options::variables_map &variables) override;
+  void create_option(const program_options::variables_map &variables);
 
   /// Create clang-format tool instance.
-  auto create_tool() -> tool_base_ptr override;
+  auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
   /// Return whether enables clang-format. Clang-format is enabled on default
   /// and could be disabled by user.

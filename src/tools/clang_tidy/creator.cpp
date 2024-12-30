@@ -117,8 +117,10 @@ void creator::create_option(const program_options::variables_map &variables) {
   }
 }
 
-auto creator::create_tool() -> tool_base_ptr {
+auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
+  create_option(variables);
   auto version = option.version;
+
   auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {
     tool = std::make_unique<clang_tidy_v18_1_3>(option);

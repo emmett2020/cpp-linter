@@ -122,7 +122,9 @@ void creator::create_option(const program_options::variables_map &variables) {
   spdlog::info("The clang-format executable path: {}", option.binary);
 }
 
-auto creator::create_tool() -> tool_base_ptr {
+auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
+  create_option(variables);
+
   auto version = option.version;
   auto tool = tool_base_ptr{};
   if (version == version_18_1_3) {

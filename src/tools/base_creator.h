@@ -29,14 +29,8 @@ struct creator_base {
   virtual void
   register_option(program_options::options_description &desc) const = 0;
 
-  /// Create option by program options.
-  /// WARN: Should only call spdlog with error log level here since we don't
-  /// known what log level user want to use.
-  virtual void
-  create_option(const program_options::variables_map &variables) = 0;
-
   /// Create tool instance.
-  virtual auto create_tool() -> tool_base_ptr = 0;
+  virtual auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr = 0;
 
   /// Whether enabled underlying tool.
   virtual bool enabled() = 0;
@@ -58,9 +52,8 @@ inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
     -> std::vector<tool_base_ptr> {
   auto res = std::vector<tool_base_ptr>{};
   for (const auto &creator : creators) {
-    creator->create_option(variables);
     if (creator->enabled()) {
-      res.emplace_back(creator->create_tool());
+      res.emplace_back(creator->create_tool(variables));
     }
   }
   return res;

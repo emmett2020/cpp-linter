@@ -42,9 +42,9 @@ struct creator : public creator_base {
   void
   register_option(program_options::options_description &desc) const override;
 
-  void create_option(const program_options::variables_map &variables) override;
+  void create_option(const program_options::variables_map &variables);
 
-  auto create_tool() -> tool_base_ptr override;
+  auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
   bool enabled() override;
 

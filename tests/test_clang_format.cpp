@@ -148,11 +148,10 @@ TEST_CASE("Test clang-format should get full version even though user input a "
 
   auto vars =
       parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
-  creator->create_option(vars);
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
-  auto clang_format = creator->create_tool();
+  auto clang_format = creator->create_tool(vars);
   auto version = clang_format->version();
   auto parts = ranges::views::split(version, '.') |
                ranges::to<std::vector<std::string>>();
@@ -171,11 +170,9 @@ TEST_CASE("Create tool of spefific version should work",
   SECTION("version 18.1.3") {
     auto vars = parse_opt(desc, "--target-revision=main",
                           "--clang-format-version=18.1.3");
-    creator->create_option(vars);
-
+    auto clang_format = creator->create_tool(vars);
     auto context = runtime_context{};
     program_options::fill_context(vars, context);
-    auto clang_format = creator->create_tool();
     REQUIRE(clang_format->version() == "18.1.3");
     REQUIRE(clang_format->name() == "clang-format");
   }
@@ -191,8 +188,7 @@ TEST_CASE("Test clang-format could check file error",
                               "--enable-comment-on-issue=false",
                               "--enable-action-output=false",
                               "--enable-step-summary=false");
-  creator->create_option(vars);
-  auto clang_format = creator->create_tool();
+  auto clang_format = creator->create_tool(vars);
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
