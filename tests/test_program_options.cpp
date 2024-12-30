@@ -29,7 +29,7 @@ auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
 }
 
 TEST_CASE("Test create program options descriptions",
-          "[cpp-linter][program_options]") {
+          "[CppLintAction][program_options]") {
   auto desc = create_desc();
 
   SECTION("help") {
@@ -45,7 +45,7 @@ TEST_CASE("Test create program options descriptions",
   }
 }
 
-TEST_CASE("Test must_specify could throw", "[cpp-linter][program_options]") {
+TEST_CASE("Test must_specify could throw", "[CppLintAction][program_options]") {
   auto desc = program_options::create_desc();
   auto opts = make_opt("--help");
   auto user_options = parse(opts.size(), opts.data(), desc);
@@ -54,7 +54,7 @@ TEST_CASE("Test must_specify could throw", "[cpp-linter][program_options]") {
 }
 
 TEST_CASE("Test must_not_specify could throw",
-          "[cpp-linter][program_options]") {
+          "[CppLintAction][program_options]") {
   auto desc = create_desc();
   auto opts = make_opt("--help");
   auto user_options = parse(opts.size(), opts.data(), desc);
@@ -63,7 +63,7 @@ TEST_CASE("Test must_not_specify could throw",
 }
 
 TEST_CASE("Test fill context by program options",
-          "[cpp-linter][program_options]") {
+          "[CppLintAction][program_options]") {
   auto desc = create_desc();
   auto context = runtime_context{};
 

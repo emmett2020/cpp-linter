@@ -84,7 +84,7 @@ namespace linter::tool {
     github_client.get_issue_comment_id(context);
 
     constexpr auto website = "";
-    constexpr auto header = "# :100: Code Quality Result by [cpp-linter](https://github.com/emmett2020/cpp-linter)\n"sv;
+    constexpr auto header = "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-linter)\n"sv;
     constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
     constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
     constexpr auto table_row_fmt = "| **{}** | {} | {} | {} |\n"sv;

@@ -23,13 +23,11 @@
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_format/creator.h"
 #include "tools/util.h"
-#include "utils/env_manager.h"
 #include "utils/shell.h"
 
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 #include <stdexcept>
-#include <unordered_map>
 
 using namespace linter;
 using namespace linter::tool;
@@ -178,8 +176,49 @@ TEST_CASE("Create tool of spefific version should work",
   }
 }
 
-TEST_CASE("Test clang-format could check file error",
-          "[cpp-linter][tool][clang_format][general_version][use]") {
+TEST_CASE("Test clang-format could correctly handle various file level cases",
+          "[CppLintAction][tool][clang_format][general_version]") {
+  SKIP_IF_NO_CLANG_FORMAT
+  auto creator = std::make_unique<clang_format::creator>();
+  auto desc = create_then_register_tool_desc(*creator);
+  auto vars = parse_opt(
+      desc, "--target-revision=master", "--enable-pull-request-review=false",
+      "--enable-comment-on-issue=false", "--enable-action-output=false",
+      "--enable-step-summary=false");
+  auto clang_format = creator->create_tool(vars);
+
+  auto context = runtime_context{};
+  program_options::fill_context(vars, context);
+
+  auto repo = repo_t{};
+
+  auto debug_env = github::github_env{};
+  debug_env.workspace = repo.get_path();
+  debug_env.event_name = github::github_event_pull_request;
+
+  constexpr auto *clang_format_content = R"(
+    BasedOnStyle: Google
+    AllowShortBlocksOnASingleLine: Never
+  )";
+  repo.add_file(".clang-format", clang_format_content);
+  repo.commit_changes();
+
+  SECTION("Test file filter should be work") {}
+
+  SECTION("DELETED files shouldn't be checked") {}
+  SECTION("NEW added files should be checked") {}
+  SECTION("MODIFIED files should be checked") {}
+
+  SECTION("The commits only delete file should check nothing") {}
+  SECTION("The commits only add new cpp files should only check these files") {}
+  SECTION("The commits modified one file and insert a new file should check "
+          "these two files") {}
+  SECTION("The commits modified one file and delete an old file should only "
+          "check the modified file") {}
+}
+
+TEST_CASE("Test clang-format could correctly check basic unformatted error",
+          "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
   auto desc = create_then_register_tool_desc(*creator);
@@ -225,4 +264,28 @@ TEST_CASE("Test clang-format could check file error",
     REQUIRE(failed == 0);
     REQUIRE(ignored == 0);
   }
+
+  SECTION("Insert unformatted lines shouldn't pass clang-format check") {}
+  SECTION("Insert formatted lines should pass clang-format check") {}
+  SECTION("Delete all unformatted lines will pass clang-format check") {}
+  SECTION(
+      "Delete only some unformatted lines shouldn't pass clang-format check") {}
+
+  SECTION("Rewrite unformatted lines to unformatted lines shouldn't pass "
+          "clang-format check") {}
+  SECTION("Rewrite unformatted lines to formatted lines should pass "
+          "clang-format check") {}
+  SECTION("Rewrite formatted lines to unformatted lines shouldn't pass "
+          "clang-format check") {}
+  SECTION("Rewrite formatted lines to formatted lines should pass "
+          "clang-format check") {}
+}
+
+TEST_CASE("Test parse replacements",
+          "[CppLintAction][tool][clang_format][general_version]") {
+  SKIP_IF_NO_CLANG_FORMAT
+
+  SECTION("Empty replacements") {}
+  SECTION("One replacement") {}
+  SECTION("Two replacements") {}
 }

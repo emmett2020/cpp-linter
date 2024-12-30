@@ -152,6 +152,7 @@ auto make_source_code_options(std::string_view file)
   return tool_opt;
 }
 
+// TODO: remove formatted source code
 auto execute(const option_t &opt, output_style_t output_style,
              std::string_view repo, std::string_view file) -> shell::result {
   spdlog::trace("Enter clang_format_general::execute()");
@@ -190,6 +191,9 @@ auto clang_format_general::check_single_file(
 }
 
 void clang_format_general::check(const runtime_context &context) {
+  assert(!option.binary.empty() && "clang-format binary is empty");
+  assert(!context.repo_path.empty() && "the repo_path of context is empty");
+
   const auto root_dir = context.repo_path;
   const auto files = context.changed_files;
   for (const auto &file : files) {
