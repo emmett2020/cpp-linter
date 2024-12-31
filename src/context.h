@@ -50,8 +50,6 @@ struct runtime_context {
   std::unordered_map<std::string, git::patch_ptr> patches;
   std::unordered_map<std::string, git::diff_delta> deltas;
   std::vector<std::string> changed_files;
-
-
 };
 
 void fill_git_info(runtime_context &context);

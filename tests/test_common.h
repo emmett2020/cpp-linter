@@ -55,6 +55,17 @@ struct repo_t {
     }
   }
 
+  // This will always remove old file.
+  auto remove_file(const std::string &file_path) {
+    auto file_full_path = repo_path / file_path;
+    if (std::filesystem::exists(file_full_path)) {
+      std::filesystem::remove(file_full_path);
+    }
+    if (!ranges::contains(uncommitted_files, file_path)) {
+      uncommitted_files.push_back(file_path);
+    }
+  }
+
   void append_content_to_exist_file(const std::string &file_path,
                                     const std::string &content) {
     auto file_full_path = repo_path / file_path;
@@ -68,8 +79,7 @@ struct repo_t {
 
   // Rewrite exist file's content. This could be safely called by user multiple
   // times. And the last version of it will be finally used.
-  auto rewrite_file(const std::string &file_path,
-                          const std::string &content) {
+  auto rewrite_file(const std::string &file_path, const std::string &content) {
     auto file_full_path = repo_path / file_path;
     REQUIRE(std::filesystem::exists(file_full_path));
 
@@ -98,6 +108,14 @@ struct repo_t {
   }
 
   auto get_path() -> std::filesystem::path { return repo_path; }
+
+  void commit_clang_format() {
+    auto content = std::string{};
+    content += "BasedOnStyle: Google\n";
+    content += "AllowShortBlocksOnASingleLine: Never\n";
+    add_file(".clang-format", content);
+    [[maybe_unused]] auto ret = commit_changes();
+  }
 
 private:
   void init() {
