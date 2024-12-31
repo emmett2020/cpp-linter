@@ -217,13 +217,13 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
           "check the modified file") {}
 }
 
-void check_result(tool_base &tool) {
+void check_result(tool_base &tool, bool expected, int p, int f, int i) {
   auto [pass, passed, failed, ignored] =
       tool.get_reporter()->get_brief_result();
-  REQUIRE(pass);
-  REQUIRE(passed == 1);
-  REQUIRE(failed == 0);
-  REQUIRE(ignored == 0);
+  REQUIRE(pass == expected);
+  REQUIRE(passed == p);
+  REQUIRE(failed == f);
+  REQUIRE(ignored == i);
 }
 
 TEST_CASE("Test clang-format could correctly check basic unformatted error",
@@ -264,12 +264,27 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     debug_env.github_sha = source_id;
     github::fill_context(debug_env, context);
     fill_git_info(context);
-
     clang_format->check(context);
-    check_result(*clang_format);
+    check_result(*clang_format, true, 1, 0, 0);
   }
 
-  SECTION("Insert unformatted lines shouldn't pass clang-format check") {}
+  SECTION("Insert unformatted lines shouldn't pass clang-format check") {
+    repo.add_file("file.cpp", "int n = 0;");
+    auto [target_id, target] = repo.commit_changes();
+    const auto *const unformatted = R"(int n   = 0;
+      int             m = 1;
+    )";
+    repo.rewrite_file("file.cpp", unformatted);
+    auto [source_id, source] = repo.commit_changes();
+    spdlog::info("target_id: {}, source_id: {}", target_id, source_id);
+
+    context.target = target_id;
+    debug_env.github_sha = source_id;
+    github::fill_context(debug_env, context);
+    fill_git_info(context);
+    clang_format->check(context);
+    check_result(*clang_format, false, 0, 1, 0);
+  }
 
   SECTION("Insert formatted lines should pass clang-format check") {}
   SECTION("Delete all unformatted lines will pass clang-format check") {}
