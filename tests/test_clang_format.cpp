@@ -217,6 +217,15 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
           "check the modified file") {}
 }
 
+void check_result(tool_base &tool) {
+  auto [pass, passed, failed, ignored] =
+      tool.get_reporter()->get_brief_result();
+  REQUIRE(pass);
+  REQUIRE(passed == 1);
+  REQUIRE(failed == 0);
+  REQUIRE(ignored == 0);
+}
+
 TEST_CASE("Test clang-format could correctly check basic unformatted error",
           "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
@@ -257,15 +266,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     fill_git_info(context);
 
     clang_format->check(context);
-    auto [pass, passed, failed, ignored] =
-        clang_format->get_reporter()->get_brief_result();
-    REQUIRE(pass);
-    REQUIRE(passed == 1);
-    REQUIRE(failed == 0);
-    REQUIRE(ignored == 0);
+    check_result(*clang_format);
   }
 
   SECTION("Insert unformatted lines shouldn't pass clang-format check") {}
+
   SECTION("Insert formatted lines should pass clang-format check") {}
   SECTION("Delete all unformatted lines will pass clang-format check") {}
   SECTION(
