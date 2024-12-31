@@ -72,6 +72,15 @@ auto create_then_register_tool_desc(const clang_format::creator &creator)
   return desc;
 }
 
+void check_result(tool_base &tool, bool expected, int p, int f, int i) {
+  auto [pass, passed, failed, ignored] =
+      tool.get_reporter()->get_brief_result();
+  REQUIRE(pass == expected);
+  REQUIRE(passed == p);
+  REQUIRE(failed == f);
+  REQUIRE(ignored == i);
+}
+
 #define SKIP_IF_NO_CLANG_FORMAT                                                \
   if (!has_clang_format()) {                                                   \
     SKIP("Local environment doesn't have clang-format. So skip clang-format "  \
@@ -176,6 +185,46 @@ TEST_CASE("Create tool of spefific version should work",
   }
 }
 
+TEST_CASE("Test clang-format could correctly handle file filter",
+          "[CppLintAction][tool][clang_format][general_version]") {
+  SKIP_IF_NO_CLANG_FORMAT
+  auto creator = std::make_unique<clang_format::creator>();
+  auto desc = create_then_register_tool_desc(*creator);
+  auto vars = parse_opt(
+      desc, "--target-revision=master", "--enable-pull-request-review=false",
+      "--enable-comment-on-issue=false", "--enable-action-output=false",
+      "--enable-step-summary=false", "--clang-format-file-iregex=.*.test");
+  auto clang_format = creator->create_tool(vars);
+
+  auto context = runtime_context{};
+  program_options::fill_context(vars, context);
+
+  auto repo = repo_t{};
+
+  auto debug_env = github::github_env{};
+  debug_env.workspace = repo.get_path();
+  debug_env.event_name = github::github_event_pull_request;
+
+  constexpr auto *clang_format_content = R"(
+    BasedOnStyle: Google
+    AllowShortBlocksOnASingleLine: Never
+  )";
+  repo.add_file(".clang-format", clang_format_content);
+  repo.commit_changes();
+  repo.add_file("file.test", "int   n = 0;");
+  auto [target_id, target] = repo.commit_changes();
+  repo.rewrite_file("file.test", "int n = 0;");
+  auto [source_id, source] = repo.commit_changes();
+  spdlog::info("target_id: {}, source_id: {}", target_id, source_id);
+
+  context.target = target_id;
+  debug_env.github_sha = source_id;
+  github::fill_context(debug_env, context);
+  fill_git_info(context);
+  clang_format->check(context);
+  check_result(*clang_format, true, 1, 0, 0);
+}
+
 TEST_CASE("Test clang-format could correctly handle various file level cases",
           "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
@@ -203,8 +252,6 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
   repo.add_file(".clang-format", clang_format_content);
   repo.commit_changes();
 
-  SECTION("Test file filter should be work") {}
-
   SECTION("DELETED files shouldn't be checked") {}
   SECTION("NEW added files should be checked") {}
   SECTION("MODIFIED files should be checked") {}
@@ -215,15 +262,6 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
           "these two files") {}
   SECTION("The commits modified one file and delete an old file should only "
           "check the modified file") {}
-}
-
-void check_result(tool_base &tool, bool expected, int p, int f, int i) {
-  auto [pass, passed, failed, ignored] =
-      tool.get_reporter()->get_brief_result();
-  REQUIRE(pass == expected);
-  REQUIRE(passed == p);
-  REQUIRE(failed == f);
-  REQUIRE(ignored == i);
 }
 
 TEST_CASE("Test clang-format could correctly check basic unformatted error",
