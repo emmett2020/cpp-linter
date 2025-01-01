@@ -140,40 +140,47 @@ TEST_CASE("Add three files to index by our utility", "[CppLintAction][git2][inde
 TEST_CASE("Delete two files to index by our utility", "[CppLintAction][git2][index]") {
   create_temp_repo_dir();
   auto guard = scope_guard{remove_temp_repo_dir};
+  auto repo  = init_basic_repo();
 
+  // Firstly, we create two files and commit it.
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
-  auto repo = init_basic_repo();
+  auto ret = git::index::add_files(repo.get(), files);
+  git::commit::create_head(repo.get(), "Add two files", std::get<1>(ret).get());
 
-  git::index::remove_files(repo.get(), files);
+  // Then we remove the files just created.
+  git::index::remove_files(repo.get(), get_temp_repo_dir(), files);
   auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 2);
-  create_temp_file("file3.cpp", "hello world");
-  git::index::add_files(repo.get(), {"file3.cpp"});
 
-  status_list = git::status::gather(repo.get(), options);
-  REQUIRE(git::status::entry_count(status_list.get()) == 3);
-  remove_temp_repo_dir();
+  const auto file1_path = get_temp_repo_dir() / "file1.cpp";
+  const auto file2_path = get_temp_repo_dir() / "file2.cpp";
+  REQUIRE(!std::filesystem::exists(file1_path));
+  REQUIRE(!std::filesystem::exists(file2_path));
 }
 
 TEST_CASE("Parse single uses revparse", "[CppLintAction][git2][revparse]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
+
   auto repo                    = init_basic_repo();
   auto [index_oid, index_tree] = git::index::add_files(repo.get(), files);
   auto [commit_oid, _]         = git::commit::create_head(repo.get(), "Init", index_tree.get());
 
-  SECTION("parse head to get commit") {
+  SECTION("get commit id by head") {
     auto ret = git::revparse::single(repo.get(), default_branch);
     REQUIRE_FALSE(git::object::id_str(ret.get()).empty());
   }
-  remove_temp_repo_dir();
 }
 
-TEST_CASE("Get HEAD", "[CppLintAction][git2][repo][commit]") {
+TEST_CASE("Get HEAD", "[CppLintAction][git2][commit]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   create_temp_files({"file0.cpp", "file1.cpp"}, "hello world");
   auto [repo, commit] = init_repo_with_commit({"file0.cpp", "file1.cpp"});
   auto ref            = git::repo::head(repo.get());
@@ -184,6 +191,8 @@ TEST_CASE("Get HEAD", "[CppLintAction][git2][repo][commit]") {
 
 TEST_CASE("Push two commits and get diff files", "[CppLintAction][git2][diff]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
   auto repo                   = init_basic_repo();
@@ -202,11 +211,12 @@ TEST_CASE("Push two commits and get diff files", "[CppLintAction][git2][diff]") 
 
   auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
   REQUIRE(changed_files.size() == 1);
-  remove_temp_repo_dir();
 }
 
 TEST_CASE("Simple use of patch ", "[CppLintAction][git2][patch]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
   auto repo                   = init_basic_repo();
@@ -225,9 +235,6 @@ TEST_CASE("Simple use of patch ", "[CppLintAction][git2][patch]") {
 
   auto diff  = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
   auto patch = git::patch::create_from_diff(diff.get(), 0);
-  std::cout << git::patch::to_str(patch.get());
-
-  remove_temp_repo_dir();
 }
 
 TEST_CASE("Create patch from buffers", "[CppLintAction][git2][patch]") {
@@ -242,6 +249,8 @@ TEST_CASE("Create patch from buffers", "[CppLintAction][git2][patch]") {
 
 TEST_CASE("Get file content from a specific commit", "[CppLintAction][git2][blob]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   const auto files = std::vector<std::string>{"file1.cpp"};
   create_temp_files(files, "hello world");
   auto repo                   = init_basic_repo();
@@ -249,12 +258,12 @@ TEST_CASE("Get file content from a specific commit", "[CppLintAction][git2][blob
   auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
   auto content                = git::blob::get_raw_content(repo.get(), commit1.get(), "file1.cpp");
   REQUIRE(content == "hello world");
-
-  remove_temp_repo_dir();
 }
 
 TEST_CASE("Get lines in a hunk", "[CppLintAction][git2][patch]") {
   create_temp_repo_dir();
+  auto guard = scope_guard{remove_temp_repo_dir};
+
   const auto files = std::vector<std::string>{"file1.cpp"};
   create_temp_files(files, "hello world\nhello world2\n");
   auto repo                   = init_basic_repo();
@@ -272,8 +281,6 @@ TEST_CASE("Get lines in a hunk", "[CppLintAction][git2][patch]") {
   REQUIRE(contents[0] == "hello world\n");
   REQUIRE(contents[1] == "hello world2\n");
   REQUIRE(contents[2] == "hello world3");
-
-  remove_temp_repo_dir();
 }
 
 TEST_CASE("Compare from buffer", "[CppLintAction][git2][patch]") {

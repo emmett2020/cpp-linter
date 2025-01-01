@@ -96,7 +96,7 @@ struct repo_t {
 
   auto commit_changes() -> std::tuple<std::string, linter::git::commit_ptr> {
     auto [index_oid1, index1] = git::index::add_files(repo.get(), modified_or_added_files);
-    auto [index_oid, index]   = git::index::remove_files(repo.get(), deleted_files);
+    auto [index_oid, index]   = git::index::remove_files(repo.get(), repo_path, deleted_files);
     auto message              = fmt::format("Commit Index {}", commit_idx);
     auto [commit_oid, commit] = git::commit::create_head(repo.get(), message, index.get());
     return {git::oid::to_str(commit_oid), std::move(commit)};
