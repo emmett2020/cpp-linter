@@ -920,9 +920,21 @@ void write(index_raw_ptr index);
 /// be moved to the "resolve undo" (REUC) section
 void add_by_path(index_raw_ptr index, const std::string &path);
 
+/// Remove an index entry corresponding to a file on disk
+/// The file path must be relative to the repository's working folder. It may
+/// exist. If this file currently is the result of a merge conflict, this file
+/// will no longer be marked as conflicting. The data about the conflict will be
+/// moved to the "resolve undo" (REUC) section.
+void remove_by_path(index_raw_ptr index, const std::string &path);
+
 /// A utility to forcely and fastly add all files to staging area.
 /// This function will automatically call write tree to enable this changes.
 auto add_files(repo_raw_ptr repo, const std::vector<std::string> &files)
+    -> std::tuple<git_oid, tree_ptr>;
+
+/// A utility to forcely and fastly add remove files to staging area.
+/// This function will automatically call write tree to enable this changes.
+auto remove_files(repo_raw_ptr repo, const std::vector<std::string> &files)
     -> std::tuple<git_oid, tree_ptr>;
 
 } // namespace index

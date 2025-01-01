@@ -20,33 +20,32 @@
 #include "tools/clang_format/general/option.h"
 
 namespace linter::tool::clang_format {
-/// The creator to create clang-format instance.
-struct creator : creator_base {
-  creator() = default;
-  ~creator() override = default;
-  creator(creator &&other) = default;
+  /// The creator to create clang-format instance.
+  struct creator : creator_base {
+    creator()                = default;
+    ~creator() override      = default;
+    creator(creator &&other) = default;
 
-  /// Register clang-format needed options to program options description.
-  void
-  register_option(program_options::options_description &desc) const override;
+    /// Register clang-format needed options to program options description.
+    void register_option(program_options::options_description &desc) const override;
 
-  /// Create clang-format option struct by user input program options.
-  void create_option(const program_options::variables_map &variables);
+    /// Create clang-format option struct by user input program options.
+    void create_option(const program_options::variables_map &variables);
 
-  /// Create clang-format tool instance.
-  auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
+    /// Create clang-format tool instance.
+    auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
-  /// Return whether enables clang-format. Clang-format is enabled on default
-  /// and could be disabled by user.
-  bool enabled() override;
+    /// Return whether enables clang-format. Clang-format is enabled on default
+    /// and could be disabled by user.
+    bool enabled() override;
 
-  [[nodiscard]] auto get_option() const -> const option_t &;
+    [[nodiscard]] auto get_option() const -> const option_t &;
 
-private:
-  option_t option;
-};
+  private:
+    option_t option;
+  };
 
-/// Get clang-format version based on clang-format output
-auto get_version(const std::string &binary) -> std::string;
+  /// Get clang-format version based on clang-format output
+  auto get_version(const std::string &binary) -> std::string;
 
 } // namespace linter::tool::clang_format

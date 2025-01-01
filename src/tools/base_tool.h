@@ -44,8 +44,7 @@ namespace linter::tool {
   using tool_base_ptr = std::unique_ptr<tool_base>;
 
   /// Run the given tools one by one and return the reporter of each tool in order.
-  inline auto
-  run_tools(const std::vector<tool_base_ptr> &tools, const runtime_context &context)
+  inline auto run_tools(const std::vector<tool_base_ptr> &tools, const runtime_context &context)
     -> std::vector<reporter_base_ptr> {
     auto ret = std::vector<reporter_base_ptr>{};
     for (const auto &tool: tools) {

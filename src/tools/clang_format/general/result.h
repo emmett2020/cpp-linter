@@ -21,11 +21,11 @@
 
 namespace linter::tool::clang_format {
   struct replacement_t {
-    int offset;  // character offset in unformatted file
-    int length;  // how may characters to be removed
+    int offset;       // character offset in unformatted file
+    int length;       // how may characters to be removed
     std::string data; // new data to be inserted
-    int row; // row number in unformatted file
-    int col; // col number in unformatted file
+    int row;          // row number in unformatted file
+    int col;          // col number in unformatted file
   };
 
   // using replacements_t = std::vector<replacement_t>;

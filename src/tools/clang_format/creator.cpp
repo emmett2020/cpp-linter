@@ -22,47 +22,46 @@
 #include "tools/util.h"
 
 namespace linter::tool::clang_format {
-using namespace std::string_view_literals;
+  using namespace std::string_view_literals;
 
-namespace {
-constexpr auto enable = "enable-clang-format";
-constexpr auto enable_fastly_exit = "enable-clang-format-fastly-exit";
-constexpr auto version = "clang-format-version";
-constexpr auto binary = "clang-format-binary";
-constexpr auto file_iregex = "clang-format-file-iregex";
+  namespace {
+    constexpr auto enable             = "enable-clang-format";
+    constexpr auto enable_fastly_exit = "enable-clang-format-fastly-exit";
+    constexpr auto version            = "clang-format-version";
+    constexpr auto binary             = "clang-format-binary";
+    constexpr auto file_iregex        = "clang-format-file-iregex";
 
-} // namespace
+  } // namespace
 
-// example:
-// Ubuntu clang-format version 18.1.3 (1ubuntu1)
-auto get_version(const std::string &binary) -> std::string {
-  auto [ec, std_out, std_err] = shell::execute(binary, {"--version"});
-  if (ec != 0) {
-    return "";
+  // example:
+  // Ubuntu clang-format version 18.1.3 (1ubuntu1)
+  auto get_version(const std::string &binary) -> std::string {
+    auto [ec, std_out, std_err] = shell::execute(binary, {"--version"});
+    if (ec != 0) {
+      return "";
+    }
+    constexpr auto version_regex = R"(version\ (\d+\.\d+\.\d+))";
+    auto regex                   = boost::regex{version_regex};
+    auto match                   = boost::smatch{};
+    auto matched                 = boost::regex_search(std_out, match, regex, boost::match_extra);
+    throw_unless(matched, "Can't get clang-format version");
+    return match[1].str();
   }
-  constexpr auto version_regex = R"(version\ (\d+\.\d+\.\d+))";
-  auto regex = boost::regex{version_regex};
-  auto match = boost::smatch{};
-  auto matched = boost::regex_search(std_out, match, regex, boost::match_extra);
-  throw_unless(matched, "Can't get clang-format version");
-  return match[1].str();
-}
 
-void creator::register_option(
-    program_options::options_description &desc) const {
-  using program_options::value;
-  using std::string;
+  void creator::register_option(program_options::options_description &desc) const {
+    using program_options::value;
+    using std::string;
 
-  const auto *ver = value<string>()->value_name("version");
-  const auto *bin = value<string>()->value_name("path");
-  const auto *iregex = value<string>()->value_name("iregex")->default_value(
+    const auto *ver    = value<string>()->value_name("version");
+    const auto *bin    = value<string>()->value_name("path");
+    const auto *iregex = value<string>()->value_name("iregex")->default_value(
       option.file_filter_iregex);
 
-  auto boolean = [](bool def) {
-    return value<bool>()->value_name("boolean")->default_value(def);
-  };
+    auto boolean = [](bool def) {
+      return value<bool>()->value_name("boolean")->default_value(def);
+    };
 
-  // clang-format off
+    // clang-format off
   desc.add_options()
     (enable,              boolean(true),   "Enabel clang-format check")
     (enable_fastly_exit,  boolean(false),  "Enabel clang-format fastly exit. This means "
@@ -77,78 +76,82 @@ void creator::register_option(
                                            "option, to avoid ambigous")
     (file_iregex,         iregex,          "Set the source file filter for clang-format.")
   ;
-  // clang-format on
-}
-
-void creator::create_option(const program_options::variables_map &variables) {
-  option.enabled = variables[enable].as<bool>();
-  if (!option.enabled) {
-    // Speed up option creation
-    return;
+    // clang-format on
   }
 
-  if (variables.contains(enable_fastly_exit)) {
-    option.enabled_fastly_exit = variables[enable_fastly_exit].as<bool>();
-  }
-  if (variables.contains(file_iregex)) {
-    option.file_filter_iregex = variables[file_iregex].as<std::string>();
-  }
-  if (variables.contains(version)) {
-    program_options::must_not_specify("specify clang-format-version", variables,
-                                      {"clang-format-binary"});
-    auto user_input_version = variables[version].as<std::string>();
-    spdlog::debug("user inputs clang-format version: {}", user_input_version);
+  void creator::create_option(const program_options::variables_map &variables) {
+    option.enabled = variables[enable].as<bool>();
+    if (!option.enabled) {
+      // Speed up option creation
+      return;
+    }
 
-    option.binary = find_clang_tool("clang-format", user_input_version);
+    if (variables.contains(enable_fastly_exit)) {
+      option.enabled_fastly_exit = variables[enable_fastly_exit].as<bool>();
+    }
+    if (variables.contains(file_iregex)) {
+      option.file_filter_iregex = variables[file_iregex].as<std::string>();
+    }
+    if (variables.contains(version)) {
+      program_options::must_not_specify(
+        "specify clang-format-version",
+        variables,
+        {"clang-format-binary"});
+      auto user_input_version = variables[version].as<std::string>();
+      spdlog::debug("user inputs clang-format version: {}", user_input_version);
 
-    // We don't use user input version since it's maybe a complete version.
-    option.version = get_version(option.binary);
-  } else if (variables.contains(binary)) {
-    program_options::must_not_specify("specify clang-format-binary", variables,
-                                      {"clang-format-version"});
+      option.binary = find_clang_tool("clang-format", user_input_version);
 
-    option.binary = variables[binary].as<std::string>();
-    auto [ec, std_out, std_err] = shell::which(option.binary);
-    throw_unless(
-        ec == 0,
-        fmt::format("Can't find given clang-format binary: {}", option.binary));
-    option.version = get_version(option.binary);
-  } else {
-    auto [ec, std_out, std_err] = shell::which("clang-format");
-    throw_unless(ec == 0, "can't find clang-format");
-    option.binary = std_out;
-    option.version = get_version(option.binary);
-  }
-  spdlog::info("The clang-format executable path: {}", option.binary);
-}
+      // We don't use user input version since it's maybe a complete version.
+      option.version = get_version(option.binary);
+    } else if (variables.contains(binary)) {
+      program_options::must_not_specify(
+        "specify clang-format-binary",
+        variables,
+        {"clang-format-version"});
 
-auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
-  create_option(variables);
-
-  auto version = option.version;
-  auto tool = tool_base_ptr{};
-  if (version == version_18_1_3) {
-    tool = std::make_unique<clang_format_v18_1_3>(option);
-  } else if (version == version_18_1_0) {
-    tool = std::make_unique<clang_format_v18_1_0>(option);
-  } else {
-    tool = std::make_unique<clang_format_general>(option);
+      option.binary               = variables[binary].as<std::string>();
+      auto [ec, std_out, std_err] = shell::which(option.binary);
+      throw_unless(ec == 0, fmt::format("Can't find given clang-format binary: {}", option.binary));
+      option.version = get_version(option.binary);
+    } else {
+      auto [ec, std_out, std_err] = shell::which("clang-format");
+      throw_unless(ec == 0, "can't find clang-format");
+      option.binary  = std_out;
+      option.version = get_version(option.binary);
+    }
+    spdlog::info("The clang-format executable path: {}", option.binary);
   }
 
-  // TODO: support get os and arch
-  const auto os = operating_system_t::ubuntu;
-  const auto arch = arch_t::x86_64;
-  throw_unless(tool->is_supported(os, arch),
-               fmt::format("Create clang-format {} instance failed since not "
-                           "supported on this platform",
-                           version));
+  auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
+    create_option(variables);
 
-  return tool;
-}
+    auto version = option.version;
+    auto tool    = tool_base_ptr{};
+    if (version == version_18_1_3) {
+      tool = std::make_unique<clang_format_v18_1_3>(option);
+    } else if (version == version_18_1_0) {
+      tool = std::make_unique<clang_format_v18_1_0>(option);
+    } else {
+      tool = std::make_unique<clang_format_general>(option);
+    }
 
-bool creator::enabled() { return option.enabled; }
+    // TODO: support get os and arch
+    const auto os   = operating_system_t::ubuntu;
+    const auto arch = arch_t::x86_64;
+    throw_unless(tool->is_supported(os, arch),
+                 fmt::format("Create clang-format {} instance failed since not "
+                             "supported on this platform",
+                             version));
 
-[[nodiscard]] auto creator::get_option() const -> const option_t & {
-  return option;
-}
+    return tool;
+  }
+
+  bool creator::enabled() {
+    return option.enabled;
+  }
+
+  [[nodiscard]] auto creator::get_option() const -> const option_t & {
+    return option;
+  }
 } // namespace linter::tool::clang_format

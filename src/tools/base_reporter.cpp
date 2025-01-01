@@ -29,15 +29,15 @@ namespace linter::tool {
   using namespace std::string_view_literals;
 
   namespace {
-    auto make_usage_specification()->std::string {
-      auto content = "<code>"s;
-      content += "# 1. download cpp-linter\n";
-      content += "TODO\n";
-      content += "# 2. validate\n";
-      content += "TODO\n";
+    auto make_usage_specification() -> std::string {
+      auto content  = "<code>"s;
+      content      += "# 1. download cpp-linter\n";
+      content      += "TODO\n";
+      content      += "# 2. validate\n";
+      content      += "TODO\n";
       return content + "</code>";
     }
-  }
+  } // namespace
 
   void write_to_github_action_output(const runtime_context &context,
                                      const std::vector<reporter_base_ptr> &reporters) {
@@ -84,34 +84,38 @@ namespace linter::tool {
     github_client.get_issue_comment_id(context);
 
     constexpr auto website = "";
-    constexpr auto header = "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-linter)\n"sv;
+    constexpr auto header =
+      "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-linter)\n"sv;
     constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
     constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
-    constexpr auto table_row_fmt = "| **{}** | {} | {} | {} |\n"sv;
-    constexpr auto summary_fmt = "<summary>:mag_right: Click here to see the details of <strong>{}</strong> failed {} reported by <strong>{}</strong></summary>\n\n"sv;
+    constexpr auto table_row_fmt  = "| **{}** | {} | {} | {} |\n"sv;
+    constexpr auto summary_fmt =
+      "<summary>:mag_right: Click here to see the details of <strong>{}</strong> failed {} reported by <strong>{}</strong></summary>\n\n"sv;
     constexpr auto details_fmt = "<details>{}</details>\n"sv;
 
     auto table_rows = ""s;
-    auto details = ""s;
+    auto details    = ""s;
 
     for (const auto &reporter: reporters) {
       auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
-      auto tool_name = reporter->tool_name();
+      auto tool_name                               = reporter->tool_name();
       table_rows += fmt::format(table_row_fmt, tool_name, successed, failed, ignored);
       if (!is_passed) {
         assert(failed != 0);
         auto summary = fmt::format(summary_fmt, failed, failed == 1 ? "file" : "files", tool_name);
-        auto tool_detail = reporter->make_issue_comment(context) + "\n";
-        details += fmt::format(details_fmt, summary + tool_detail);
+        auto tool_detail  = reporter->make_issue_comment(context) + "\n";
+        details          += fmt::format(details_fmt, summary + tool_detail);
       }
     }
 
     {
-      static const auto usage_summary = "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
+      static const auto usage_summary =
+        "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
       details += fmt::format(details_fmt, usage_summary + make_usage_specification());
     }
 
-    auto final_content = fmt::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
+    auto final_content =
+      fmt::format("{}{}{}{}{}", header, table_header, table_sep_line, table_rows, details);
     github_client.add_or_update_issue_comment(context, final_content);
   }
 

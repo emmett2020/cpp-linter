@@ -33,66 +33,69 @@ using namespace linter;
 using namespace linter::tool;
 
 namespace {
-// Pass in c_str
-template <class... Opts>
-auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
-  return {const_cast<char *>("CppLintAction"), // NOLINT
-          const_cast<char *>(opts)...};        // NOLINT
-}
-
-template <class... Opts>
-auto parse_opt(const program_options::options_description &desc,
-               Opts &&...opts) -> program_options::variables_map {
-  auto inputs = make_opt(std::forward<Opts &&>(opts)...);
-  return program_options::parse(inputs.size(), inputs.data(), desc);
-}
-
-// Check whether local environment contains clang-format otherwise some checks
-// will be failed.
-bool has_clang_format() {
-  auto [ec, std_out, std_err] = shell::which("clang-format");
-  return ec == 0;
-}
-
-// Check whether local environment contains specific clang-format version
-// otherwise some checks will be failed.
-bool has_clang_format(std::string_view version) {
-  try {
-    find_clang_tool("clang-format", version);
-    return true;
-  } catch (std::runtime_error &err) {
-    return false;
+  // Pass in c_str
+  template <class... Opts>
+  auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
+    return {const_cast<char *>("CppLintAction"), // NOLINT
+            const_cast<char *>(opts)...};        // NOLINT
   }
-}
 
-auto create_then_register_tool_desc(const clang_format::creator &creator)
+  template <class... Opts>
+  auto parse_opt(const program_options::options_description &desc, Opts &&...opts)
+    -> program_options::variables_map {
+    auto inputs = make_opt(std::forward<Opts &&>(opts)...);
+    return program_options::parse(inputs.size(), inputs.data(), desc);
+  }
+
+  // Check whether local environment contains clang-format otherwise some checks
+  // will be failed.
+  bool has_clang_format() {
+    auto [ec, std_out, std_err] = shell::which("clang-format");
+    return ec == 0;
+  }
+
+  // Check whether local environment contains specific clang-format version
+  // otherwise some checks will be failed.
+  bool has_clang_format(std::string_view version) {
+    try {
+      find_clang_tool("clang-format", version);
+      return true;
+    } catch (std::runtime_error &err) {
+      return false;
+    }
+  }
+
+  auto create_then_register_tool_desc(const clang_format::creator &creator)
     -> program_options::options_description {
-  auto desc = program_options::create_desc();
-  creator.register_option(desc);
-  return desc;
-}
+    auto desc = program_options::create_desc();
+    creator.register_option(desc);
+    return desc;
+  }
 
-void check_result(tool_base &tool, bool expected, int expected_passed_num,
-                  int expected_failed_num, int expected_ignored_num) {
-  auto [pass, passed, failed, ignored] =
-      tool.get_reporter()->get_brief_result();
-  REQUIRE(pass == expected);
-  REQUIRE(passed == expected_passed_num);
-  REQUIRE(failed == expected_failed_num);
-  REQUIRE(ignored == expected_ignored_num);
-}
+  void check_result(
+    tool_base &tool,
+    bool expected,
+    int expected_passed_num,
+    int expected_failed_num,
+    int expected_ignored_num) {
+    auto [pass, passed, failed, ignored] = tool.get_reporter()->get_brief_result();
+    REQUIRE(pass == expected);
+    REQUIRE(passed == expected_passed_num);
+    REQUIRE(failed == expected_failed_num);
+    REQUIRE(ignored == expected_ignored_num);
+  }
 
-#define SKIP_IF_NO_CLANG_FORMAT                                                \
-  if (!has_clang_format()) {                                                   \
-    SKIP("Local environment doesn't have clang-format. So skip clang-format "  \
-         "unit tests.");                                                       \
+#define SKIP_IF_NO_CLANG_FORMAT                                               \
+  if (!has_clang_format()) {                                                  \
+    SKIP("Local environment doesn't have clang-format. So skip clang-format " \
+         "unit tests.");                                                      \
   }
 
 // NOLINTNEXTLINE
-#define SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION(version)                          \
-  if (!has_clang_format(version)) {                                            \
-    SKIP("Local environment doesn't have required clang-format version. So "   \
-         "skip clang-format unit tests.");                                     \
+#define SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION(version)                        \
+  if (!has_clang_format(version)) {                                          \
+    SKIP("Local environment doesn't have required clang-format version. So " \
+         "skip clang-format unit tests.");                                   \
   }
 
 } // namespace
@@ -101,18 +104,16 @@ TEST_CASE("Test register and create clang-format option",
           "[CppLintAction][program_options][tool][clang_format][creator]") {
   SKIP_IF_NO_CLANG_FORMAT
   auto creator = std::make_unique<clang_format::creator>();
-  auto desc = create_then_register_tool_desc(*creator);
+  auto desc    = create_then_register_tool_desc(*creator);
 
   SECTION("Explicitly enables clang-format should work") {
-    auto opts =
-        parse_opt(desc, "--target-revision=main", "--enable-clang-format=true");
+    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=true");
     creator->create_option(opts);
     REQUIRE(creator->enabled());
   }
 
   SECTION("Explicitly disable clang-format should work") {
-    auto opts = parse_opt(desc, "--target-revision=main",
-                          "--enable-clang-format=false");
+    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=false");
     creator->create_option(opts);
     REQUIRE(creator->enabled() == false);
   }
@@ -124,22 +125,23 @@ TEST_CASE("Test register and create clang-format option",
   }
 
   SECTION("Receive an invalid clang-format version should throw exception") {
-    auto opts = parse_opt(desc, "--target-revision=main",
-                          "--clang-format-version=18.x.1");
+    auto opts = parse_opt(desc, "--target-revision=main", "--clang-format-version=18.x.1");
     REQUIRE_THROWS(creator->create_option(opts));
   }
 
   SECTION("Receive an invalid clang-format binary should throw exception") {
-    auto opts =
-        parse_opt(desc, "--target-revision=main",
-                  "--clang-format-binary=/usr/bin/clang-format-invalid");
+    auto opts = parse_opt(desc,
+                          "--target-revision=main",
+                          "--clang-format-binary=/usr/bin/clang-format-invalid");
     REQUIRE_THROWS(creator->create_option(opts));
   }
 
   SECTION("Other options should be correctly created based on user input") {
-    auto opts = parse_opt(desc, "--target-revision=main",
-                          "--enable-clang-format-fastly-exit=true",
-                          "--clang-format-file-iregex=*.cpp");
+    auto opts = parse_opt(
+      desc,
+      "--target-revision=main",
+      "--enable-clang-format-fastly-exit=true",
+      "--clang-format-file-iregex=*.cpp");
     creator->create_option(opts);
     auto option = creator->get_option();
     REQUIRE(option.enabled_fastly_exit == true);
@@ -152,17 +154,15 @@ TEST_CASE("Test clang-format should get full version even though user input a "
           "[CppLintAction][tool][clang_format][creator]") {
   SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18")
   auto creator = std::make_unique<clang_format::creator>();
-  auto desc = create_then_register_tool_desc(*creator);
+  auto desc    = create_then_register_tool_desc(*creator);
 
-  auto vars =
-      parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
+  auto vars = parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
   auto clang_format = creator->create_tool(vars);
-  auto version = clang_format->version();
-  auto parts = ranges::views::split(version, '.') |
-               ranges::to<std::vector<std::string>>();
+  auto version      = clang_format->version();
+  auto parts        = ranges::views::split(version, '.') | ranges::to<std::vector<std::string>>();
   REQUIRE(parts.size() == 3);
   REQUIRE(parts[0] == "18");
   REQUIRE(ranges::all_of(parts[1], isdigit));
@@ -173,13 +173,12 @@ TEST_CASE("Create tool of spefific version should work",
           "[CppLintAction][tool][clang_format][creator]") {
   SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18.1.3")
   auto creator = std::make_unique<clang_format::creator>();
-  auto desc = create_then_register_tool_desc(*creator);
+  auto desc    = create_then_register_tool_desc(*creator);
 
   SECTION("version 18.1.3") {
-    auto vars = parse_opt(desc, "--target-revision=main",
-                          "--clang-format-version=18.1.3");
+    auto vars         = parse_opt(desc, "--target-revision=main", "--clang-format-version=18.1.3");
     auto clang_format = creator->create_tool(vars);
-    auto context = runtime_context{};
+    auto context      = runtime_context{};
     program_options::fill_context(vars, context);
     REQUIRE(clang_format->version() == "18.1.3");
     REQUIRE(clang_format->name() == "clang-format");
@@ -187,22 +186,22 @@ TEST_CASE("Create tool of spefific version should work",
 }
 
 namespace {
-auto create_clang_format() -> clang_format::clang_format_general {
-  auto option = clang_format::option_t{};
-  option.enabled = true;
-  option.binary = "/usr/bin/clang-format";
-  return clang_format::clang_format_general{option};
-}
+  auto create_clang_format() -> clang_format::clang_format_general {
+    auto option    = clang_format::option_t{};
+    option.enabled = true;
+    option.binary  = "/usr/bin/clang-format";
+    return clang_format::clang_format_general{option};
+  }
 
-auto create_runtime_context(const std::string &target,
-                            const std::string &source) -> runtime_context {
-  auto context = runtime_context{};
-  context.repo_path = get_temp_repo_dir();
-  context.target = target;
-  context.source = source;
-  fill_git_info(context);
-  return context;
-}
+  auto create_runtime_context(const std::string &target, const std::string &source)
+    -> runtime_context {
+    auto context      = runtime_context{};
+    context.repo_path = get_temp_repo_dir();
+    context.target    = target;
+    context.source    = source;
+    fill_git_info(context);
+    return context;
+  }
 
 } // namespace
 
@@ -210,7 +209,7 @@ TEST_CASE("Test clang-format could correctly handle file filter",
           "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
 
-  auto clang_format = create_clang_format();
+  auto clang_format                      = create_clang_format();
   clang_format.option.file_filter_iregex = ".*.test";
 
   // Create git repository whichi to be checked.
@@ -221,8 +220,7 @@ TEST_CASE("Test clang-format could correctly handle file filter",
   repo.rewrite_file("file.test", "int n = 0;");
   auto source = repo.commit_changes();
 
-  auto context =
-      create_runtime_context(std::get<0>(target), std::get<0>(source));
+  auto context = create_runtime_context(std::get<0>(target), std::get<0>(source));
 
   // Check
   clang_format.check(context);
@@ -248,29 +246,34 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     repo.remove_file("test2.cpp");
     auto source = repo.commit_changes();
 
-    auto context =
-        create_runtime_context(std::get<0>(target), std::get<0>(source));
+    auto context = create_runtime_context(std::get<0>(target), std::get<0>(source));
     clang_format.check(context);
     check_result(clang_format, true, 1, 0, 0);
   }
 
-  SECTION("NEW added files should be checked") {}
-  SECTION("MODIFIED files should be checked") {}
+  SECTION("NEW added files should be checked") {
+  }
+  SECTION("MODIFIED files should be checked") {
+  }
 
-  SECTION("The commits only delete file should check nothing") {}
-  SECTION("The commits only add new cpp files should only check these files") {}
+  SECTION("The commits only delete file should check nothing") {
+  }
+  SECTION("The commits only add new cpp files should only check these files") {
+  }
   SECTION("The commits modified one file and insert a new file should check "
-          "these two files") {}
+          "these two files") {
+  }
   SECTION("The commits modified one file and delete an old file should only "
-          "check the modified file") {}
+          "check the modified file") {
+  }
 }
 
 TEST_CASE("Test clang-format could correctly handle various file level cases1",
           "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
-  auto option = clang_format::option_t{};
+  auto option       = clang_format::option_t{};
   auto clang_format = clang_format::clang_format_general{option};
-  auto context = runtime_context{};
+  auto context      = runtime_context{};
 }
 
 TEST_CASE("Test clang-format could correctly check basic unformatted error",
@@ -283,7 +286,7 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
 
   SECTION("Insert unformatted lines shouldn't pass clang-format check") {
     repo.add_file("file.cpp", "int n = 0;");
-    auto [target_id, target] = repo.commit_changes();
+    auto [target_id, target]      = repo.commit_changes();
     const auto *const unformatted = R"(int n   = 0;
       int             m = 1;
     )";
@@ -322,24 +325,30 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     check_result(clang_format, true, 1, 0, 0);
   }
 
-  SECTION(
-      "Delete only some unformatted lines shouldn't pass clang-format check") {}
+  SECTION("Delete only some unformatted lines shouldn't pass clang-format check") {
+  }
 
   SECTION("Rewrite unformatted lines to unformatted lines shouldn't pass "
-          "clang-format check") {}
+          "clang-format check") {
+  }
   SECTION("Rewrite unformatted lines to formatted lines should pass "
-          "clang-format check") {}
+          "clang-format check") {
+  }
   SECTION("Rewrite formatted lines to unformatted lines shouldn't pass "
-          "clang-format check") {}
+          "clang-format check") {
+  }
   SECTION("Rewrite formatted lines to formatted lines should pass "
-          "clang-format check") {}
+          "clang-format check") {
+  }
 }
 
-TEST_CASE("Test parse replacements",
-          "[CppLintAction][tool][clang_format][general_version]") {
+TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_format][general_version]") {
   SKIP_IF_NO_CLANG_FORMAT
 
-  SECTION("Empty replacements") {}
-  SECTION("One replacement") {}
-  SECTION("Two replacements") {}
+  SECTION("Empty replacements") {
+  }
+  SECTION("One replacement") {
+  }
+  SECTION("Two replacements") {
+  }
 }

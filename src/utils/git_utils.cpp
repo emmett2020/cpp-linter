@@ -934,11 +934,27 @@ void add_by_path(index_raw_ptr index, const std::string &path) {
   throw_if(ret);
 }
 
+void remove_by_path(index_raw_ptr index, const std::string &path) {
+  auto ret = ::git_index_remove_bypath(index, path.c_str());
+  throw_if(ret);
+}
+
 auto add_files(repo_raw_ptr repo, const std::vector<std::string> &files)
     -> std::tuple<git_oid, tree_ptr> {
   auto index = repo::index(repo);
   for (const auto &file : files) {
     git::index::add_by_path(index.get(), file);
+  }
+  auto oid = index::write_tree(index.get());
+  auto obj = tree::lookup(repo, &oid);
+  return {oid, std::move(obj)};
+}
+
+auto remove_files(repo_raw_ptr repo, const std::vector<std::string> &files)
+    -> std::tuple<git_oid, tree_ptr> {
+  auto index = repo::index(repo);
+  for (const auto &file : files) {
+    git::index::remove_by_path(index.get(), file);
   }
   auto oid = index::write_tree(index.get());
   auto obj = tree::lookup(repo, &oid);

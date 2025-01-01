@@ -40,55 +40,55 @@ using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 namespace {
-constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
+  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
 
-// This function must be called before any spdlog operations.
-void set_log_level(const program_options::variables_map& vars) {
-  // This name must be samed with the one we registered.
-  constexpr auto log_level_opt = "log-level";
-  assert(vars.contains(log_level_opt));
+  // This function must be called before any spdlog operations.
+  void set_log_level(const program_options::variables_map &vars) {
+    // This name must be samed with the one we registered.
+    constexpr auto log_level_opt = "log-level";
+    assert(vars.contains(log_level_opt));
 
-  auto level = vars[log_level_opt].as<std::string>();
-  auto log_level = boost::algorithm::to_lower_copy(level);
-  throw_unless(ranges::contains(supported_log_level, log_level),
-                fmt::format("unsupported log level: {}", level));
+    auto level     = vars[log_level_opt].as<std::string>();
+    auto log_level = boost::algorithm::to_lower_copy(level);
+    throw_unless(ranges::contains(supported_log_level, log_level),
+                 fmt::format("unsupported log level: {}", level));
 
-  if (log_level == "trace") {
-    spdlog::set_level(spdlog::level::trace);
-  } else if (log_level == "debug") {
-    spdlog::set_level(spdlog::level::debug);
-  } else if (log_level == "info") {
-    spdlog::set_level(spdlog::level::info);
-  } else {
-    spdlog::set_level(spdlog::level::err);
+    if (log_level == "trace") {
+      spdlog::set_level(spdlog::level::trace);
+    } else if (log_level == "debug") {
+      spdlog::set_level(spdlog::level::debug);
+    } else if (log_level == "info") {
+      spdlog::set_level(spdlog::level::info);
+    } else {
+      spdlog::set_level(spdlog::level::err);
+    }
   }
-}
 
-auto print_changed_files(const std::vector<std::string> &files) {
-  spdlog::info("Got {} changed files. File list:\n{}", files.size(),
-               concat(files));
-}
+  auto print_changed_files(const std::vector<std::string> &files) {
+    spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
+  }
 
-void print_version() {
-  fmt::print("{}.{}.{}", cpp_linter_VERSION_MAJOR, cpp_linter_VERSION_MINOR,
-             cpp_linter_VERSION_PATCH);
-}
+  void print_version() {
+    fmt::print("{}.{}.{}",
+               cpp_linter_VERSION_MAJOR,
+               cpp_linter_VERSION_MINOR,
+               cpp_linter_VERSION_PATCH);
+  }
 
-auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
-  auto ret = std::vector<tool::creator_base_ptr>{};
-  ret.push_back(std::make_unique<tool::clang_format::creator>());
-  ret.push_back(std::make_unique<tool::clang_tidy::creator>());
-  return ret;
-}
+  auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
+    auto ret = std::vector<tool::creator_base_ptr>{};
+    ret.push_back(std::make_unique<tool::clang_format::creator>());
+    ret.push_back(std::make_unique<tool::clang_tidy::creator>());
+    return ret;
+  }
 
-void check_repo_is_on_source(const runtime_context &ctx) {
-  auto head = git::repo::head_commit(ctx.repo.get());
-  throw_unless(
-      head == ctx.source_commit,
-      fmt::format("Head of repository isn't equal to source commit: {} != {}",
-                  git::commit::id_str(head.get()),
-                  git::commit::id_str(ctx.source_commit.get())));
-}
+  void check_repo_is_on_source(const runtime_context &ctx) {
+    auto head = git::repo::head_commit(ctx.repo.get());
+    throw_unless(head == ctx.source_commit,
+                 fmt::format("Head of repository isn't equal to source commit: {} != {}",
+                             git::commit::id_str(head.get()),
+                             git::commit::id_str(ctx.source_commit.get())));
+  }
 
 } // namespace
 

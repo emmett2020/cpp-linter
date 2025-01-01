@@ -19,24 +19,23 @@
 #include <string>
 
 namespace linter::tool {
-/// Provide a base option for all tools.
-struct option_base {
-  /// Whether user want to use this tool.
-  bool enabled = false;
+  /// Provide a base option for all tools.
+  struct option_base {
+    /// Whether user want to use this tool.
+    bool enabled = false;
 
-  /// Exited check process as soon as error occurs.
-  bool enabled_fastly_exit = false;
+    /// Exited check process as soon as error occurs.
+    bool enabled_fastly_exit = false;
 
-  /// The version of this tool. It's usually the full version of tool.
-  std::string version;
+    /// The version of this tool. It's usually the full version of tool.
+    std::string version;
 
-  /// The executable binary of this tool.
-  std::string binary;
+    /// The executable binary of this tool.
+    std::string binary;
 
-  /// Used to filt files.
-  std::string file_filter_iregex =
-      R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
-};
+    /// Used to filt files.
+    std::string file_filter_iregex = R"(.*\.(cpp|cc|c\+\+|cxx|c|cl|h|hpp|m|mm|inc))";
+  };
 
-using option_base_ptr = std::unique_ptr<option_base>;
+  using option_base_ptr = std::unique_ptr<option_base>;
 } // namespace linter::tool

@@ -26,97 +26,102 @@
 
 namespace linter::tool::clang_tidy {
 
-struct reporter_t : reporter_base {
-  ~reporter_t() override = default;
+  struct reporter_t : reporter_base {
+    ~reporter_t() override = default;
 
-  reporter_t(option_t opt, result_t res)
-      : option(std::move(opt)), result(std::move(res)) {}
-
-  auto make_brief() -> std::string {
-    // TODO: replace diagnostic_type with linkable name
-    auto ret = ""s;
-    for (const auto &[name, failed] : result.fails) {
-      for (const auto &diag : failed.diags) {
-        // use relative file name rather than diag.header.file_name which is
-        // absolute name
-        auto one = fmt::format("- **{}:{}:{}:** {}: [{}]\n  > {}\n", name,
-                               diag.header.row_idx, diag.header.col_idx,
-                               diag.header.serverity,
-                               diag.header.diagnostic_type, diag.header.brief);
-        ret += one;
-      }
+    reporter_t(option_t opt, result_t res)
+      : option(std::move(opt))
+      , result(std::move(res)) {
     }
-    return ret;
-  }
 
-  auto make_issue_comment([[maybe_unused]] const runtime_context &context)
+    auto make_brief() -> std::string {
+      // TODO: replace diagnostic_type with linkable name
+      auto ret = ""s;
+      for (const auto &[name, failed]: result.fails) {
+        for (const auto &diag: failed.diags) {
+          // use relative file name rather than diag.header.file_name which is
+          // absolute name
+          auto one = fmt::format(
+            "- **{}:{}:{}:** {}: [{}]\n  > {}\n",
+            name,
+            diag.header.row_idx,
+            diag.header.col_idx,
+            diag.header.serverity,
+            diag.header.diagnostic_type,
+            diag.header.brief);
+          ret += one;
+        }
+      }
+      return ret;
+    }
+
+    auto make_issue_comment([[maybe_unused]] const runtime_context &context)
       -> std::string override {
-    return make_brief();
-  }
+      return make_brief();
+    }
 
-  auto make_step_summary([[maybe_unused]] const runtime_context &context)
+    auto make_step_summary([[maybe_unused]] const runtime_context &context)
       -> std::string override {
-    return make_brief();
-  }
+      return make_brief();
+    }
 
-  auto make_review_comment(const runtime_context &context)
-      -> github::review_comments override {
-    auto comments = github::review_comments{};
+    auto make_review_comment(const runtime_context &context) -> github::review_comments override {
+      auto comments = github::review_comments{};
 
-    // For each failed file:
-    for (const auto &[file, per_file_result] : result.fails) {
-      assert(per_file_result.file_path == file);
-      assert(context.patches.contains(file));
+      // For each failed file:
+      for (const auto &[file, per_file_result]: result.fails) {
+        assert(per_file_result.file_path == file);
+        assert(context.patches.contains(file));
 
-      const auto &patch = context.patches.at(file);
-      const auto num_hunk = git::patch::num_hunks(patch.get());
+        const auto &patch   = context.patches.at(file);
+        const auto num_hunk = git::patch::num_hunks(patch.get());
 
-      // For each clang-tidy diagnostic result in current file:
-      for (const auto &diag : per_file_result.diags) {
-        auto row = std::stoi(diag.header.row_idx);
-        auto col = std::stoi(diag.header.col_idx);
+        // For each clang-tidy diagnostic result in current file:
+        for (const auto &diag: per_file_result.diags) {
+          auto row = std::stoi(diag.header.row_idx);
+          auto col = std::stoi(diag.header.col_idx);
 
-        // Check current diagnostic is in diff hunk.
-        auto pos = std::size_t{0};
-        for (int hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
-          auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), hunk_idx);
-          if (!github::is_row_in_hunk(hunk, row)) {
-            pos += num_lines;
-          } else {
-            auto comment = github::review_comment{};
-            comment.path = file;
-            comment.position = pos + row - hunk.new_start + 1;
-            comment.body = diag.header.brief + diag.header.diagnostic_type;
-            comments.emplace_back(std::move(comment));
+          // Check current diagnostic is in diff hunk.
+          auto pos = std::size_t{0};
+          for (int hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
+            auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), hunk_idx);
+            if (!github::is_row_in_hunk(hunk, row)) {
+              pos += num_lines;
+            } else {
+              auto comment     = github::review_comment{};
+              comment.path     = file;
+              comment.position = pos + row - hunk.new_start + 1;
+              comment.body     = diag.header.brief + diag.header.diagnostic_type;
+              comments.emplace_back(std::move(comment));
+            }
           }
         }
       }
+      return comments;
     }
-    return comments;
-  }
 
-  auto write_to_action_output([[maybe_unused]] const runtime_context &context)
-      -> void override {
-    auto output = env::get(github::github_output);
-    auto file = std::fstream{output, std::ios::app};
-    throw_unless(file.is_open(), "error to open output file to write");
-    file << fmt::format("clang_tidy_failed_number={}\n", result.fails.size());
-  }
+    auto write_to_action_output([[maybe_unused]] const runtime_context &context) -> void override {
+      auto output = env::get(github::github_output);
+      auto file   = std::fstream{output, std::ios::app};
+      throw_unless(file.is_open(), "error to open output file to write");
+      file << fmt::format("clang_tidy_failed_number={}\n", result.fails.size());
+    }
 
-  auto get_brief_result()
-      -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
-    return {result.final_passed, result.passes.size(), result.fails.size(),
-            result.ignored.size()};
-  }
+    auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> override {
+      return {result.final_passed,
+              result.passes.size(),
+              result.fails.size(),
+              result.ignored.size()};
+    }
 
-  auto tool_name() -> std::string override {
-    auto parts = ranges::views::split(option.binary, '/') |
-                 ranges::to<std::vector<std::string>>();
-    return parts.back();
-  }
+    auto tool_name() -> std::string override {
+      auto parts = ranges::views::split(option.binary, '/')
+                 | ranges::to<std::vector<std::string>>();
+      return parts.back();
+    }
 
-  option_t option;
-  result_t result;
-};
+    option_t option;
+    result_t result;
+  };
 
 } // namespace linter::tool::clang_tidy

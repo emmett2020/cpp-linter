@@ -19,44 +19,43 @@
 #include "tools/base_tool.h"
 
 namespace linter::tool {
-/// This class used to create tool and it's option.
-struct creator_base {
-  virtual ~creator_base() = default;
+  /// This class used to create tool and it's option.
+  struct creator_base {
+    virtual ~creator_base() = default;
 
-  /// Register program options.
-  /// WARN: Should only call spdlog with error log level here since we don't
-  /// known what log level user want to use.
-  virtual void
-  register_option(program_options::options_description &desc) const = 0;
+    /// Register program options.
+    /// WARN: Should only call spdlog with error log level here since we don't
+    /// known what log level user want to use.
+    virtual void register_option(program_options::options_description &desc) const = 0;
 
-  /// Create tool instance.
-  virtual auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr = 0;
+    /// Create tool instance.
+    virtual auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr = 0;
 
-  /// Whether enabled underlying tool.
-  virtual bool enabled() = 0;
-};
+    /// Whether enabled underlying tool.
+    virtual bool enabled() = 0;
+  };
 
-using creator_base_ptr = std::unique_ptr<creator_base>;
+  using creator_base_ptr = std::unique_ptr<creator_base>;
 
-/// An utility to register options for multiple creators.
-inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
-                                  program_options::options_description &desc) {
-  for (const auto &creator : creators) {
-    creator->register_option(desc);
-  }
-}
-
-/// An utility to create enabled tools for multiple creators.
-inline auto create_enabled_tools(const std::vector<creator_base_ptr> &creators,
-                                 program_options::variables_map &variables)
-    -> std::vector<tool_base_ptr> {
-  auto res = std::vector<tool_base_ptr>{};
-  for (const auto &creator : creators) {
-    if (creator->enabled()) {
-      res.emplace_back(creator->create_tool(variables));
+  /// An utility to register options for multiple creators.
+  inline auto register_tool_options(const std::vector<creator_base_ptr> &creators,
+                                    program_options::options_description &desc) {
+    for (const auto &creator: creators) {
+      creator->register_option(desc);
     }
   }
-  return res;
-}
+
+  /// An utility to create enabled tools for multiple creators.
+  inline auto
+  create_enabled_tools(const std::vector<creator_base_ptr> &creators,
+                       program_options::variables_map &variables) -> std::vector<tool_base_ptr> {
+    auto res = std::vector<tool_base_ptr>{};
+    for (const auto &creator: creators) {
+      if (creator->enabled()) {
+        res.emplace_back(creator->create_tool(variables));
+      }
+    }
+    return res;
+  }
 
 } // namespace linter::tool

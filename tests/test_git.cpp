@@ -43,7 +43,7 @@ TEST_CASE("Create repo", "[git2][repo]") {
 
 TEST_CASE("Set config", "[git2][config]") {
   create_temp_repo();
-  auto repo = git::repo::init(get_temp_repo_dir(), false);
+  auto repo   = git::repo::init(get_temp_repo_dir(), false);
   auto origin = git::repo::config(repo.get());
   SECTION("set_string") {
     git::config::set_string(origin.get(), "user.name", "test");
@@ -65,14 +65,13 @@ TEST_CASE("Compare with head", "[git2][status]") {
   REQUIRE(git::repo::is_empty(repo.get()));
 
   // default is HEAD
-  auto options = git::status::default_options();
+  auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 0);
   remove_repo();
 }
 
-TEST_CASE("Commit two new added files",
-          "[git2][index][status][commit][branch][sig]") {
+TEST_CASE("Commit two new added files", "[git2][index][status][commit][branch][sig]") {
   create_temp_repo();
   create_temp_file("file1.cpp", "hello world");
   create_temp_file("file2.cpp", "hello world");
@@ -88,7 +87,7 @@ TEST_CASE("Commit two new added files",
   git::index::add_by_path(index.get(), "file2.cpp");
   auto index_tree_oid = git::index::write_tree(index.get());
 
-  auto options = git::status::default_options();
+  auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 2);
 
@@ -99,10 +98,15 @@ TEST_CASE("Commit two new added files",
 
   // we did't have any branches yet.
   auto index_tree_obj = git::tree::lookup(repo.get(), &index_tree_oid);
-  auto sig = git::sig::create_default(repo.get());
-  auto commit_oid =
-      git::commit::create(repo.get(), "HEAD", sig.get(), sig.get(),
-                          "Initial commit", index_tree_obj.get(), {});
+  auto sig            = git::sig::create_default(repo.get());
+  auto commit_oid     = git::commit::create(
+    repo.get(),
+    "HEAD",
+    sig.get(),
+    sig.get(),
+    "Initial commit",
+    index_tree_obj.get(),
+    {});
   REQUIRE(git::branch::current_name(repo.get()) == default_branch);
   remove_repo();
 }
@@ -114,7 +118,7 @@ TEST_CASE("Add three files to index by utility", "[git2][index][utility]") {
   auto repo = init_basic_repo();
 
   git::index::add_files(repo.get(), files);
-  auto options = git::status::default_options();
+  auto options     = git::status::default_options();
   auto status_list = git::status::gather(repo.get(), options);
   REQUIRE(git::status::entry_count(status_list.get()) == 2);
   create_temp_file("file3.cpp", "hello world");
@@ -129,10 +133,9 @@ TEST_CASE("Parse single uses revparse", "[git2][revparse]") {
   create_temp_repo();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
-  auto repo = init_basic_repo();
+  auto repo                    = init_basic_repo();
   auto [index_oid, index_tree] = git::index::add_files(repo.get(), files);
-  auto [commit_oid, _] =
-      git::commit::create_head(repo.get(), "Init", index_tree.get());
+  auto [commit_oid, _]         = git::commit::create_head(repo.get(), "Init", index_tree.get());
 
   SECTION("parse head to get commit") {
     auto ret = git::revparse::single(repo.get(), default_branch);
@@ -145,10 +148,9 @@ TEST_CASE("Get HEAD", "[git2][repo][commit]") {
   create_temp_repo();
   create_temp_files({"file0.cpp", "file1.cpp"}, "hello world");
   auto [repo, commit] = init_repo_with_commit({"file0.cpp", "file1.cpp"});
-  auto ref = git::repo::head(repo.get());
-  auto head_commit = git::ref::peel<git::commit_ptr>(ref.get());
-  REQUIRE(git::commit::id_str(head_commit.get()) ==
-          git::commit::id_str(commit.get()));
+  auto ref            = git::repo::head(repo.get());
+  auto head_commit    = git::ref::peel<git::commit_ptr>(ref.get());
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit.get()));
   remove_repo();
 }
 
@@ -156,23 +158,19 @@ TEST_CASE("Push two commits and get diff files", "[git2][diff]") {
   create_temp_repo();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
-  auto repo = init_basic_repo();
-  auto [index_oid1, index1] = git::index::add_files(repo.get(), files);
-  auto [commit_oid1, commit1] =
-      git::commit::create_head(repo.get(), "Init", index1.get());
+  auto repo                   = init_basic_repo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
 
   auto head_commit = git::repo::head_commit(repo.get());
   std::cout << git::commit::id_str(head_commit.get()) << "\n";
-  REQUIRE(git::commit::id_str(head_commit.get()) ==
-          git::commit::id_str(commit1.get()));
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
 
   append_content_to_file("file1.cpp", "hello world2");
-  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-  auto [commit_oid2, commit2] =
-      git::commit::create_head(repo.get(), "Two", index2.get());
-  auto head_commit2 = git::repo::head_commit(repo.get());
-  REQUIRE(git::commit::id_str(head_commit2.get()) ==
-          git::commit::id_str(commit2.get()));
+  auto [index_oid2, index2]   = git::index::add_files(repo.get(), {"file1.cpp"});
+  auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index2.get());
+  auto head_commit2           = git::repo::head_commit(repo.get());
+  REQUIRE(git::commit::id_str(head_commit2.get()) == git::commit::id_str(commit2.get()));
 
   auto changed_files = git::diff::changed_files(repo.get(), "HEAD~1", "HEAD");
   REQUIRE(changed_files.size() == 1);
@@ -183,26 +181,21 @@ TEST_CASE("Simple use of patch ", "[git2][patch]") {
   create_temp_repo();
   const auto files = std::vector<std::string>{"file1.cpp", "file2.cpp"};
   create_temp_files(files, "hello world");
-  auto repo = init_basic_repo();
-  auto [index_oid1, index1] = git::index::add_files(repo.get(), files);
-  auto [commit_oid1, commit1] =
-      git::commit::create_head(repo.get(), "Init", index1.get());
+  auto repo                   = init_basic_repo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
 
   auto head_commit = git::repo::head_commit(repo.get());
   std::cout << git::commit::id_str(head_commit.get()) << "\n";
-  REQUIRE(git::commit::id_str(head_commit.get()) ==
-          git::commit::id_str(commit1.get()));
+  REQUIRE(git::commit::id_str(head_commit.get()) == git::commit::id_str(commit1.get()));
 
   append_content_to_file("file1.cpp", "hello world2");
-  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-  auto [commit_oid2, commit2] =
-      git::commit::create_head(repo.get(), "Two", index2.get());
-  auto head_commit2 = git::repo::head_commit(repo.get());
-  REQUIRE(git::commit::id_str(head_commit2.get()) ==
-          git::commit::id_str(commit2.get()));
+  auto [index_oid2, index2]   = git::index::add_files(repo.get(), {"file1.cpp"});
+  auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index2.get());
+  auto head_commit2           = git::repo::head_commit(repo.get());
+  REQUIRE(git::commit::id_str(head_commit2.get()) == git::commit::id_str(commit2.get()));
 
-  auto diff =
-      git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
+  auto diff  = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
   auto patch = git::patch::create_from_diff(diff.get(), 0);
   std::cout << git::patch::to_str(patch.get());
 
@@ -212,10 +205,10 @@ TEST_CASE("Simple use of patch ", "[git2][patch]") {
 TEST_CASE("Create patch from buffers", "[git2][patch]") {
   auto old_content = "int n = 2;"s;
   auto new_content = "double n = 2;"s;
-  auto opt = git_diff_options{};
+  auto opt         = git_diff_options{};
   git::diff::init_option(&opt);
-  auto patch = git::patch::create_from_buffers(old_content, "temp.cpp",
-                                               new_content, "temp.cpp", opt);
+  auto patch =
+    git::patch::create_from_buffers(old_content, "temp.cpp", new_content, "temp.cpp", opt);
   std::cout << git::patch::to_str(patch.get());
 }
 
@@ -223,12 +216,10 @@ TEST_CASE("Get file content from a specific commit", "[git2][blob]") {
   create_temp_repo();
   const auto files = std::vector<std::string>{"file1.cpp"};
   create_temp_files(files, "hello world");
-  auto repo = init_basic_repo();
-  auto [index_oid1, index1] = git::index::add_files(repo.get(), files);
-  auto [commit_oid1, commit1] =
-      git::commit::create_head(repo.get(), "Init", index1.get());
-  auto content =
-      git::blob::get_raw_content(repo.get(), commit1.get(), "file1.cpp");
+  auto repo                   = init_basic_repo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
+  auto content                = git::blob::get_raw_content(repo.get(), commit1.get(), "file1.cpp");
   REQUIRE(content == "hello world");
 
   remove_repo();
@@ -238,20 +229,17 @@ TEST_CASE("Get lines in a hunk", "[git2][patch]") {
   create_temp_repo();
   const auto files = std::vector<std::string>{"file1.cpp"};
   create_temp_files(files, "hello world\nhello world2\n");
-  auto repo = init_basic_repo();
-  auto [index_oid1, index1] = git::index::add_files(repo.get(), files);
-  auto [commit_oid1, commit1] =
-      git::commit::create_head(repo.get(), "Init", index1.get());
+  auto repo                   = init_basic_repo();
+  auto [index_oid1, index1]   = git::index::add_files(repo.get(), files);
+  auto [commit_oid1, commit1] = git::commit::create_head(repo.get(), "Init", index1.get());
 
   append_content_to_file("file1.cpp", "hello world3");
-  auto [index_oid2, index2] = git::index::add_files(repo.get(), {"file1.cpp"});
-  auto [commit_oid2, commit2] =
-      git::commit::create_head(repo.get(), "Two", index2.get());
-  auto head_commit2 = git::repo::head_commit(repo.get());
+  auto [index_oid2, index2]   = git::index::add_files(repo.get(), {"file1.cpp"});
+  auto [commit_oid2, commit2] = git::commit::create_head(repo.get(), "Two", index2.get());
+  auto head_commit2           = git::repo::head_commit(repo.get());
 
-  auto diff =
-      git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
-  auto patch = git::patch::create_from_diff(diff.get(), 0);
+  auto diff     = git::diff::commit_to_commit(repo.get(), commit1.get(), commit2.get());
+  auto patch    = git::patch::create_from_diff(diff.get(), 0);
   auto contents = git::patch::get_lines_in_hunk(patch.get(), 0);
   REQUIRE(contents[0] == "hello world\n");
   REQUIRE(contents[1] == "hello world2\n");
@@ -293,10 +281,9 @@ intu2;
 intu3;
 )""";
 
-  auto opts = git::diff::init_option();
+  auto opts          = git::diff::init_option();
   opts.context_lines = 0;
-  auto patch =
-      git::patch::create_from_buffers(before, "name", after, "name", opts);
+  auto patch         = git::patch::create_from_buffers(before, "name", after, "name", opts);
 
   auto num_hunks = git::patch::num_hunks(*patch);
   REQUIRE(num_hunks == 1);
