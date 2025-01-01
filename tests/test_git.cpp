@@ -233,7 +233,7 @@ TEST_CASE("Simple use of patch ", "[CppLintAction][git2][patch]") {
   append_content_to_file("file1.cpp", "hello world2");
   auto [index_oid2, index2] = git::index::add_files(*repo, {"file1.cpp"});
   auto commit_oid2          = git::commit::create_head(*repo, "Two", *index2);
-  auto commit2              = git::commit::lookup(*repo, commit_oid1);
+  auto commit2              = git::commit::lookup(*repo, commit_oid2);
   auto head_commit2         = git::repo::head_commit(*repo);
   REQUIRE(git::commit::id_str(*head_commit2) == git::commit::id_str(*commit2));
 
