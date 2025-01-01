@@ -33,7 +33,7 @@ auto get_temp_repo_dir() -> std::filesystem::path;
 struct repo_t {
   explicit repo_t(const std::string &path = get_temp_repo_dir())
     : repo_path(path)
-    , repo(nullptr, git::repo::free) {
+    , repo(nullptr, ::git_repository_free) {
     remove();
     std::filesystem::create_directory(path);
     init();
@@ -90,12 +90,12 @@ struct repo_t {
     }
   }
 
-  auto commit_changes() -> std::tuple<std::string, lint::git::commit_ptr> {
-    auto [index_oid1, index1] = git::index::add_files(repo.get(), modified_or_added_files);
-    auto [index_oid, index]   = git::index::remove_files(repo.get(), repo_path, deleted_files);
+  auto commit_changes() -> std::string {
+    auto [index_oid1, index1] = git::index::add_files(*repo, modified_or_added_files);
+    auto [index_oid, index]   = git::index::remove_files(*repo, repo_path, deleted_files);
     auto message              = fmt::format("Commit Index {}", commit_idx);
-    auto [commit_oid, commit] = git::commit::create_head(repo.get(), message, index.get());
-    return {git::oid::to_str(commit_oid), std::move(commit)};
+    auto commit_oid           = git::commit::create_head(*repo, message, *index);
+    return git::oid::to_str(commit_oid);
   }
 
   void remove() {
@@ -120,10 +120,10 @@ private:
   void init() {
     using namespace lint;
     repo = git::repo::init(repo_path, false);
-    REQUIRE(git::repo::is_empty(repo.get()));
-    auto config = git::repo::config(repo.get());
-    git::config::set_string(config.get(), "user.name", user_name);
-    git::config::set_string(config.get(), "user.email", user_email);
+    REQUIRE(git::repo::is_empty(*repo));
+    auto config = git::repo::config(*repo);
+    git::config::set_string(*config, "user.name", user_name);
+    git::config::set_string(*config, "user.email", user_email);
   }
 
   static constexpr auto user_name  = "test";
@@ -155,11 +155,6 @@ void append_content_to_file(const std::string &file, const std::string &content)
 
 // Initialize a basic repo for futhure test.
 auto init_basic_repo() -> lint::git::repo_ptr;
-
-// Initialize a basic repo for futhure test.
-auto init_repo_with_commit(const std::vector<std::string> &files,
-                           const std::string &commit_message = "")
-  -> std::tuple<lint::git::repo_ptr, lint::git::commit_ptr>;
 
 class scope_guard {
 public:

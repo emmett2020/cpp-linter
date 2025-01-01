@@ -27,7 +27,8 @@
 #include <boost/process/v2/src.hpp>
 #include <boost/process/v2/start_dir.hpp>
 
-#include "utils/util.h"
+#include "utils/error.h"
+#include "utils/common.h"
 
 namespace lint::shell {
   namespace bp = boost::process::v2;

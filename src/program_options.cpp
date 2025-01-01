@@ -37,14 +37,6 @@ namespace lint::program_options {
     constexpr auto enable_comment_on_issue    = "enable-comment-on-issue";
     constexpr auto enable_pull_request_review = "enable-pull-request-review";
     constexpr auto enable_action_output       = "enable-action-output";
-
-    // constexpr auto repo_path                  = "repo-path";
-    // constexpr auto repo                       = "repo";
-    // constexpr auto token                      = "token";
-    // constexpr auto source                     = "source";
-    // constexpr auto event_name                 = "event-name";
-    // constexpr auto pr_number                  = "pr-number";
-
   } // namespace
 
   using std::string;

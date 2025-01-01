@@ -42,7 +42,7 @@ namespace lint::github {
     // side,
     // start_side,
     // start_line
-    )
+  )
 
   using review_comments = std::vector<review_comment>;
 

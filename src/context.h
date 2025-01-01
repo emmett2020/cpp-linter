@@ -48,7 +48,7 @@ namespace lint {
 
     // The diff patches of source revision to target revision.
     std::unordered_map<std::string, git::patch_ptr> patches;
-    std::unordered_map<std::string, git::diff_delta> deltas;
+    std::unordered_map<std::string, git_diff_delta> deltas;
     std::vector<std::string> changed_files;
   };
 

@@ -18,7 +18,6 @@
 #include <cstdint>
 
 namespace lint {
-
   /// The operating system type.
   enum class operating_system_t : std::uint8_t {
     windows,

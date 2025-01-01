@@ -220,7 +220,7 @@ TEST_CASE("Test clang-format could correctly handle file filter",
   repo.rewrite_file("file.test", "int n = 0;");
   auto source = repo.commit_changes();
 
-  auto context = create_runtime_context(std::get<0>(target), std::get<0>(source));
+  auto context = create_runtime_context(target, source);
 
   // Check
   clang_format.check(context);
@@ -246,7 +246,7 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     repo.remove_file("test2.cpp");
     auto source = repo.commit_changes();
 
-    auto context = create_runtime_context(std::get<0>(target), std::get<0>(source));
+    auto context = create_runtime_context(target, source);
     clang_format.check(context);
     check_result(clang_format, true, 0, 0, 0);
   }
@@ -286,13 +286,13 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
 
   SECTION("Insert unformatted lines shouldn't pass clang-format check") {
     repo.add_file("file.cpp", "int n = 0;");
-    auto [target_id, target]      = repo.commit_changes();
+    auto target_id                = repo.commit_changes();
     const auto *const unformatted = R"(int n   = 0;
       int             m = 1;
     )";
 
     repo.rewrite_file("file.cpp", unformatted);
-    auto [source_id, source] = repo.commit_changes();
+    auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
     clang_format.check(context);
@@ -301,10 +301,10 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
 
   SECTION("Insert formatted lines should pass clang-format check") {
     repo.add_file("file.cpp", "int n = 0;");
-    auto [target_id, target] = repo.commit_changes();
+    auto target_id = repo.commit_changes();
 
     repo.rewrite_file("file.cpp", "int n = 0;\nint m = 1;\n");
-    auto [source_id, source] = repo.commit_changes();
+    auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
     clang_format.check(context);
@@ -315,10 +315,10 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     repo.add_file("file.cpp", R"(int n = 0;
     int m     = 1;
     )");
-    auto [target_id, target] = repo.commit_changes();
+    auto target_id = repo.commit_changes();
 
     repo.rewrite_file("file.cpp", "int n = 0;\n");
-    auto [source_id, source] = repo.commit_changes();
+    auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
     clang_format.check(context);

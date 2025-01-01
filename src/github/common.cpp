@@ -21,85 +21,80 @@
 #include "utils/util.h"
 
 namespace lint::github {
-namespace {
-// PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
-auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
-  spdlog::trace("parse pr number uses: {}", ref_name);
-  auto parts = ranges::views::split(ref_name, '/') |
-               ranges::to<std::vector<std::string>>();
-  throw_if(parts.size() != 4,
-           fmt::format("ref_name format error: {}", ref_name));
-  return std::stoi(parts[2]);
-}
+  namespace {
+    // PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
+    auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
+      spdlog::trace("parse pr number uses: {}", ref_name);
+      auto parts = ranges::views::split(ref_name, '/') | ranges::to<std::vector<std::string>>();
+      throw_if(parts.size() != 4, fmt::format("ref_name format error: {}", ref_name));
+      return std::stoi(parts[2]);
+    }
 
-void check_env(const github_env &env) {
-  spdlog::debug("Start to check github environment variables");
+    void check_env(const github_env &env) {
+      spdlog::debug("Start to check github environment variables");
 
-  throw_if(env.repository.empty(),
-           "empty git repository, check env: GITHUB_REPOSITORY");
-  throw_if(env.token.empty(), "empty token, check env: GITHUB_TOKEN");
-  throw_if(env.event_name.empty(),
-           "empty git event, check env: GITHUB_EVENT_NAME");
-  throw_if(env.github_ref.empty(), "empty github ref, check env: GITHUB_REF");
-  throw_if(env.github_sha.empty(), "empty github sha, check env: GITHUB_SHA");
-  throw_if(env.github_ref_type.empty(),
-           "empty git ref type, check env: GITHUB_REF_TYPE");
-  throw_if(env.workspace.empty(),
-           "empty git repository workspace, check env: GITHUB_WORKSPACE");
-}
+      throw_if(env.repository.empty(), "empty git repository, check env: GITHUB_REPOSITORY");
+      throw_if(env.token.empty(), "empty token, check env: GITHUB_TOKEN");
+      throw_if(env.event_name.empty(), "empty git event, check env: GITHUB_EVENT_NAME");
+      throw_if(env.github_ref.empty(), "empty github ref, check env: GITHUB_REF");
+      throw_if(env.github_sha.empty(), "empty github sha, check env: GITHUB_SHA");
+      throw_if(env.github_ref_type.empty(), "empty git ref type, check env: GITHUB_REF_TYPE");
+      throw_if(env.workspace.empty(),
+               "empty git repository workspace, check env: GITHUB_WORKSPACE");
+    }
 
-void print_env(const github_env &env) {
-  spdlog::debug("Github Envionment Variables:");
-  spdlog::debug("--------------------------------------------------");
-  spdlog::debug("\tgit repository:{}", env.repository);
-  spdlog::debug("\tgit token:{}", env.token);
-  spdlog::debug("\tgit event name:{}", env.event_name);
-  spdlog::debug("\tgit base ref:{}", env.base_ref);
-  spdlog::debug("\tgit head ref:{}", env.head_ref);
-  spdlog::debug("\tgit ref:{}", env.github_ref);
-  spdlog::debug("\tgit sha:{}", env.github_sha);
-  spdlog::debug("\tgit ref type:{}", env.github_ref_type);
-  spdlog::debug("\tgit workspace:{}", env.workspace);
-  spdlog::debug("");
-}
+    void print_env(const github_env &env) {
+      spdlog::debug("Github Envionment Variables:");
+      spdlog::debug("--------------------------------------------------");
+      spdlog::debug("\tgit repository:{}", env.repository);
+      spdlog::debug("\tgit token:{}", env.token);
+      spdlog::debug("\tgit event name:{}", env.event_name);
+      spdlog::debug("\tgit base ref:{}", env.base_ref);
+      spdlog::debug("\tgit head ref:{}", env.head_ref);
+      spdlog::debug("\tgit ref:{}", env.github_ref);
+      spdlog::debug("\tgit sha:{}", env.github_sha);
+      spdlog::debug("\tgit ref type:{}", env.github_ref_type);
+      spdlog::debug("\tgit workspace:{}", env.workspace);
+      spdlog::debug("");
+    }
 
-} // namespace
+  } // namespace
 
-auto read_env() -> github_env {
-  spdlog::trace("Enter read_env");
+  auto read_env() -> github_env {
+    spdlog::trace("Enter read_env");
 
-  auto env = github_env{};
-  env.repository = env::get(github_repository);
-  env.token = env::get(github_token);
-  env.event_name = env::get(github_event_name);
-  env.base_ref = env::get(github_base_ref);
-  env.head_ref = env::get(github_head_ref);
-  env.github_ref = env::get(github_ref);
-  env.github_sha = env::get(github_sha);
-  env.github_ref_type = env::get(github_ref_type);
-  env.workspace = env::get(github_workspace);
+    auto env            = github_env{};
+    env.repository      = env::get(github_repository);
+    env.token           = env::get(github_token);
+    env.event_name      = env::get(github_event_name);
+    env.base_ref        = env::get(github_base_ref);
+    env.head_ref        = env::get(github_head_ref);
+    env.github_ref      = env::get(github_ref);
+    env.github_sha      = env::get(github_sha);
+    env.github_ref_type = env::get(github_ref_type);
+    env.workspace       = env::get(github_workspace);
 
-  print_env(env);
-  check_env(env);
-  return env;
-}
-
-void fill_context(const github_env &env, runtime_context &ctx) {
-  spdlog::trace("Enter fill_context");
-
-  // Basic
-  ctx.repo_path = env.workspace;
-  ctx.event_name = env.event_name;
-  ctx.source = env.github_sha;
-
-  // For reporter
-  ctx.token = env.token;
-  ctx.repo_pair = env.repository;
-  bool needs_parse_pr_number = ranges::contains(github_events_with_pr_number, ctx.event_name) 
-                            && (ctx.enable_comment_on_issue || ctx.enable_pull_request_review);
-  if (needs_parse_pr_number) {
-    ctx.pr_number = parse_pr_number(env.github_ref);
+    print_env(env);
+    check_env(env);
+    return env;
   }
-}
+
+  void fill_context(const github_env &env, runtime_context &ctx) {
+    spdlog::trace("Enter fill_context");
+
+    // Basic
+    ctx.repo_path  = env.workspace;
+    ctx.event_name = env.event_name;
+    ctx.source     = env.github_sha;
+
+    // For reporter
+    ctx.token                  = env.token;
+    ctx.repo_pair              = env.repository;
+    bool needs_parse_pr_number = ranges::contains(github_events_with_pr_number, ctx.event_name)
+                              && (ctx.enable_comment_on_issue || ctx.enable_pull_request_review);
+    if (needs_parse_pr_number) {
+      ctx.pr_number = parse_pr_number(env.github_ref);
+    }
+  }
 
 } // namespace lint::github

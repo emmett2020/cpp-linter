@@ -83,11 +83,11 @@ namespace {
   }
 
   void check_repo_is_on_source(const runtime_context &ctx) {
-    auto head = git::repo::head_commit(ctx.repo.get());
+    auto head = git::repo::head_commit(*ctx.repo);
     throw_unless(head == ctx.source_commit,
                  fmt::format("Head of repository isn't equal to source commit: {} != {}",
-                             git::commit::id_str(head.get()),
-                             git::commit::id_str(ctx.source_commit.get())));
+                             git::commit::id_str(*head),
+                             git::commit::id_str(*ctx.source_commit)));
   }
 
 } // namespace

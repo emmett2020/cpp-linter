@@ -25,7 +25,7 @@ export LD_LIBRARY_PATH=/path/to/cpp-lint-action-xxx/lib:$LD_LIBRARY_PATH
   4.2 refine log
   4.3 copyright [done]
   4.4 print usage rather exception when meets invalid program options [discard]
-  4.5 use reference rather than raw pointer in git2
+  4.5 use reference rather than raw pointer in git2 [done]
   4.6 finish clang-format tests
   4.7 finish clang-tidy tests
   4.8 finish all tests

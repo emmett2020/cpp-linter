@@ -76,17 +76,10 @@ void append_content_to_file(const std::string &file, const std::string &content)
 
 auto init_basic_repo() -> git::repo_ptr {
   auto repo = git::repo::init(temp_repo_dir, false);
-  REQUIRE(git::repo::is_empty(repo.get()));
-  auto config = git::repo::config(repo.get());
-  git::config::set_string(config.get(), "user.name", "test");
-  git::config::set_string(config.get(), "user.email", "test@email.com");
+  REQUIRE(git::repo::is_empty(*repo));
+  auto config = git::repo::config(*repo);
+  git::config::set_string(*config, "user.name", "test");
+  git::config::set_string(*config, "user.email", "test@email.com");
   return repo;
 }
 
-auto init_repo_with_commit(const std::vector<std::string> &files, const std::string &commit_message)
-  -> std::tuple<git::repo_ptr, git::commit_ptr> {
-  auto repo                 = init_basic_repo();
-  auto [index_oid, index]   = git::index::add_files(repo.get(), files);
-  auto [commit_oid, commit] = git::commit::create_head(repo.get(), commit_message, index.get());
-  return {std::move(repo), std::move(commit)};
-}

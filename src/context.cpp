@@ -38,7 +38,7 @@ namespace lint {
     context.source_commit = git::revparse::commit(*context.repo, context.source);
     auto diff       = git::diff::get(*context.repo, *context.target_commit, *context.source_commit);
     context.patches = git::patch::create_from_diff(*diff);
-    context.deltas  = git::diff::deltas(diff.get());
+    context.deltas  = git::diff::deltas(*diff);
     context.changed_files = git::patch::changed_files(context.patches);
   }
 

@@ -16,13 +16,13 @@
 #pragma once
 
 #include "context.h"
-#include "github/common.h"
-#include "github/utils.h"
+#include "github/github.h"
+#include "utils/util.h"
+
 #include "tools/base_reporter.h"
 #include "tools/clang_tidy/general/option.h"
 #include "tools/clang_tidy/general/result.h"
 #include "utils/env_manager.h"
-#include "utils/util.h"
 
 namespace lint::tool::clang_tidy {
 
@@ -74,7 +74,7 @@ namespace lint::tool::clang_tidy {
         assert(context.patches.contains(file));
 
         const auto &patch   = context.patches.at(file);
-        const auto num_hunk = git::patch::num_hunks(patch.get());
+        const auto num_hunk = git::patch::num_hunks(*patch);
 
         // For each clang-tidy diagnostic result in current file:
         for (const auto &diag: per_file_result.diags) {
@@ -84,8 +84,8 @@ namespace lint::tool::clang_tidy {
           // Check current diagnostic is in diff hunk.
           auto pos = std::size_t{0};
           for (int hunk_idx = 0; hunk_idx < num_hunk; ++hunk_idx) {
-            auto [hunk, num_lines] = git::patch::get_hunk(patch.get(), hunk_idx);
-            if (!github::is_row_in_hunk(hunk, row)) {
+            auto [hunk, num_lines] = git::patch::get_hunk(*patch, hunk_idx);
+            if (!git::hunk::is_row_in_hunk(hunk, row)) {
               pos += num_lines;
             } else {
               auto comment     = github::review_comment{};
