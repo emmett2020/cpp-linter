@@ -325,20 +325,96 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     check_result(clang_format, true, 1, 0, 0);
   }
 
-  SECTION("Delete only some unformatted lines shouldn't pass clang-format check") {
+  SECTION("Delete only part of unformatted lines shouldn't pass clang-format check") {
+    auto old_content  = std::string{};
+    old_content      += "int n = 0;\n";
+    old_content      += "int m     = 0;\n";
+    old_content      += "int p     = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "int n = 0;\n";
+    new_content      += "int m     = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_format.check(context);
+    check_result(clang_format, false, 0, 1, 0);
   }
 
   SECTION("Rewrite unformatted lines to unformatted lines shouldn't pass "
           "clang-format check") {
+    auto old_content  = std::string{};
+    old_content      += "int n = 0;\n";
+    old_content      += "int m     = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "int n = 0;\n";
+    new_content      += "int p     = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_format.check(context);
+    check_result(clang_format, false, 0, 1, 0);
   }
   SECTION("Rewrite unformatted lines to formatted lines should pass "
           "clang-format check") {
+    auto old_content  = std::string{};
+    old_content      += "int n = 0;\n";
+    old_content      += "int m     = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "int n = 0;\n";
+    new_content      += "int m = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_format.check(context);
+    check_result(clang_format, true, 1, 0, 0);
   }
   SECTION("Rewrite formatted lines to unformatted lines shouldn't pass "
           "clang-format check") {
+    auto old_content  = std::string{};
+    old_content      += "int n = 0;\n";
+    old_content      += "int m = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "int n = 0;\n";
+    new_content      += "int m   = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_format.check(context);
+    check_result(clang_format, false, 0, 1, 0);
   }
   SECTION("Rewrite formatted lines to formatted lines should pass "
           "clang-format check") {
+    auto old_content  = std::string{};
+    old_content      += "int n = 0;\n";
+    old_content      += "int m = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "int n = 0;\n";
+    new_content      += "int p = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_format.check(context);
+    check_result(clang_format, true, 1, 0, 0);
   }
 }
 
@@ -351,4 +427,7 @@ TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_format][genera
   }
   SECTION("Two replacements") {
   }
+}
+
+TEST_CASE("Test reporter", "[CppLintAction][tool][clang_format][general_version]") {
 }
