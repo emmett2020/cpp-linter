@@ -18,7 +18,7 @@
 #include "program_options.h"
 #include "test_common.h"
 #include "tools/base_tool.h"
-#include "tools/clang_format/clang_format.h"
+#include "tools/clang_tidy/clang_tidy.h"
 #include "tools/util.h"
 #include "utils/shell.h"
 
@@ -29,7 +29,7 @@
 using namespace lint;
 using namespace lint::tool;
 
-// TODO: typical clang-format tools.
+// TODO: typical clang-tidy tools.
 
 namespace {
   // Pass in c_str
@@ -46,25 +46,25 @@ namespace {
     return program_options::parse(inputs.size(), inputs.data(), desc);
   }
 
-  // Check whether local environment contains clang-format otherwise some checks
+  // Check whether local environment contains clang-tidy otherwise some checks
   // will be failed.
-  bool has_clang_format() {
-    auto [ec, std_out, std_err] = shell::which("clang-format");
+  bool has_clang_tidy() {
+    auto [ec, std_out, std_err] = shell::which("clang-tidy");
     return ec == 0;
   }
 
-  // Check whether local environment contains specific clang-format version
+  // Check whether local environment contains specific clang-tidy version
   // otherwise some checks will be failed.
-  bool has_clang_format(std::string_view version) {
+  bool has_clang_tidy(std::string_view version) {
     try {
-      find_clang_tool("clang-format", version);
+      find_clang_tool("clang-tidy", version);
       return true;
     } catch (std::runtime_error &err) {
       return false;
     }
   }
 
-  auto create_then_register_tool_desc(const clang_format::creator &creator)
+  auto create_then_register_tool_desc(const clang_tidy::creator &creator)
     -> program_options::options_description {
     auto desc = program_options::create_desc();
     creator.register_option(desc);
@@ -84,54 +84,53 @@ namespace {
     REQUIRE(ignored == expected_ignored_num);
   }
 
-#define SKIP_IF_NO_CLANG_FORMAT                                               \
-  if (!has_clang_format()) {                                                  \
-    SKIP("Local environment doesn't have clang-format. So skip clang-format " \
-         "unit tests.");                                                      \
+#define SKIP_IF_NO_CLANG_TIDY                                             \
+  if (!has_clang_tidy()) {                                                \
+    SKIP("Local environment doesn't have clang-tidy. So skip clang-tidy " \
+         "unit tests.");                                                  \
   }
 
 // NOLINTNEXTLINE
-#define SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION(version)                        \
-  if (!has_clang_format(version)) {                                          \
-    SKIP("Local environment doesn't have required clang-format version. So " \
-         "skip clang-format unit tests.");                                   \
+#define SKIP_IF_NOT_HAS_CLANG_TIDY_VERSION(version)                        \
+  if (!has_clang_tidy(version)) {                                          \
+    SKIP("Local environment doesn't have required clang-tidy version. So " \
+         "skip clang-tidy unit tests.");                                   \
   }
 
 } // namespace
 
-TEST_CASE("Test register and create clang-format option",
-          "[CppLintAction][program_options][tool][clang_format][creator]") {
-  SKIP_IF_NO_CLANG_FORMAT
-  auto creator = std::make_unique<clang_format::creator>();
+TEST_CASE("Test register and create clang-tidy option",
+          "[CppLintAction][program_options][tool][clang_tidy][creator]") {
+  SKIP_IF_NO_CLANG_TIDY
+  auto creator = std::make_unique<clang_tidy::creator>();
   auto desc    = create_then_register_tool_desc(*creator);
 
-  SECTION("Explicitly enables clang-format should work") {
-    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=true");
+  SECTION("Explicitly enables clang-tidy should work") {
+    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-tidy=true");
     creator->create_option(opts);
     REQUIRE(creator->enabled());
   }
 
-  SECTION("Explicitly disable clang-format should work") {
-    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=false");
+  SECTION("Explicitly disable clang-tidy should work") {
+    auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-tidy=false");
     creator->create_option(opts);
     REQUIRE(creator->enabled() == false);
   }
 
-  SECTION("clang-format is defaultly enabled") {
+  SECTION("clang-tidy is defaultly enabled") {
     auto opts = parse_opt(desc, "--target-revision=main");
     creator->create_option(opts);
     REQUIRE(creator->enabled() == true);
   }
 
-  SECTION("Receive an invalid clang-format version should throw exception") {
-    auto opts = parse_opt(desc, "--target-revision=main", "--clang-format-version=18.x.1");
+  SECTION("Receive an invalid clang-tidy version should throw exception") {
+    auto opts = parse_opt(desc, "--target-revision=main", "--clang-tidy-version=18.x.1");
     REQUIRE_THROWS(creator->create_option(opts));
   }
 
-  SECTION("Receive an invalid clang-format binary should throw exception") {
-    auto opts = parse_opt(desc,
-                          "--target-revision=main",
-                          "--clang-format-binary=/usr/bin/clang-format-invalid");
+  SECTION("Receive an invalid clang-tidy binary should throw exception") {
+    auto opts =
+      parse_opt(desc, "--target-revision=main", "--clang-tidy-binary=/usr/bin/clang-tidy-invalid");
     REQUIRE_THROWS(creator->create_option(opts));
   }
 
@@ -139,8 +138,8 @@ TEST_CASE("Test register and create clang-format option",
     auto opts = parse_opt(
       desc,
       "--target-revision=main",
-      "--enable-clang-format-fastly-exit=true",
-      "--clang-format-file-iregex=*.cpp");
+      "--enable-clang-tidy-fastly-exit=true",
+      "--clang-tidy-file-iregex=*.cpp");
     creator->create_option(opts);
     auto option = creator->get_option();
     REQUIRE(option.enabled_fastly_exit == true);
@@ -148,20 +147,20 @@ TEST_CASE("Test register and create clang-format option",
   }
 }
 
-TEST_CASE("Test clang-format should get full version even though user input a "
+TEST_CASE("Test clang-tidy should get full version even though user input a "
           "simplified version",
-          "[CppLintAction][tool][clang_format][creator]") {
-  SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18")
-  auto creator = std::make_unique<clang_format::creator>();
+          "[CppLintAction][tool][clang_tidy][creator]") {
+  SKIP_IF_NOT_HAS_CLANG_TIDY_VERSION("18")
+  auto creator = std::make_unique<clang_tidy::creator>();
   auto desc    = create_then_register_tool_desc(*creator);
 
-  auto vars = parse_opt(desc, "--target-revision=main", "--clang-format-version=18");
+  auto vars = parse_opt(desc, "--target-revision=main", "--clang-tidy-version=18");
 
   auto context = runtime_context{};
   program_options::fill_context(vars, context);
-  auto clang_format = creator->create_tool(vars);
-  auto version      = clang_format->version();
-  auto parts        = ranges::views::split(version, '.') | ranges::to<std::vector<std::string>>();
+  auto clang_tidy = creator->create_tool(vars);
+  auto version    = clang_tidy->version();
+  auto parts      = ranges::views::split(version, '.') | ranges::to<std::vector<std::string>>();
   REQUIRE(parts.size() == 3);
   REQUIRE(parts[0] == "18");
   REQUIRE(ranges::all_of(parts[1], isdigit));
@@ -169,27 +168,27 @@ TEST_CASE("Test clang-format should get full version even though user input a "
 }
 
 TEST_CASE("Create tool of spefific version should work",
-          "[CppLintAction][tool][clang_format][creator]") {
-  SKIP_IF_NOT_HAS_CLANG_FORMAT_VERSION("18.1.3")
-  auto creator = std::make_unique<clang_format::creator>();
+          "[CppLintAction][tool][clang_tidy][creator]") {
+  SKIP_IF_NOT_HAS_CLANG_TIDY_VERSION("18.1.3")
+  auto creator = std::make_unique<clang_tidy::creator>();
   auto desc    = create_then_register_tool_desc(*creator);
 
   SECTION("version 18.1.3") {
-    auto vars         = parse_opt(desc, "--target-revision=main", "--clang-format-version=18.1.3");
-    auto clang_format = creator->create_tool(vars);
-    auto context      = runtime_context{};
+    auto vars       = parse_opt(desc, "--target-revision=main", "--clang-tidy-version=18.1.3");
+    auto clang_tidy = creator->create_tool(vars);
+    auto context    = runtime_context{};
     program_options::fill_context(vars, context);
-    REQUIRE(clang_format->version() == "18.1.3");
-    REQUIRE(clang_format->name() == "clang-format");
+    REQUIRE(clang_tidy->version() == "18.1.3");
+    REQUIRE(clang_tidy->name() == "clang-tidy");
   }
 }
 
 namespace {
-  auto create_clang_format() -> clang_format::clang_format_general {
-    auto option    = clang_format::option_t{};
+  auto create_clang_tidy() -> clang_tidy::clang_tidy_general {
+    auto option    = clang_tidy::option_t{};
     option.enabled = true;
-    option.binary  = "/usr/bin/clang-format";
-    return clang_format::clang_format_general{option};
+    option.binary  = "/usr/bin/clang-tidy";
+    return clang_tidy::clang_tidy_general{option};
   }
 
   auto create_runtime_context(const std::string &target, const std::string &source)
@@ -204,16 +203,16 @@ namespace {
 
 } // namespace
 
-TEST_CASE("Test clang-format could correctly handle file filter",
-          "[CppLintAction][tool][clang_format][general_version]") {
-  SKIP_IF_NO_CLANG_FORMAT
+TEST_CASE("Test clang-tidy could correctly handle file filter",
+          "[CppLintAction][tool][clang_tidy][general_version]") {
+  SKIP_IF_NO_CLANG_TIDY
 
-  auto clang_format                      = create_clang_format();
-  clang_format.option.file_filter_iregex = ".*.test";
+  auto clang_tidy                      = create_clang_tidy();
+  clang_tidy.option.file_filter_iregex = ".*.test";
 
   // Create git repository whichi to be checked.
   auto repo = repo_t{};
-  repo.commit_clang_format();
+  repo.commit_clang_tidy();
   repo.add_file("file.test", "int   n = 0;");
   auto target = repo.commit_changes();
   repo.rewrite_file("file.test", "int n = 0;");
@@ -222,18 +221,18 @@ TEST_CASE("Test clang-format could correctly handle file filter",
   auto context = create_runtime_context(target, source);
 
   // Check
-  clang_format.check(context);
-  check_result(clang_format, true, 1, 0, 0);
+  clang_tidy.check(context);
+  check_result(clang_tidy, true, 1, 0, 0);
 }
 
-TEST_CASE("Test clang-format could correctly handle various file level cases",
-          "[CppLintAction][tool][clang_format][general_version]") {
-  SKIP_IF_NO_CLANG_FORMAT
-  auto clang_format = create_clang_format();
+TEST_CASE("Test clang-tidy could correctly handle various file level cases",
+          "[CppLintAction][tool][clang_tidy][general_version]") {
+  SKIP_IF_NO_CLANG_TIDY
+  auto clang_tidy = create_clang_tidy();
 
   // Create git repository whichi to be checked.
   auto repo = repo_t{};
-  repo.commit_clang_format();
+  repo.commit_clang_tidy();
 
   SECTION("DELETED files shouldn't be checked") {
     repo.add_file("test1.cpp", "int n =       1;\n");
@@ -246,8 +245,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, true, 0, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("NEW added files should be checked") {
@@ -260,8 +259,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, false, 1, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 1, 1, 0);
   }
 
   SECTION("MODIFIED files should be checked") {
@@ -273,8 +272,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, false, 0, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("The commit contains only delete file should check nothing") {
@@ -287,8 +286,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, true, 0, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("The commit contains one modified file and insert a new non-cpp file should check "
@@ -303,8 +302,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 1);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 1);
   }
   SECTION("The commit contains one modified file and delete an old file should only "
           "check the modified file") {
@@ -318,20 +317,20 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     auto source = repo.commit_changes();
 
     auto context = create_runtime_context(target, source);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 }
 
-TEST_CASE("Test clang-format could correctly check basic unformatted error",
-          "[CppLintAction][tool][clang_format][general_version]") {
-  SKIP_IF_NO_CLANG_FORMAT
-  auto clang_format = create_clang_format();
+TEST_CASE("Test clang-tidy could correctly check basic unformatted error",
+          "[CppLintAction][tool][clang_tidy][general_version]") {
+  SKIP_IF_NO_CLANG_TIDY
+  auto clang_tidy = create_clang_tidy();
 
   auto repo = repo_t{};
-  repo.commit_clang_format();
+  repo.commit_clang_tidy();
 
-  SECTION("Insert unformatted lines shouldn't pass clang-format check") {
+  SECTION("Insert unformatted lines shouldn't pass clang-tidy check") {
     repo.add_file("file.cpp", "int n = 0;");
     auto target_id                = repo.commit_changes();
     const auto *const unformatted = R"(int n   = 0;
@@ -342,11 +341,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, false, 0, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
-  SECTION("Insert formatted lines should pass clang-format check") {
+  SECTION("Insert formatted lines should pass clang-tidy check") {
     repo.add_file("file.cpp", "int n = 0;");
     auto target_id = repo.commit_changes();
 
@@ -354,11 +353,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 
-  SECTION("Delete all unformatted lines will pass clang-format check") {
+  SECTION("Delete all unformatted lines will pass clang-tidy check") {
     repo.add_file("file.cpp", R"(int n = 0;
     int m     = 1;
     )");
@@ -368,11 +367,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 
-  SECTION("Delete only part of unformatted lines shouldn't pass clang-format check") {
+  SECTION("Delete only part of unformatted lines shouldn't pass clang-tidy check") {
     auto old_content  = std::string{};
     old_content      += "int n = 0;\n";
     old_content      += "int m     = 0;\n";
@@ -387,12 +386,12 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, false, 0, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("Rewrite unformatted lines to unformatted lines shouldn't pass "
-          "clang-format check") {
+          "clang-tidy check") {
     auto old_content  = std::string{};
     old_content      += "int n = 0;\n";
     old_content      += "int m     = 0;\n";
@@ -406,11 +405,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, false, 0, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
   SECTION("Rewrite unformatted lines to formatted lines should pass "
-          "clang-format check") {
+          "clang-tidy check") {
     auto old_content  = std::string{};
     old_content      += "int n = 0;\n";
     old_content      += "int m     = 0;\n";
@@ -424,11 +423,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
   SECTION("Rewrite formatted lines to unformatted lines shouldn't pass "
-          "clang-format check") {
+          "clang-tidy check") {
     auto old_content  = std::string{};
     old_content      += "int n = 0;\n";
     old_content      += "int m = 0;\n";
@@ -442,11 +441,11 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, false, 0, 1, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
   SECTION("Rewrite formatted lines to formatted lines should pass "
-          "clang-format check") {
+          "clang-tidy check") {
     auto old_content  = std::string{};
     old_content      += "int n = 0;\n";
     old_content      += "int m = 0;\n";
@@ -460,13 +459,13 @@ TEST_CASE("Test clang-format could correctly check basic unformatted error",
     auto source_id = repo.commit_changes();
 
     auto context = create_runtime_context(target_id, source_id);
-    clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 }
 
-TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_format][general_version]") {
-  SKIP_IF_NO_CLANG_FORMAT
+TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_tidy][general_version]") {
+  SKIP_IF_NO_CLANG_TIDY
 
   SECTION("Empty replacements") {
   }
@@ -476,8 +475,8 @@ TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_format][genera
   }
 }
 
-TEST_CASE("Test reporter", "[CppLintAction][tool][clang_format][general_version]") {
-  auto option   = clang_format::option_t{};
-  auto result   = clang_format::result_t{};
-  auto reporter = clang_format::reporter_t{option, result};
+TEST_CASE("Test reporter", "[CppLintAction][tool][clang_tidy][general_version]") {
+  auto option   = clang_tidy::option_t{};
+  auto result   = clang_tidy::result_t{};
+  auto reporter = clang_tidy::reporter_t{option, result};
 }

@@ -15,10 +15,8 @@
  */
 #include "common.h"
 
-#include <algorithm>
-
 #include "utils/env_manager.h"
-#include "utils/util.h"
+#include "utils/error.h"
 
 namespace lint::github {
   namespace {

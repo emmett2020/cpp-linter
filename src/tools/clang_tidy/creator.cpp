@@ -21,7 +21,6 @@
 #include "tools/clang_tidy/general/option.h"
 #include "tools/clang_tidy/version/v18.h"
 #include "tools/util.h"
-#include "utils/util.h"
 
 namespace lint::tool::clang_tidy {
   void creator::register_option(program_options::options_description &desc) const {

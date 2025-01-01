@@ -15,11 +15,9 @@
  */
 #pragma once
 
-#include <algorithm>
 #include <cstdlib>
 #include <string>
 #include <sys/types.h>
-#include <utility>
 
 #include <httplib.h>
 #include <nlohmann/json.hpp>
@@ -27,7 +25,7 @@
 
 #include "common.h"
 #include "context.h"
-#include "utils/util.h"
+#include "utils/error.h"
 
 namespace lint::github {
   using namespace std::string_literals;

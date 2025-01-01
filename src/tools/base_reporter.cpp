@@ -21,9 +21,10 @@
 #include <string_view>
 
 #include "context.h"
-#include "github/github.h"
+#include "github/client.h"
+#include "github/common.h"
 #include "utils/env_manager.h"
-#include "utils/util.h"
+#include "utils/error.h"
 
 namespace lint::tool {
   using namespace std::string_view_literals;

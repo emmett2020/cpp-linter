@@ -16,13 +16,15 @@
 #pragma once
 
 #include "context.h"
-#include "github/github.h"
-#include "utils/util.h"
 
+#include <spdlog/spdlog.h>
+
+#include "github/common.h"
 #include "tools/base_reporter.h"
 #include "tools/clang_tidy/general/option.h"
 #include "tools/clang_tidy/general/result.h"
 #include "utils/env_manager.h"
+#include "utils/error.h"
 
 namespace lint::tool::clang_tidy {
 

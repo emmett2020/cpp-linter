@@ -28,8 +28,8 @@
 
 #include "context.h"
 #include "tools/clang_format/general/reporter.h"
+#include "utils/common.h"
 #include "utils/shell.h"
-#include "utils/util.h"
 
 namespace lint::tool::clang_format {
   namespace {

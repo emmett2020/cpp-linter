@@ -17,7 +17,6 @@
 
 #include <string>
 #include <utility>
-#include <vector>
 
 #include <spdlog/spdlog.h>
 
@@ -26,6 +25,7 @@
 #include "tools/clang_tidy/general/result.h"
 
 namespace lint::tool::clang_tidy {
+  /// The general implementation of clang-tidy.
   struct clang_tidy_general : tool_base {
     explicit clang_tidy_general(option_t opt)
       : option(std::move(opt)) {
@@ -36,7 +36,7 @@ namespace lint::tool::clang_tidy {
     }
 
     constexpr auto name() -> std::string_view override {
-      return "clang_tidy";
+      return "clang-tidy";
     }
 
     auto version() -> std::string_view override {

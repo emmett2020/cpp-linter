@@ -15,7 +15,6 @@
  */
 #include "program_options.h"
 
-#include <algorithm>
 #include <initializer_list>
 
 #include <boost/algorithm/string/case_conv.hpp>
@@ -23,8 +22,7 @@
 #include <spdlog/spdlog.h>
 
 #include "context.h"
-#include "github/github.h"
-#include "utils/util.h"
+#include "utils/error.h"
 
 namespace lint::program_options {
   namespace {

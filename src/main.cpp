@@ -33,7 +33,6 @@
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_tidy/clang_tidy.h"
 #include "utils/git_utils.h"
-#include "utils/util.h"
 
 using namespace lint; // NOLINT
 using namespace std::string_literals;

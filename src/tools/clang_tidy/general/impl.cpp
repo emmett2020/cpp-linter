@@ -27,8 +27,8 @@
 #include <tinyxml2.h>
 
 #include "tools/clang_tidy/general/reporter.h"
+#include "utils/common.h"
 #include "utils/shell.h"
-#include "utils/util.h"
 
 namespace lint::tool::clang_tidy {
   using namespace std::string_view_literals;

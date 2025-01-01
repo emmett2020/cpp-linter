@@ -21,10 +21,12 @@
 #include <spdlog/spdlog.h>
 
 #include "context.h"
-#include "github/github.h"
+#include "github/common.h"
 #include "tools/base_reporter.h"
 #include "tools/clang_format/general/option.h"
 #include "tools/clang_format/general/result.h"
+#include "utils/env_manager.h"
+#include "utils/error.h"
 
 namespace lint::tool::clang_format {
   using namespace std::string_view_literals;

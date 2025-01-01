@@ -18,14 +18,13 @@
 #include <string>
 #include <utility>
 
-#include "github/github.h"
 #include "tools/base_reporter.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/general/option.h"
 #include "tools/clang_format/general/result.h"
 
 namespace lint::tool::clang_format {
-  // The general implementation of clang-format.
+  /// The general implementation of clang-format.
   struct clang_format_general : tool_base {
     explicit clang_format_general(option_t opt)
       : option(std::move(opt)) {

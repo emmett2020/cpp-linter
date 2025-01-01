@@ -18,8 +18,9 @@
 #include <spdlog/spdlog.h>
 #include <string>
 
+#include "utils/common.h"
+#include "utils/error.h"
 #include "utils/shell.h"
-#include "utils/util.h"
 
 namespace lint::tool {
   // Find the full executable path of clang tools with specific version.
