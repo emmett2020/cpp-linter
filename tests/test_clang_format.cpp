@@ -252,28 +252,76 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
   }
 
   SECTION("NEW added files should be checked") {
+    repo.add_file("test1.cpp", "int n = 1;\n");
+    repo.add_file("test2.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.add_file("test3.cpp", "int n    = 1;\n");
+    repo.add_file("test4.cpp", "int n = 1;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_format.check(context);
+    check_result(clang_format, false, 1, 1, 0);
   }
+
   SECTION("MODIFIED files should be checked") {
+    repo.add_file("test1.cpp", "int n = 1;\n");
+    repo.add_file("test2.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.rewrite_file("test1.cpp", "int n    = 1;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_format.check(context);
+    check_result(clang_format, false, 0, 1, 0);
   }
 
-  SECTION("The commits only delete file should check nothing") {
+  SECTION("The commit contains only delete file should check nothing") {
+    repo.add_file("test1.cpp", "int n =       1;\n");
+    repo.add_file("test2.cpp", "int n    = 1;\n");
+    repo.add_file("test3.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.remove_file("test1.cpp");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_format.check(context);
+    check_result(clang_format, true, 0, 0, 0);
   }
-  SECTION("The commits only add new cpp files should only check these files") {
+
+  SECTION("The commit contains one modified file and insert a new non-cpp file should check "
+          "only one files") {
+    repo.add_file("test1.cpp", "int n =       1;\n");
+    repo.add_file("test2.cpp", "int n    = 1;\n");
+    repo.add_file("test3.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.rewrite_file("test1.cpp", "int n = 1");
+    repo.add_file("test4.unknown", "int n = 1");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_format.check(context);
+    check_result(clang_format, true, 1, 0, 1);
   }
-  SECTION("The commits modified one file and insert a new file should check "
-          "these two files") {
-  }
-  SECTION("The commits modified one file and delete an old file should only "
+  SECTION("The commit contains one modified file and delete an old file should only "
           "check the modified file") {
-  }
-}
+    repo.add_file("test1.cpp", "int n     = 1;\n");
+    repo.add_file("test2.cpp", "int n = 1;\n");
+    repo.add_file("test3.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
 
-TEST_CASE("Test clang-format could correctly handle various file level cases1",
-          "[CppLintAction][tool][clang_format][general_version]") {
-  SKIP_IF_NO_CLANG_FORMAT
-  auto option       = clang_format::option_t{};
-  auto clang_format = clang_format::clang_format_general{option};
-  auto context      = runtime_context{};
+    repo.remove_file("test1.cpp");
+    repo.rewrite_file("test3.cpp", "int m = 1;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_format.check(context);
+    check_result(clang_format, true, 1, 0, 0);
+  }
 }
 
 TEST_CASE("Test clang-format could correctly check basic unformatted error",
