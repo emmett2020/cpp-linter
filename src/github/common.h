@@ -25,7 +25,7 @@
 #include "context.h"
 #include "utils/env_manager.h"
 
-namespace linter::github {
+namespace lint::github {
 struct rate_limit_headers {
   std::size_t reset = 0;
   std::size_t remaining = 0;
@@ -119,4 +119,4 @@ auto read_env() -> github_env;
 void fill_context(const github_env &env, runtime_context &ctx);
 
 inline bool is_on_github() { return env::get(github_actions) == "true"; }
-} // namespace linter::github
+} // namespace lint::github

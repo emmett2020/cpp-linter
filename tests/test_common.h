@@ -25,7 +25,7 @@
 
 #include "utils/git_utils.h"
 
-using namespace linter; // NOLINT
+using namespace lint; // NOLINT
 
 // Get temporary repository directory.
 auto get_temp_repo_dir() -> std::filesystem::path;
@@ -60,10 +60,6 @@ struct repo_t {
 
   // This will not really remove old file till comment_changes.
   auto remove_file(const std::string &file_path) {
-    auto file_full_path = repo_path / file_path;
-    if (std::filesystem::exists(file_full_path)) {
-      std::filesystem::remove(file_full_path);
-    }
     if (!ranges::contains(deleted_files, file_path)) {
       deleted_files.push_back(file_path);
     }
@@ -94,7 +90,7 @@ struct repo_t {
     }
   }
 
-  auto commit_changes() -> std::tuple<std::string, linter::git::commit_ptr> {
+  auto commit_changes() -> std::tuple<std::string, lint::git::commit_ptr> {
     auto [index_oid1, index1] = git::index::add_files(repo.get(), modified_or_added_files);
     auto [index_oid, index]   = git::index::remove_files(repo.get(), repo_path, deleted_files);
     auto message              = fmt::format("Commit Index {}", commit_idx);
@@ -122,7 +118,7 @@ struct repo_t {
 
 private:
   void init() {
-    using namespace linter;
+    using namespace lint;
     repo = git::repo::init(repo_path, false);
     REQUIRE(git::repo::is_empty(repo.get()));
     auto config = git::repo::config(repo.get());
@@ -134,7 +130,7 @@ private:
   static constexpr auto user_email = "test@email.com";
 
   std::filesystem::path repo_path;
-  linter::git::repo_ptr repo;
+  lint::git::repo_ptr repo;
   std::size_t commit_idx = 1;
 
   std::vector<std::string> modified_or_added_files;
@@ -158,12 +154,12 @@ void create_temp_files(const std::vector<std::string> &file_paths, const std::st
 void append_content_to_file(const std::string &file, const std::string &content);
 
 // Initialize a basic repo for futhure test.
-auto init_basic_repo() -> linter::git::repo_ptr;
+auto init_basic_repo() -> lint::git::repo_ptr;
 
 // Initialize a basic repo for futhure test.
 auto init_repo_with_commit(const std::vector<std::string> &files,
                            const std::string &commit_message = "")
-  -> std::tuple<linter::git::repo_ptr, linter::git::commit_ptr>;
+  -> std::tuple<lint::git::repo_ptr, lint::git::commit_ptr>;
 
 class scope_guard {
 public:

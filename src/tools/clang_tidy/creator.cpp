@@ -23,7 +23,7 @@
 #include "tools/util.h"
 #include "utils/util.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
   void creator::register_option(program_options::options_description &desc) const {
     using namespace program_options; // NOLINT
     using std::string;
@@ -32,7 +32,7 @@ namespace linter::tool::clang_tidy {
   desc.add_options()
     (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
     (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit. "
-                                                           "This means cpp-linter will stop all clang-tidy "
+                                                           "This means CppLintAction will stop all clang-tidy "
                                                            "checks as soon as first file error occurs")
     (clang_tidy_version,               value<string>(),    "Set The version of clang-tidy")
     (clang_tidy_binary,                value<string>(),    "Set the full path of clang-tidy executable binary. "
@@ -136,4 +136,4 @@ namespace linter::tool::clang_tidy {
     return option.enabled;
   }
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

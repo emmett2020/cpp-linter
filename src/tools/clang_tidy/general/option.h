@@ -17,7 +17,7 @@
 
 #include "tools/base_option.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
   struct option_t : option_base {
     bool allow_no_checks      = false;
     bool enable_check_profile = false;
@@ -29,4 +29,4 @@ namespace linter::tool::clang_tidy {
     std::string line_filter;
   };
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

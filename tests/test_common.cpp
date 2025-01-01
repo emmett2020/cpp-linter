@@ -30,7 +30,7 @@
 #include "utils/git_utils.h"
 
 using namespace std;
-using namespace linter;
+using namespace lint;
 
 const auto temp_repo_dir = std::filesystem::temp_directory_path() / "test_git";
 

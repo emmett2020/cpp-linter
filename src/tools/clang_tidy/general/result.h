@@ -19,7 +19,7 @@
 
 #include "tools/base_result.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
   /// Represents statistics outputed by clang-tidy. It's usually the stderr
   /// messages of clang-tidy.
   struct statistic {
@@ -58,4 +58,4 @@ namespace linter::tool::clang_tidy {
   };
 
   using result_t = multi_files_result_base<per_file_result>;
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

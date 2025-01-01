@@ -18,7 +18,7 @@
 
 #include <git2/errors.h>
 
-namespace linter::git {
+namespace lint::git {
   inline void throw_if(int error, const std::string &msg) {
     if (error < 0) {
       throw std::runtime_error{msg};
@@ -49,4 +49,4 @@ namespace linter::git {
   inline void throw_unsupported() {
     throw std::runtime_error{"unsupported"};
   }
-} // namespace linter::git
+} // namespace lint::git

@@ -25,7 +25,7 @@
 #include "tools/clang_tidy/general/option.h"
 #include "tools/clang_tidy/general/result.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
   struct clang_tidy_general : tool_base {
     explicit clang_tidy_general(option_t opt)
       : option(std::move(opt)) {
@@ -55,4 +55,4 @@ namespace linter::tool::clang_tidy {
     result_t result;
   };
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

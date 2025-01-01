@@ -19,7 +19,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace linter::shell {
+namespace lint::shell {
   struct result {
     int exit_code;
     std::string std_out;
@@ -38,4 +38,4 @@ namespace linter::shell {
                std::string_view start_dir) -> result;
 
   auto which(std::string command) -> result;
-} // namespace linter::shell
+} // namespace lint::shell

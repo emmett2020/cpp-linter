@@ -28,7 +28,7 @@
 
 #include "utils/git_error.h"
 
-namespace linter::git {
+namespace lint::git {
   namespace {
     inline auto make_str(const char *p, std::size_t len) -> std::string {
       return {p, len};
@@ -1189,4 +1189,4 @@ namespace linter::git {
 
   } // namespace blob
 
-} // namespace linter::git
+} // namespace lint::git

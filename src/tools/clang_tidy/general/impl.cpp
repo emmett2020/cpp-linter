@@ -31,7 +31,7 @@
 #include "utils/shell.h"
 #include "utils/util.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
   using namespace std::string_view_literals;
 
   namespace {
@@ -312,4 +312,4 @@ namespace linter::tool::clang_tidy {
     return std::make_unique<reporter_t>(option, result);
   }
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

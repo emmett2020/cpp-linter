@@ -18,7 +18,7 @@
 #include "program_options.h"
 #include "tools/base_tool.h"
 
-namespace linter::tool {
+namespace lint::tool {
   /// This class used to create tool and it's option.
   struct creator_base {
     virtual ~creator_base() = default;
@@ -58,4 +58,4 @@ namespace linter::tool {
     return res;
   }
 
-} // namespace linter::tool
+} // namespace lint::tool

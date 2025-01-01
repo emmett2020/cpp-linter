@@ -20,7 +20,7 @@
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
-namespace linter::github {
+namespace lint::github {
 namespace {
 // PR merge branch refs/pull/PULL_REQUEST_NUMBER/merge
 auto parse_pr_number(const std::string &ref_name) -> std::int32_t {
@@ -102,4 +102,4 @@ void fill_context(const github_env &env, runtime_context &ctx) {
   }
 }
 
-} // namespace linter::github
+} // namespace lint::github

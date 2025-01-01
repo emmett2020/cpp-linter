@@ -20,7 +20,7 @@
 
 #include "context.h"
 
-namespace linter::program_options {
+namespace lint::program_options {
   using options_description = boost::program_options::options_description;
   using variables_map       = boost::program_options::variables_map;
   using boost::program_options::notify;
@@ -46,4 +46,4 @@ namespace linter::program_options {
   void must_not_specify(const std::string &condition,
                         const variables_map &variables,
                         const std::initializer_list<const char *> &options);
-} // namespace linter::program_options
+} // namespace lint::program_options

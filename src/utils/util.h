@@ -22,7 +22,7 @@
 #include <boost/regex.hpp>
 #include <range/v3/all.hpp>
 
-namespace linter {
+namespace lint {
   constexpr auto trim_left(std::string_view str) -> std::string_view {
     if (auto idx = str.find_first_not_of(" \n"); idx < str.size()) {
       str.remove_prefix(idx);
@@ -109,4 +109,4 @@ namespace linter {
 #endif
   }
 
-} // namespace linter
+} // namespace lint

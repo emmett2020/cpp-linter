@@ -21,7 +21,7 @@
 #include "tools/clang_format/version/v18.h"
 #include "tools/util.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   using namespace std::string_view_literals;
 
   namespace {
@@ -154,4 +154,4 @@ namespace linter::tool::clang_format {
   [[nodiscard]] auto creator::get_option() const -> const option_t & {
     return option;
   }
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

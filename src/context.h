@@ -23,7 +23,7 @@
 #include "utils/git_utils.h"
 #include "utils/platform.h"
 
-namespace linter {
+namespace lint {
   /// The runtime context for all tools.
   struct runtime_context {
     // Theses will be filled by [ program_options::fill_context() ]
@@ -55,4 +55,4 @@ namespace linter {
   void fill_git_info(runtime_context &context);
 
   void print_context(const runtime_context &ctx);
-} // namespace linter
+} // namespace lint

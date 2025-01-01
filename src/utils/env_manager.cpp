@@ -15,10 +15,9 @@
  */
 #include "env_manager.h"
 
-/// TODO: There is no standard std::setenv
+/// INFO: There is no standard std::setenv
 
-namespace linter::env {
-
+namespace lint::env {
   auto thread_safe_env_manager::get_instance() noexcept -> thread_safe_env_manager & {
     static auto env_manager = thread_safe_env_manager{};
     return env_manager;
@@ -62,4 +61,4 @@ namespace linter::env {
     env_manager.set_cache(std::move(data));
   }
 
-} // namespace linter::env
+} // namespace lint::env

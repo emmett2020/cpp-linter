@@ -31,7 +31,7 @@
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   using namespace std::string_view_literals;
 
   struct reporter_t : reporter_base {
@@ -88,4 +88,4 @@ namespace linter::tool::clang_format {
     result_t result;
   };
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace linter::env {
+namespace lint::env {
 
   class thread_safe_env_manager {
   public:
@@ -45,4 +45,4 @@ namespace linter::env {
   void set_cache(const std::string &name, const std::string &value);
   void set_cache(std::unordered_map<std::string, std::string> data);
 
-} // namespace linter::env
+} // namespace lint::env

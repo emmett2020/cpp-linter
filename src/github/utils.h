@@ -17,8 +17,8 @@
 
 #include "utils/git_utils.h"
 
-namespace linter::github {
+namespace lint::github {
   /// Check whether the given row number in hunk.
   bool is_row_in_hunk(const git::diff_hunk &hunk, int row_number) noexcept;
 
-} // namespace linter::github
+} // namespace lint::github

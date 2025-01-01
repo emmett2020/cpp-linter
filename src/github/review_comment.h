@@ -20,7 +20,7 @@
 
 #include <nlohmann/json.hpp>
 
-namespace linter::github {
+namespace lint::github {
   /// A class represent Github pull request review comment.
   /// Details: https://docs.github.com/en/rest/pulls/reviews?apiVersion=2022-11-28#about-pull-request-reviews
   struct review_comment {
@@ -47,4 +47,4 @@ namespace linter::github {
   using review_comments = std::vector<review_comment>;
 
   auto make_review_str(const review_comments &comments) -> std::string;
-} // namespace linter::github
+} // namespace lint::github

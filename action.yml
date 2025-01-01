@@ -1,6 +1,6 @@
-name: 'cpp-linter action'
+name: 'CppLintAction'
 description: |
-  A C/C++ linter to improve code quality.
+  A C/C++ lint Action to improve code quality.
   Default only supports pr event. If you want to use for non-pr event,
   you must sepcify the default-branch option.
 author: emmettzhang2020@outlook.com
@@ -9,7 +9,7 @@ branding:
   color: "red"
 inputs:
   log-level:
-    description: Set log level for cpp-linter
+    description: Set log level for cpp-lint-action
     default: info
   clang-format-version:
     description: Choose which clang-format version you want to use
@@ -60,13 +60,13 @@ runs:
         # release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
         release_version=0.0.32
         echo "Current path: `pwd`, current version: ${release_version}"
-        wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-linter.tar.gz
-        tar -xvf cpp-linter.tar.gz
+        wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-lint-action.tar.gz
+        tar -xvf cpp-lint-action.tar.gz
 
-        cd cpp-linter-dist && ls -lrth && ./install.sh
+        cd cpp-lint-action-dist && ls -lrth && ./install.sh
 
 
-    - name: Run cpp-linter on Linux
+    - name: Run cpp-lint-action on Linux
       id: cpp_linter_on_linux
       if: runner.os == 'Linux'
       shell: bash
@@ -75,14 +75,14 @@ runs:
           echo "The git repo details:"
           ls -lrthaR .git
         fi
-        /usr/local/bin/cpp-linter --log-level="${{ inputs.log-level }}"                          \
-                                  --enable-clang-format="${{ inputs.enable-clang-format }}"      \
-                                  --clang-format-version="${{ inputs.clang-format-version }}"    \
-                                  --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"          \
-                                  --clang-tidy-version="${{ inputs.clang-tidy-version }}"        \
-                                  --clang-tidy-database="${{ inputs.clang-tidy-database }}"      \
-                                  --target="${{ inputs.target }}"                                \
-                                  --enable-pull-request-review=true
+        /usr/local/bin/cpp-lint-action --log-level="${{ inputs.log-level }}"                          \
+                                       --enable-clang-format="${{ inputs.enable-clang-format }}"      \
+                                       --clang-format-version="${{ inputs.clang-format-version }}"    \
+                                       --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"          \
+                                       --clang-tidy-version="${{ inputs.clang-tidy-version }}"        \
+                                       --clang-tidy-database="${{ inputs.clang-tidy-database }}"      \
+                                       --target="${{ inputs.target }}"                                \
+                                       --enable-pull-request-review=true
         exit $?
 
 

@@ -24,7 +24,7 @@
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
 
   struct reporter_t : reporter_base {
     ~reporter_t() override = default;
@@ -124,4 +124,4 @@ namespace linter::tool::clang_tidy {
     result_t result;
   };
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

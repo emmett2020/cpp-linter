@@ -31,7 +31,7 @@
 #include "utils/shell.h"
 #include "utils/util.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   namespace {
 
     // Read a file and get this
@@ -230,4 +230,4 @@ namespace linter::tool::clang_format {
     return std::make_unique<reporter_t>(option, result);
   }
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

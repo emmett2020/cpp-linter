@@ -17,9 +17,9 @@
 
 #include "tools/base_option.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   struct option_t : option_base {
     bool enable_warning_as_error = false;
   };
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

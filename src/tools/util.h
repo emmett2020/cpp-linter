@@ -21,7 +21,7 @@
 #include "utils/shell.h"
 #include "utils/util.h"
 
-namespace linter::tool {
+namespace lint::tool {
   // Find the full executable path of clang tools with specific version.
   inline auto find_clang_tool(std::string_view tool, std::string_view version) -> std::string {
     auto command                = fmt::format("{}-{}", tool, version);
@@ -31,4 +31,4 @@ namespace linter::tool {
     throw_if(trimmed.empty(), "got empty clang tool path");
     return {trimmed.data(), trimmed.size()};
   }
-} // namespace linter::tool
+} // namespace lint::tool

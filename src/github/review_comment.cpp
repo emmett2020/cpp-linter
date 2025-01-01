@@ -15,7 +15,7 @@
  */
 #include "review_comment.h"
 
-namespace linter::github {
+namespace lint::github {
   using namespace std::string_view_literals;
 
   constexpr auto review_event_comment         = "COMMENT"sv;
@@ -23,10 +23,10 @@ namespace linter::github {
 
   auto make_review_str(const review_comments &comments) -> std::string {
     auto res        = nlohmann::json{};
-    res["body"]     = "cpp-linter suggestion";
+    res["body"]     = "cpp-lint-action suggestion";
     res["event"]    = review_event_comment; // TODO:DEBUG
     res["comments"] = comments;
     return res.dump();
   }
 
-} // namespace linter::github
+} // namespace lint::github

@@ -20,7 +20,7 @@
 #include "context.h"
 #include "github/review_comment.h"
 
-namespace linter::tool {
+namespace lint::tool {
   using namespace std::string_literals;
 
   struct reporter_base {
@@ -56,4 +56,4 @@ namespace linter::tool {
                                              const std::vector<reporter_base_ptr> &reporters);
 
   bool all_passed(const std::vector<reporter_base_ptr> &reporters);
-} // namespace linter::tool
+} // namespace lint::tool

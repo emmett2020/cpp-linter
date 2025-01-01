@@ -29,7 +29,7 @@
 
 #include "utils/util.h"
 
-namespace linter::shell {
+namespace lint::shell {
   namespace bp = boost::process::v2;
 
   auto execute(std::string_view command, const options &opts) -> result {
@@ -147,4 +147,4 @@ namespace linter::shell {
     return res;
   }
 
-} // namespace linter::shell
+} // namespace lint::shell

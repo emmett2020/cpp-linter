@@ -35,7 +35,7 @@
 #include "utils/git_utils.h"
 #include "utils/util.h"
 
-using namespace linter; // NOLINT
+using namespace lint; // NOLINT
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
@@ -70,9 +70,9 @@ namespace {
 
   void print_version() {
     fmt::print("{}.{}.{}",
-               cpp_linter_VERSION_MAJOR,
-               cpp_linter_VERSION_MINOR,
-               cpp_linter_VERSION_PATCH);
+               CPP_LINT_ACTION_VERSION_MAJOR,
+               CPP_LINT_ACTION_VERSION_MINOR,
+               CPP_LINT_ACTION_VERSION_PATCH);
   }
 
   auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {

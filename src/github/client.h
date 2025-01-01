@@ -29,7 +29,7 @@
 #include "context.h"
 #include "utils/util.h"
 
-namespace linter::github {
+namespace lint::github {
 using namespace std::string_literals;
 
 class client {
@@ -227,4 +227,4 @@ private:
   std::uint32_t comment_id_ = -1;
   httplib::Client client{github_api};
 };
-} // namespace linter::github
+} // namespace lint::github

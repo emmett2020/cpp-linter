@@ -20,7 +20,7 @@
 
 #include "tools/clang_format/general/impl.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   using namespace std::string_view_literals;
   constexpr auto version_18_1_0 = "18.1.0"sv;
   constexpr auto version_18_1_3 = "18.1.3"sv;
@@ -45,4 +45,4 @@ namespace linter::tool::clang_format {
     }
   };
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

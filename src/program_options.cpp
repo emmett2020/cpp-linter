@@ -26,7 +26,7 @@
 #include "github/github.h"
 #include "utils/util.h"
 
-namespace linter::program_options {
+namespace lint::program_options {
   namespace {
 
     constexpr auto help                       = "help";
@@ -50,7 +50,7 @@ namespace linter::program_options {
   using std::string;
 
   auto create_desc() -> options_description {
-    auto desc = options_description{"cpp-linter options"};
+    auto desc = options_description{"cpp-lint-action options"};
 
     const auto *level    = value<string>()->value_name("level")->default_value("info");
     const auto *revision = value<string>()->value_name("revision");
@@ -62,8 +62,8 @@ namespace linter::program_options {
     // clang-format off
     desc.add_options()
       (help,                                         "Display help message")
-      (version,                                      "Display current cpp-linter version")
-      (log_level,                   level,           "Set the log verbose level of cpp-linter. "
+      (version,                                      "Display current cpp-lint-action version")
+      (log_level,                   level,           "Set the log verbose level of cpp-lint-action. "
                                                      "Supports: [trace, debug, info, error]")
       (target,                      revision,        "Set the target revision of git repository "
                                                      "which is usually the branch name you want to merged into")
@@ -138,4 +138,4 @@ namespace linter::program_options {
     }
   }
 
-} // namespace linter::program_options
+} // namespace lint::program_options

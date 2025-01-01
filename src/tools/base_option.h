@@ -18,7 +18,7 @@
 #include <memory>
 #include <string>
 
-namespace linter::tool {
+namespace lint::tool {
   /// Provide a base option for all tools.
   struct option_base {
     /// Whether user want to use this tool.
@@ -38,4 +38,4 @@ namespace linter::tool {
   };
 
   using option_base_ptr = std::unique_ptr<option_base>;
-} // namespace linter::tool
+} // namespace lint::tool

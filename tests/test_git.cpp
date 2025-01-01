@@ -26,7 +26,7 @@
 #include "test_common.h"
 #include "utils/git_utils.h"
 
-using namespace linter;
+using namespace lint;
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 

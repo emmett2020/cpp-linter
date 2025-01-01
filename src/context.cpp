@@ -18,7 +18,7 @@
 #include <magic_enum/magic_enum.hpp>
 #include <spdlog/spdlog.h>
 
-namespace linter {
+namespace lint {
 
   void fill_git_info(runtime_context &context) {
     spdlog::trace("Enter fill_git_info");
@@ -62,4 +62,4 @@ namespace linter {
     }
     spdlog::info("");
   }
-} // namespace linter
+} // namespace lint

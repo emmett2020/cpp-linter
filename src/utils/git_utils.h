@@ -29,11 +29,9 @@
 #include "utils/git_error.h"
 #include "utils/util.h"
 
-/// TODO: Maybe a standlone repository with libgit2 as submodule
-
 /// This is based on v1.8.4
 
-namespace linter::git {
+namespace lint::git {
   /// https://libgit2.org/libgit2/#HEAD/type/git_diff_file
   using diff_file = git_diff_file;
 
@@ -1013,4 +1011,4 @@ namespace linter::git {
       -> std::string;
 
   } // namespace blob
-} // namespace linter::git
+} // namespace lint::git

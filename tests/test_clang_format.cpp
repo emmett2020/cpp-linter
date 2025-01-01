@@ -29,8 +29,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <stdexcept>
 
-using namespace linter;
-using namespace linter::tool;
+using namespace lint;
+using namespace lint::tool;
 
 namespace {
   // Pass in c_str
@@ -237,8 +237,8 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
   repo.commit_clang_format();
 
   SECTION("DELETED files shouldn't be checked") {
-    repo.add_file("test1.cpp", "int n = 1;\n");
-    repo.add_file("test2.cpp", "int n = 1;\n");
+    repo.add_file("test1.cpp", "int n =       1;\n");
+    repo.add_file("test2.cpp", "int n    = 1;\n");
     repo.add_file("test3.cpp", "int n = 1;\n");
     auto target = repo.commit_changes();
 
@@ -248,7 +248,7 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
 
     auto context = create_runtime_context(std::get<0>(target), std::get<0>(source));
     clang_format.check(context);
-    check_result(clang_format, true, 1, 0, 0);
+    check_result(clang_format, true, 0, 0, 0);
   }
 
   SECTION("NEW added files should be checked") {

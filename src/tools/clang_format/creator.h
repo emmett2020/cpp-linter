@@ -19,7 +19,7 @@
 #include "tools/base_tool.h"
 #include "tools/clang_format/general/option.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   /// The creator to create clang-format instance.
   struct creator : creator_base {
     creator()                = default;
@@ -48,4 +48,4 @@ namespace linter::tool::clang_format {
   /// Get clang-format version based on clang-format output
   auto get_version(const std::string &binary) -> std::string;
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

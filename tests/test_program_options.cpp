@@ -19,8 +19,8 @@
 #include <catch2/catch_all.hpp>
 #include <catch2/catch_test_macros.hpp>
 
-using namespace linter;
-using namespace linter::program_options;
+using namespace lint;
+using namespace lint::program_options;
 
 template <class... Opts>
 auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {

@@ -18,7 +18,7 @@
 
 #include <catch2/catch_all.hpp>
 
-using namespace linter;
+using namespace lint;
 
 int main(int argc, char *argv[]) {
   git::setup();

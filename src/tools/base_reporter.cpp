@@ -25,13 +25,14 @@
 #include "utils/env_manager.h"
 #include "utils/util.h"
 
-namespace linter::tool {
+namespace lint::tool {
   using namespace std::string_view_literals;
 
   namespace {
+    // TODO: Use original clang-format and clang-tidy tools.
     auto make_usage_specification() -> std::string {
       auto content  = "<code>"s;
-      content      += "# 1. download cpp-linter\n";
+      content      += "# 1. download cpp-lint-action\n";
       content      += "TODO\n";
       content      += "# 2. validate\n";
       content      += "TODO\n";
@@ -62,9 +63,9 @@ namespace linter::tool {
     auto file         = std::fstream{summary_file, std::ios::app};
     throw_unless(file.is_open(), "failed to open step summary file to write");
 
-    static const auto title     = "# The cpp-linter Result"s;
+    static const auto title     = "# The cpp-lint-action Result"s;
     static const auto hint_pass = ":rocket: All checks on all file passed."s;
-    static const auto hint_fail = ":warning: Some files didn't pass the cpp-linter checks\n"s;
+    static const auto hint_fail = ":warning: Some files didn't pass the cpp-lint-action checks\n"s;
 
     if (all_passed(reporters)) {
       file << (title + hint_pass);
@@ -85,7 +86,7 @@ namespace linter::tool {
 
     constexpr auto website = "";
     constexpr auto header =
-      "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-linter)\n"sv;
+      "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-lint-action)\n"sv;
     constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
     constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
     constexpr auto table_row_fmt  = "| **{}** | {} | {} | {} |\n"sv;
@@ -130,4 +131,4 @@ namespace linter::tool {
     auto body = github::make_review_str(comments);
     github_client.post_pull_request_review(context, body);
   }
-} // namespace linter::tool
+} // namespace lint::tool

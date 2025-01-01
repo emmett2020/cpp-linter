@@ -4,17 +4,17 @@ CUR_SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
 # This file needs sudo permission.
 # Install interpreter into desired directory.
-BINARY_NAME="cpp-linter"
+BINARY_NAME="cpp-lint-action"
 LIB_INSTALL_PATH="/usr/local/lib/${BINARY_NAME}"
 BIN_INSTALL_PATH="/usr/local/bin/"
 
 # Refresh libraries
 if [[ -d "${LIB_INSTALL_PATH}" ]]; then
-  echo "Remove old cpp-linter libraries"
+  echo "Remove old cpp-lint-action libraries"
   sudo rm -rf ${LIB_INSTALL_PATH}
 fi
 if [[ -d "${BIN_INSTALL_PATH}" ]]; then
-  echo "Remove old cpp-linter binaries"
+  echo "Remove old cpp-lint-action binaries"
   sudo rm -rf ${BIN_INSTALL_PATH}
 fi
 sudo mkdir -p ${LIB_INSTALL_PATH}

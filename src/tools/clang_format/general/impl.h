@@ -24,7 +24,7 @@
 #include "tools/clang_format/general/option.h"
 #include "tools/clang_format/general/result.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   // The general implementation of clang-format.
   struct clang_format_general : tool_base {
     explicit clang_format_general(option_t opt)
@@ -55,4 +55,4 @@ namespace linter::tool::clang_format {
     result_t result;
   };
 
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

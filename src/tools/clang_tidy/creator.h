@@ -21,7 +21,7 @@
 #include "tools/base_tool.h"
 #include "tools/clang_tidy/general/option.h"
 
-namespace linter::tool::clang_tidy {
+namespace lint::tool::clang_tidy {
 
   constexpr auto enable_clang_tidy               = "enable-clang-tidy";
   constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
@@ -49,4 +49,4 @@ namespace linter::tool::clang_tidy {
     option_t option;
   };
 
-} // namespace linter::tool::clang_tidy
+} // namespace lint::tool::clang_tidy

@@ -18,8 +18,8 @@
 #include "context.h"
 #include "tools/base_reporter.h"
 
-namespace linter::tool {
-  /// This is a base class represents linter tools. All specified tools should be
+namespace lint::tool {
+  /// This is a base class represents lint tools. All specified tools should be
   /// derived from this.
   struct tool_base {
     virtual ~tool_base() = default;
@@ -54,4 +54,4 @@ namespace linter::tool {
     return ret;
   }
 
-} // namespace linter::tool
+} // namespace lint::tool

@@ -19,7 +19,7 @@
 
 #include "tools/base_result.h"
 
-namespace linter::tool::clang_format {
+namespace lint::tool::clang_format {
   struct replacement_t {
     int offset;       // character offset in unformatted file
     int length;       // how may characters to be removed
@@ -39,4 +39,4 @@ namespace linter::tool::clang_format {
   };
 
   using result_t = multi_files_result_base<per_file_result>;
-} // namespace linter::tool::clang_format
+} // namespace lint::tool::clang_format

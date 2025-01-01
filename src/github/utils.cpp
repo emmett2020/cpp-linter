@@ -15,10 +15,10 @@
  */
 #include "utils.h"
 
-namespace linter::github {
+namespace lint::github {
 
   // TODO: move into git
   bool is_row_in_hunk(const git::diff_hunk &hunk, int row_number) noexcept {
     return row_number >= hunk.new_start && row_number <= hunk.new_start + hunk.new_lines;
   }
-} // namespace linter::github
+} // namespace lint::github

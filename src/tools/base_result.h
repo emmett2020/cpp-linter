@@ -20,7 +20,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace linter::tool {
+namespace lint::tool {
 
   struct per_file_result_base {
     bool passed = false;
@@ -41,4 +41,4 @@ namespace linter::tool {
     std::unordered_map<std::string, PerFileResult> fails;
   };
 
-} // namespace linter::tool
+} // namespace lint::tool
