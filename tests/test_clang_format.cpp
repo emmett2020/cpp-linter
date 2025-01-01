@@ -37,7 +37,7 @@ namespace {
   template <class... Opts>
   auto make_opt(Opts &&...opts) -> std::array<char *, sizeof...(Opts) + 1> {
     return {const_cast<char *>("CppLintAction"), // NOLINT
-            const_cast<char *>(opts)...};        // NOLINT
+            const_cast<char *>(std::forward<Opts &&>(opts))...};
   }
 
   template <class... Opts>

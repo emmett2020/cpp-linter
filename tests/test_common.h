@@ -58,14 +58,14 @@ struct repo_t {
     }
   }
 
-  // This will always remove old file.
+  // This will not really remove old file till comment_changes.
   auto remove_file(const std::string &file_path) {
     auto file_full_path = repo_path / file_path;
     if (std::filesystem::exists(file_full_path)) {
       std::filesystem::remove(file_full_path);
     }
-    if (!ranges::contains(deleted_file, file_path)) {
-      deleted_file.push_back(file_path);
+    if (!ranges::contains(deleted_files, file_path)) {
+      deleted_files.push_back(file_path);
     }
   }
 
@@ -96,7 +96,7 @@ struct repo_t {
 
   auto commit_changes() -> std::tuple<std::string, linter::git::commit_ptr> {
     auto [index_oid1, index1] = git::index::add_files(repo.get(), modified_or_added_files);
-    auto [index_oid, index]   = git::index::remove_files(repo.get(), modified_or_added_files);
+    auto [index_oid, index]   = git::index::remove_files(repo.get(), deleted_files);
     auto message              = fmt::format("Commit Index {}", commit_idx);
     auto [commit_oid, commit] = git::commit::create_head(repo.get(), message, index.get());
     return {git::oid::to_str(commit_oid), std::move(commit)};
@@ -138,21 +138,21 @@ private:
   std::size_t commit_idx = 1;
 
   std::vector<std::string> modified_or_added_files;
-  std::vector<std::string> deleted_file;
+  std::vector<std::string> deleted_files;
 };
 
 // Remove repository.
-void remove_repo();
+void remove_temp_repo_dir();
 
 // Create temporary repository. If repository already exists, it'll be
 // refreshed.
-void create_temp_repo();
+void create_temp_repo_dir();
 
 // Create file in temporary repository.
-void create_temp_file(const std::string &file_name, const std::string &content);
+void create_temp_file(const std::string &file_path, const std::string &content);
 
 // Create files in temporary repository. Each file contains the same content.
-void create_temp_files(const std::vector<std::string> &file_names, const std::string &content);
+void create_temp_files(const std::vector<std::string> &file_paths, const std::string &content);
 
 // Append the given content into the given file.
 void append_content_to_file(const std::string &file, const std::string &content);
@@ -164,3 +164,24 @@ auto init_basic_repo() -> linter::git::repo_ptr;
 auto init_repo_with_commit(const std::vector<std::string> &files,
                            const std::string &commit_message = "")
   -> std::tuple<linter::git::repo_ptr, linter::git::commit_ptr>;
+
+class scope_guard {
+public:
+  explicit scope_guard(std::function<void()> f)
+    : func_(std::move(f)) {
+  }
+
+  ~scope_guard() {
+    if (func_) {
+      func_();
+    }
+  }
+
+  scope_guard(const scope_guard &)            = delete;
+  scope_guard &operator=(const scope_guard &) = delete;
+  scope_guard(scope_guard &&)                 = delete;
+  scope_guard &operator=(scope_guard &&)      = delete;
+
+private:
+  std::function<void()> func_;
+};

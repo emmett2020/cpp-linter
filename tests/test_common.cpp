@@ -29,30 +29,28 @@
 
 #include "utils/git_utils.h"
 
-using namespace std;    // NOLINT
-using namespace linter; // NOLINT
+using namespace std;
+using namespace linter;
 
-const auto temp_dir       = std::filesystem::temp_directory_path();
-const auto temp_repo_dir  = temp_dir / "test_git";
-const auto default_branch = "master"s;
+const auto temp_repo_dir = std::filesystem::temp_directory_path() / "test_git";
 
 auto get_temp_repo_dir() -> filesystem::path {
   return temp_repo_dir;
 }
 
-void remove_repo() {
+void remove_temp_repo_dir() {
   if (std::filesystem::exists(temp_repo_dir)) {
     std::filesystem::remove_all(temp_repo_dir);
   }
 }
 
-void create_temp_repo() {
-  remove_repo();
+void create_temp_repo_dir() {
+  remove_temp_repo_dir();
   std::filesystem::create_directory(temp_repo_dir);
 }
 
-void create_temp_file(const std::string &file_name, const std::string &content) {
-  auto new_file_path = temp_repo_dir / file_name;
+void create_temp_file(const std::string &file_path, const std::string &content) {
+  auto new_file_path = temp_repo_dir / file_path;
   if (std::filesystem::exists(new_file_path)) {
     std::filesystem::remove(new_file_path);
   }
@@ -62,8 +60,8 @@ void create_temp_file(const std::string &file_name, const std::string &content) 
   file.close();
 }
 
-void create_temp_files(const std::vector<std::string> &file_names, const std::string &content) {
-  for (const auto &file: file_names) {
+void create_temp_files(const std::vector<std::string> &file_paths, const std::string &content) {
+  for (const auto &file: file_paths) {
     create_temp_file(file, content);
   }
 }
