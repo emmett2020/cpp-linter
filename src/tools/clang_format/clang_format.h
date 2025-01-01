@@ -17,4 +17,6 @@
 
 #include "tools/clang_format/creator.h"
 #include "tools/clang_format/general/impl.h"
+#include "tools/clang_format/general/reporter.h"
+#include "tools/clang_format/general/result.h"
 #include "tools/clang_format/version/v18.h"

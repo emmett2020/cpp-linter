@@ -80,7 +80,7 @@ namespace lint::program_options {
                     const variables_map &variables,
                     const std::initializer_list<const char *> &options) {
     auto lacks = std::vector<std::string>();
-    std::ranges::for_each(options, [&](const auto *option) {
+    ranges::for_each(options, [&](const auto *option) {
       if (!variables.contains(option)) {
         lacks.push_back(option);
       }
@@ -95,7 +95,7 @@ namespace lint::program_options {
                         const variables_map &variables,
                         const std::initializer_list<const char *> &options) {
     auto forbidden = std::vector<std::string>();
-    std::ranges::for_each(options, [&](const auto *option) {
+    ranges::for_each(options, [&](const auto *option) {
       if (variables.contains(option)) {
         forbidden.push_back(option);
       }

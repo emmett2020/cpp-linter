@@ -15,7 +15,6 @@
  */
 
 #include "context.h"
-#include "github/common.h"
 #include "program_options.h"
 #include "test_common.h"
 #include "tools/base_creator.h"
@@ -31,6 +30,8 @@
 
 using namespace lint;
 using namespace lint::tool;
+
+// TODO: typical clang-format tools.
 
 namespace {
   // Pass in c_str
@@ -478,4 +479,7 @@ TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_format][genera
 }
 
 TEST_CASE("Test reporter", "[CppLintAction][tool][clang_format][general_version]") {
+  auto option   = clang_format::option_t{};
+  auto result   = clang_format::result_t{};
+  auto reporter = clang_format::reporter_t{option, result};
 }

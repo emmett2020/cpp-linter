@@ -86,7 +86,7 @@ namespace lint::github {
         return;
       }
 
-      auto comment = std::ranges::find_if(comments, is_our_comment);
+      auto comment = ranges::find_if(comments, is_our_comment);
       if (comment == comments.end()) {
         spdlog::info("The cpp-lint doesn't comments on pull request number {} yet", ctx.pr_number);
         return;
