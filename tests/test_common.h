@@ -116,6 +116,20 @@ struct repo_t {
     [[maybe_unused]] auto ret = commit_changes();
   }
 
+  void commit_clang_tidy() {
+    const auto *content = R"(
+Checks: '
+  -*,
+  +cppcoreguidelines-*,
+'
+WarningsAsErrors: '*'
+    )";
+    add_file(".clang-format", content);
+    [[maybe_unused]] auto ret = commit_changes();
+  }
+
+
+
 private:
   void init() {
     using namespace lint;

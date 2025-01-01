@@ -135,4 +135,8 @@ namespace lint::tool::clang_tidy {
     return option.enabled;
   }
 
+  [[nodiscard]] auto creator::get_option() const -> const option_t & {
+    return option;
+  }
+
 } // namespace lint::tool::clang_tidy

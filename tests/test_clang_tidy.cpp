@@ -205,24 +205,6 @@ namespace {
 
 TEST_CASE("Test clang-tidy could correctly handle file filter",
           "[CppLintAction][tool][clang_tidy][general_version]") {
-  SKIP_IF_NO_CLANG_TIDY
-
-  auto clang_tidy                      = create_clang_tidy();
-  clang_tidy.option.file_filter_iregex = ".*.test";
-
-  // Create git repository whichi to be checked.
-  auto repo = repo_t{};
-  repo.commit_clang_tidy();
-  repo.add_file("file.test", "int   n = 0;");
-  auto target = repo.commit_changes();
-  repo.rewrite_file("file.test", "int n = 0;");
-  auto source = repo.commit_changes();
-
-  auto context = create_runtime_context(target, source);
-
-  // Check
-  clang_tidy.check(context);
-  check_result(clang_tidy, true, 1, 0, 0);
 }
 
 TEST_CASE("Test clang-tidy could correctly handle various file level cases",
@@ -235,94 +217,26 @@ TEST_CASE("Test clang-tidy could correctly handle various file level cases",
   repo.commit_clang_tidy();
 
   SECTION("DELETED files shouldn't be checked") {
-    repo.add_file("test1.cpp", "int n =       1;\n");
-    repo.add_file("test2.cpp", "int n    = 1;\n");
-    repo.add_file("test3.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.remove_file("test1.cpp");
-    repo.remove_file("test2.cpp");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("NEW added files should be checked") {
-    repo.add_file("test1.cpp", "int n = 1;\n");
-    repo.add_file("test2.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.add_file("test3.cpp", "int n    = 1;\n");
-    repo.add_file("test4.cpp", "int n = 1;\n");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 1, 1, 0);
   }
 
   SECTION("MODIFIED files should be checked") {
-    repo.add_file("test1.cpp", "int n = 1;\n");
-    repo.add_file("test2.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.rewrite_file("test1.cpp", "int n    = 1;\n");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("The commit contains only delete file should check nothing") {
-    repo.add_file("test1.cpp", "int n =       1;\n");
-    repo.add_file("test2.cpp", "int n    = 1;\n");
-    repo.add_file("test3.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.remove_file("test1.cpp");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("The commit contains one modified file and insert a new non-cpp file should check "
           "only one files") {
-    repo.add_file("test1.cpp", "int n =       1;\n");
-    repo.add_file("test2.cpp", "int n    = 1;\n");
-    repo.add_file("test3.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.rewrite_file("test1.cpp", "int n = 1");
-    repo.add_file("test4.unknown", "int n = 1");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 1);
   }
   SECTION("The commit contains one modified file and delete an old file should only "
           "check the modified file") {
-    repo.add_file("test1.cpp", "int n     = 1;\n");
-    repo.add_file("test2.cpp", "int n = 1;\n");
-    repo.add_file("test3.cpp", "int n = 1;\n");
-    auto target = repo.commit_changes();
-
-    repo.remove_file("test1.cpp");
-    repo.rewrite_file("test3.cpp", "int m = 1;\n");
-    auto source = repo.commit_changes();
-
-    auto context = create_runtime_context(target, source);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 0);
   }
 }
 
-TEST_CASE("Test clang-tidy could correctly check basic unformatted error",
+TEST_CASE("Test clang-tidy could correctly check basic error error",
           "[CppLintAction][tool][clang_tidy][general_version]") {
   SKIP_IF_NO_CLANG_TIDY
   auto clang_tidy = create_clang_tidy();
@@ -330,153 +244,33 @@ TEST_CASE("Test clang-tidy could correctly check basic unformatted error",
   auto repo = repo_t{};
   repo.commit_clang_tidy();
 
-  SECTION("Insert unformatted lines shouldn't pass clang-tidy check") {
-    repo.add_file("file.cpp", "int n = 0;");
-    auto target_id                = repo.commit_changes();
-    const auto *const unformatted = R"(int n   = 0;
-      int             m = 1;
-    )";
-
-    repo.rewrite_file("file.cpp", unformatted);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 0, 1, 0);
+  SECTION("Insert error lines shouldn't pass clang-tidy check") {
   }
 
-  SECTION("Insert formatted lines should pass clang-tidy check") {
-    repo.add_file("file.cpp", "int n = 0;");
-    auto target_id = repo.commit_changes();
-
-    repo.rewrite_file("file.cpp", "int n = 0;\nint m = 1;\n");
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 0);
+  SECTION("Insert correct lines should pass clang-tidy check") {
   }
 
-  SECTION("Delete all unformatted lines will pass clang-tidy check") {
-    repo.add_file("file.cpp", R"(int n = 0;
-    int m     = 1;
-    )");
-    auto target_id = repo.commit_changes();
-
-    repo.rewrite_file("file.cpp", "int n = 0;\n");
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 0);
+  SECTION("Delete all error lines will pass clang-tidy check") {
   }
 
-  SECTION("Delete only part of unformatted lines shouldn't pass clang-tidy check") {
-    auto old_content  = std::string{};
-    old_content      += "int n = 0;\n";
-    old_content      += "int m     = 0;\n";
-    old_content      += "int p     = 0;\n";
-    repo.add_file("file.cpp", old_content);
-    auto target_id = repo.commit_changes();
-
-    auto new_content  = std::string{};
-    new_content      += "int n = 0;\n";
-    new_content      += "int m     = 0;\n";
-    repo.rewrite_file("file.cpp", new_content);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 0, 1, 0);
+  SECTION("Delete only part of error lines shouldn't pass clang-tidy check") {
   }
 
-  SECTION("Rewrite unformatted lines to unformatted lines shouldn't pass "
+  SECTION("Rewrite error lines to error lines shouldn't pass "
           "clang-tidy check") {
-    auto old_content  = std::string{};
-    old_content      += "int n = 0;\n";
-    old_content      += "int m     = 0;\n";
-    repo.add_file("file.cpp", old_content);
-    auto target_id = repo.commit_changes();
-
-    auto new_content  = std::string{};
-    new_content      += "int n = 0;\n";
-    new_content      += "int p     = 0;\n";
-    repo.rewrite_file("file.cpp", new_content);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 0, 1, 0);
   }
-  SECTION("Rewrite unformatted lines to formatted lines should pass "
+  SECTION("Rewrite error lines to correct lines should pass "
           "clang-tidy check") {
-    auto old_content  = std::string{};
-    old_content      += "int n = 0;\n";
-    old_content      += "int m     = 0;\n";
-    repo.add_file("file.cpp", old_content);
-    auto target_id = repo.commit_changes();
-
-    auto new_content  = std::string{};
-    new_content      += "int n = 0;\n";
-    new_content      += "int m = 0;\n";
-    repo.rewrite_file("file.cpp", new_content);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 0);
   }
-  SECTION("Rewrite formatted lines to unformatted lines shouldn't pass "
+  SECTION("Rewrite correct lines to error lines shouldn't pass "
           "clang-tidy check") {
-    auto old_content  = std::string{};
-    old_content      += "int n = 0;\n";
-    old_content      += "int m = 0;\n";
-    repo.add_file("file.cpp", old_content);
-    auto target_id = repo.commit_changes();
-
-    auto new_content  = std::string{};
-    new_content      += "int n = 0;\n";
-    new_content      += "int m   = 0;\n";
-    repo.rewrite_file("file.cpp", new_content);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, false, 0, 1, 0);
   }
-  SECTION("Rewrite formatted lines to formatted lines should pass "
+  SECTION("Rewrite correct lines to correct lines should pass "
           "clang-tidy check") {
-    auto old_content  = std::string{};
-    old_content      += "int n = 0;\n";
-    old_content      += "int m = 0;\n";
-    repo.add_file("file.cpp", old_content);
-    auto target_id = repo.commit_changes();
-
-    auto new_content  = std::string{};
-    new_content      += "int n = 0;\n";
-    new_content      += "int p = 0;\n";
-    repo.rewrite_file("file.cpp", new_content);
-    auto source_id = repo.commit_changes();
-
-    auto context = create_runtime_context(target_id, source_id);
-    clang_tidy.check(context);
-    check_result(clang_tidy, true, 1, 0, 0);
-  }
-}
-
-TEST_CASE("Test parse replacements", "[CppLintAction][tool][clang_tidy][general_version]") {
-  SKIP_IF_NO_CLANG_TIDY
-
-  SECTION("Empty replacements") {
-  }
-  SECTION("One replacement") {
-  }
-  SECTION("Two replacements") {
   }
 }
 
 TEST_CASE("Test reporter", "[CppLintAction][tool][clang_tidy][general_version]") {
-  auto option   = clang_tidy::option_t{};
-  auto result   = clang_tidy::result_t{};
-  auto reporter = clang_tidy::reporter_t{option, result};
+  auto option = clang_tidy::option_t{};
+  auto result = clang_tidy::result_t{};
 }

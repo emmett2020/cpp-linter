@@ -46,6 +46,9 @@ namespace lint::tool::clang_tidy {
 
     bool enabled() override;
 
+
+    [[nodiscard]] auto get_option() const -> const option_t &;
+
     option_t option;
   };
 
