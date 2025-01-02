@@ -68,7 +68,7 @@ namespace lint::tool::clang_format {
                                            "CppLintAction will stop clang-format as soon "
                                            "as first file error occurs")
     (version,             ver,             "Set the version of clang-format. Don't specify "
-                                           "both this option and the clang-format-binary option, "
+                                           "both this option and the clang-format-binary option "
                                            "to avoid ambigous. And the clang-format-${version} must "
                                            "exist in your $PATH")
     (binary,              bin,             "Set the full path of clang-format executable binary. "

@@ -26,4 +26,7 @@
 1. Code coverage > 80%
 
 # 1.3.0
+## New Features
 1. Add online document
+2. Support save and upload log file
+3. Support multiple compilation database for clang-tidy
