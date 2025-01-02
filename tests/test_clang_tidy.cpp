@@ -265,16 +265,60 @@ TEST_CASE("Test clang-tidy could correctly handle various file level cases",
   }
 
   SECTION("MODIFIED files should be checked") {
+    repo.add_file("test1.cpp", "const int n = 1;\n");
+    repo.add_file("test2.cpp", "const int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.rewrite_file("test2.cpp", "int n = 0;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("The commit contains only delete file should check nothing") {
+    repo.add_file("test1.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.remove_file("test1.cpp");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("The commit contains one modified file and insert a new non-cpp file should check "
           "only one files") {
+    repo.add_file("test1.cpp", "int n = 1;\n");
+    repo.add_file("test2.cpp", "int n = 1;\n");
+    repo.add_file("test3.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.rewrite_file("test1.cpp", "const int n = 1;\n");
+    repo.add_file("test4.unknown", "int n = 1");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 1);
   }
+
   SECTION("The commit contains one modified file and delete an old file should only "
           "check the modified file") {
+    repo.add_file("test1.cpp", "int n = 1;\n");
+    repo.add_file("test2.cpp", "int n = 1;\n");
+    repo.add_file("test3.cpp", "int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.remove_file("test1.cpp");
+    repo.rewrite_file("test3.cpp", "const int m = 1;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 }
 

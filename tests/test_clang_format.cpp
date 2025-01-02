@@ -308,6 +308,7 @@ TEST_CASE("Test clang-format could correctly handle various file level cases",
     clang_format.check(context);
     check_result(clang_format, true, 1, 0, 1);
   }
+
   SECTION("The commit contains one modified file and delete an old file should only "
           "check the modified file") {
     repo.add_file("test1.cpp", "int n     = 1;\n");
