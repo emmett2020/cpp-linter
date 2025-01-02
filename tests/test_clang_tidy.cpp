@@ -207,6 +207,27 @@ namespace {
 
 TEST_CASE("Test clang-tidy could correctly handle file filter",
           "[CppLintAction][tool][clang_tidy][general_version]") {
+  SKIP_IF_NO_CLANG_TIDY
+
+  auto clang_tidy = create_clang_tidy();
+
+  clang_tidy.option.file_filter_iregex = ".*.cpp";
+
+  // Create git repository whichi to be checked.
+  auto repo = repo_t{};
+  repo.commit_clang_tidy();
+  repo.add_file("file.cpp", "int n = 0;\n");
+  repo.add_file("file.test", "int n = 0;\n");
+  auto target = repo.commit_changes();
+  repo.rewrite_file("file.cpp", "int m = 0;\n");
+  repo.add_file("file.test", "int m = 0;\n");
+  auto source = repo.commit_changes();
+
+  auto context = create_runtime_context(target, source);
+
+  // Check
+  clang_tidy.check(context);
+  check_result(clang_tidy, true, 1, 0, 1);
 }
 
 TEST_CASE("Test clang-tidy could correctly handle various file level cases",

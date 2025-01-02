@@ -14,13 +14,21 @@
  * limitations under the License.
  */
 
-#include "utils/git_utils.h"
-
+#include <spdlog/spdlog.h>
 #include <catch2/catch_all.hpp>
+
+#include "utils/common.h"
+#include "utils/git_utils.h"
+#include "utils/env_manager.h"
 
 using namespace lint;
 
 int main(int argc, char *argv[]) {
+  auto log_level = env::get("CPP_LINT_ACTION_TEST_LOG_LEVEL");
+  if (!log_level.empty()) {
+    set_log_level(log_level);
+  }
+
   git::setup();
   int result = Catch::Session().run(argc, argv);
   git::shutdown();

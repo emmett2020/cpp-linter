@@ -16,7 +16,12 @@
 #pragma once
 
 #include <string_view>
+
 #include <boost/regex.hpp>
+#include <range/v3/algorithm/contains.hpp>
+#include <spdlog/spdlog.h>
+
+#include "utils/error.h"
 
 namespace lint {
   constexpr auto trim_left(std::string_view str) -> std::string_view {
@@ -43,5 +48,25 @@ namespace lint {
     auto regex = boost::regex{iregex, boost::regex::icase};
     return !boost::regex_match(file, regex);
   }
+
+  /// Log level
+  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
+
+  // This function must be called before any spdlog operations.
+  inline void set_log_level(const std::string &log_level) {
+    throw_unless(ranges::contains(supported_log_level, log_level),
+                 fmt::format("unsupported log level: {}", log_level));
+
+    if (log_level == "trace") {
+      spdlog::set_level(spdlog::level::trace);
+    } else if (log_level == "debug") {
+      spdlog::set_level(spdlog::level::debug);
+    } else if (log_level == "info") {
+      spdlog::set_level(spdlog::level::info);
+    } else {
+      spdlog::set_level(spdlog::level::err);
+    }
+  }
+
 
 } // namespace lint

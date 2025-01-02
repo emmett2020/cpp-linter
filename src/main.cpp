@@ -34,34 +34,22 @@
 #include "tools/clang_tidy/clang_tidy.h"
 #include "utils/error.h"
 #include "utils/git_utils.h"
+#include "utils/common.h"
 
 using namespace lint; // NOLINT
 using namespace std::string_literals;
 using namespace std::string_view_literals;
 
 namespace {
-  constexpr auto supported_log_level = {"trace", "debug", "info", "error"};
-
   // This function must be called before any spdlog operations.
-  void set_log_level(const program_options::variables_map &vars) {
+  void set_log(const program_options::variables_map &vars) {
     // This name must be samed with the one we registered.
     constexpr auto log_level_opt = "log-level";
     assert(vars.contains(log_level_opt));
 
     auto level     = vars[log_level_opt].as<std::string>();
     auto log_level = boost::algorithm::to_lower_copy(level);
-    throw_unless(ranges::contains(supported_log_level, log_level),
-                 fmt::format("unsupported log level: {}", level));
-
-    if (log_level == "trace") {
-      spdlog::set_level(spdlog::level::trace);
-    } else if (log_level == "debug") {
-      spdlog::set_level(spdlog::level::debug);
-    } else if (log_level == "info") {
-      spdlog::set_level(spdlog::level::info);
-    } else {
-      spdlog::set_level(spdlog::level::err);
-    }
+    set_log_level(log_level);
   }
 
   auto print_changed_files(const std::vector<std::string> &files) {
@@ -107,7 +95,7 @@ auto main(int argc, char **argv) -> int {
     print_version();
     return 0;
   }
-  set_log_level(user_options);
+  set_log(user_options);
   auto tools = tool::create_enabled_tools(tool_creators, user_options);
 
   // Create runtime context.

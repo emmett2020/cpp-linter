@@ -116,7 +116,7 @@ struct repo_t {
     [[maybe_unused]] auto ret = commit_changes();
   }
 
-  void commit_clang_tidy() {
+  auto commit_clang_tidy() -> std::string {
     const auto *content = R"(
 Checks: '
   -*,
@@ -125,7 +125,7 @@ Checks: '
 WarningsAsErrors: '*'
     )";
     add_file(".clang-format", content);
-    [[maybe_unused]] auto ret = commit_changes();
+    return commit_changes();
   }
 
 

@@ -82,6 +82,8 @@ namespace lint::tool::clang_tidy {
 
     auto execute(const option_t &option, std::string_view repo, std::string_view file)
       -> shell::result {
+      spdlog::trace("Enter clang_tidy_general::execute()");
+
       auto opts = std::vector<std::string>{};
       if (!option.database.empty()) {
         opts.emplace_back(fmt::format("-p={}", option.database));
@@ -116,22 +118,12 @@ namespace lint::tool::clang_tidy {
       return shell::execute(option.binary, opts, repo);
     }
 
-    void try_match(const std::string &line, const char *regex_str, auto callback) {
-      auto regex   = boost::regex{regex_str};
-      auto match   = boost::smatch{};
-      auto matched = boost::regex_match(line, match, regex, boost::match_extra);
-      if (matched) {
-        callback(match);
-      }
-    };
-
     auto parse_stdout(std::string_view std_out) -> diagnostics {
       auto diags         = diagnostics{};
       auto needs_details = false;
 
       for (auto part: ranges::views::split(std_out, '\n')) {
         auto line = ranges::to<std::string>(part);
-
         spdlog::trace("Parsing: {}", line);
 
         auto header_line = parse_diagnostic_header(line);
@@ -155,7 +147,7 @@ namespace lint::tool::clang_tidy {
         }
       }
 
-      spdlog::info("Parsed clang tidy stdout, got {} diagnostics.", diags.size());
+      spdlog::debug("Parsed clang tidy stdout, got {} diagnostics.", diags.size());
       return diags;
     }
 
@@ -167,7 +159,16 @@ namespace lint::tool::clang_tidy {
       R"(Suppressed (\d+) warnings \((\d+) in non-user code, (\d+) NOLINT\)\.)";
     constexpr auto warnings_as_errors = "^(\\d+) warnings treated as errors";
 
-    /// TODO: should we parse stderr?
+    void try_match(const std::string &line, const char *regex_str, auto callback) {
+      auto regex   = boost::regex{regex_str};
+      auto match   = boost::smatch{};
+      auto matched = boost::regex_match(line, match, regex, boost::match_extra);
+      if (matched) {
+        callback(match);
+      }
+    };
+
+    // TODO: remove?
     auto parse_stderr(std::string_view std_err) -> statistic {
       auto stat                 = statistic{};
       auto warning_and_error_cb = [&](boost::smatch &match) {
@@ -224,30 +225,16 @@ namespace lint::tool::clang_tidy {
 
       return stat;
     }
-
-    void print_statistic(const statistic &stat) {
-      spdlog::debug("Errors: {}", stat.errors);
-      spdlog::debug("Warnings: {}", stat.warnings);
-      spdlog::debug("Warnings treated as errors: {}", stat.warnings_treated_as_errors);
-      spdlog::debug("Total suppressed warnings: {}", stat.total_suppressed_warnings);
-      spdlog::debug("Non user code warnings: {}", stat.non_user_code_warnings);
-      spdlog::debug("No lint warnings: {}", stat.no_lint_warnings);
-    }
-
   } // namespace
 
   auto clang_tidy_general::check_single_file(
     [[maybe_unused]] const runtime_context &context,
     const std::string &root_dir,
     const std::string &file) const -> per_file_result {
-    spdlog::info("Start to run clang-tidy");
-    auto [ec, std_out, std_err] = execute(option, root_dir, file);
-    spdlog::trace("clang-tidy original output:\nreturn code: {}\nstdout:\n{}stderr:\n{}",
-                  ec,
-                  std_out,
-                  std_err);
+    spdlog::trace("Enter clang_tidy_general::check_single_file()");
 
-    spdlog::info("Successfully ran clang-tidy, now start to parse the output of it.");
+    auto [ec, std_out, std_err] = execute(option, root_dir, file);
+
     auto result        = per_file_result{};
     result.passed      = ec == 0;
     result.diags       = parse_stdout(std_out);
@@ -256,23 +243,17 @@ namespace lint::tool::clang_tidy {
     result.file_path   = file;
 
     if (result.passed) {
-      spdlog::info("The final result of ran clang-tidy on {} is: {}, detailed "
-                   "information:\n{}",
-                   file,
-                   "PASSED",
-                   result.tool_stderr);
+      spdlog::info("The result of check {} with clang-tidy was: PASS", file);
     } else {
-      spdlog::error(
-        "The final result of ran clang-tidy on {} is: {} , detailed "
-        "information:\n{}",
-        file,
-        "FAILED",
-        result.tool_stderr);
+      spdlog::error("The result of check {} with clang-tidy was: FAIL", file);
     }
     return result;
   }
 
   void clang_tidy_general::check(const runtime_context &context) {
+    assert(!option.binary.empty() && "clang-tidy binary is empty");
+    assert(!context.repo_path.empty() && "the repo_path of context is empty");
+
     const auto root_dir = context.repo_path;
     const auto files    = context.changed_files;
     for (const auto &file: files) {

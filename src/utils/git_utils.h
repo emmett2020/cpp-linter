@@ -233,7 +233,6 @@ namespace lint::git {
     /// Given the unsigned commit object's contents, its signature and the
     /// header field in which to store the signature, attach the signature to the
     /// commit and write it into the given repository.
-    /// TODO:
     auto create_with_signature(git_repository &repo, const std::string &commit_content) -> git_oid;
 
     /// Create new commit in the repository from a list of git_object pointers.
