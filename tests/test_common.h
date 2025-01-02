@@ -120,11 +120,11 @@ struct repo_t {
     const auto *content = R"(
 Checks: '
   -*,
-  +cppcoreguidelines-*,
+  cppcoreguidelines-*,
 '
 WarningsAsErrors: '*'
     )";
-    add_file(".clang-format", content);
+    add_file(".clang-tidy", content);
     return commit_changes();
   }
 

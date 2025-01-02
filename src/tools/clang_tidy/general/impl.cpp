@@ -241,12 +241,6 @@ namespace lint::tool::clang_tidy {
     result.tool_stdout = std_out;
     result.tool_stderr = std_err;
     result.file_path   = file;
-
-    if (result.passed) {
-      spdlog::info("The result of check {} with clang-tidy was: PASS", file);
-    } else {
-      spdlog::error("The result of check {} with clang-tidy was: FAIL", file);
-    }
     return result;
   }
 

@@ -213,19 +213,16 @@ TEST_CASE("Test clang-tidy could correctly handle file filter",
 
   clang_tidy.option.file_filter_iregex = ".*.cpp";
 
-  // Create git repository whichi to be checked.
   auto repo = repo_t{};
   repo.commit_clang_tidy();
   repo.add_file("file.cpp", "int n = 0;\n");
   repo.add_file("file.test", "int n = 0;\n");
   auto target = repo.commit_changes();
-  repo.rewrite_file("file.cpp", "int m = 0;\n");
-  repo.add_file("file.test", "int m = 0;\n");
+  repo.rewrite_file("file.cpp", "const int m = 0;\n");
+  repo.add_file("file.test", "const int m = 0;\n");
   auto source = repo.commit_changes();
 
   auto context = create_runtime_context(target, source);
-
-  // Check
   clang_tidy.check(context);
   check_result(clang_tidy, true, 1, 0, 1);
 }
@@ -235,14 +232,36 @@ TEST_CASE("Test clang-tidy could correctly handle various file level cases",
   SKIP_IF_NO_CLANG_TIDY
   auto clang_tidy = create_clang_tidy();
 
-  // Create git repository whichi to be checked.
   auto repo = repo_t{};
   repo.commit_clang_tidy();
 
   SECTION("DELETED files shouldn't be checked") {
+    repo.add_file("test1.cpp", "const int n = 1;\n");
+    repo.add_file("test2.cpp", "const int n = 1;\n");
+    repo.add_file("test3.cpp", "const int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.remove_file("test1.cpp");
+    repo.remove_file("test2.cpp");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 0, 0, 0);
   }
 
   SECTION("NEW added files should be checked") {
+    repo.add_file("test1.cpp", "const int n = 1;\n");
+    repo.add_file("test2.cpp", "const int n = 1;\n");
+    auto target = repo.commit_changes();
+
+    repo.add_file("test3.cpp", "int n;\n");
+    repo.add_file("test4.cpp", "const int n = 1;\n");
+    auto source = repo.commit_changes();
+
+    auto context = create_runtime_context(target, source);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 1, 1, 0);
   }
 
   SECTION("MODIFIED files should be checked") {
