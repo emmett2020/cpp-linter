@@ -32,6 +32,7 @@
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
 #include "tools/clang_tidy/clang_tidy.h"
+#include "utils/error.h"
 #include "utils/git_utils.h"
 
 using namespace lint; // NOLINT

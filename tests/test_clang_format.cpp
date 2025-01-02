@@ -19,6 +19,8 @@
 #include "test_common.h"
 #include "tools/base_tool.h"
 #include "tools/clang_format/clang_format.h"
+#include "tools/clang_format/general/impl.h"
+#include "tools/clang_format/general/reporter.h"
 #include "tools/util.h"
 #include "utils/shell.h"
 

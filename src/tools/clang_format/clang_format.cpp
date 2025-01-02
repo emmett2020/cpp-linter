@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_format/creator.h"
+#include "tools/clang_format/clang_format.h"
 
 #include "program_options.h"
 #include "tools/base_tool.h"
@@ -92,35 +92,28 @@ namespace lint::tool::clang_format {
     if (variables.contains(file_iregex)) {
       option.file_filter_iregex = variables[file_iregex].as<std::string>();
     }
+
+    // Get clang-format-binary
     if (variables.contains(version)) {
-      program_options::must_not_specify(
-        "specify clang-format-version",
-        variables,
-        {"clang-format-binary"});
+      program_options::must_not_specify("specify clang-format-version", variables, {binary});
       auto user_input_version = variables[version].as<std::string>();
       spdlog::debug("user inputs clang-format version: {}", user_input_version);
 
       option.binary = find_clang_tool("clang-format", user_input_version);
-
-      // We don't use user input version since it's maybe a complete version.
-      option.version = get_version(option.binary);
     } else if (variables.contains(binary)) {
-      program_options::must_not_specify(
-        "specify clang-format-binary",
-        variables,
-        {"clang-format-version"});
+      program_options::must_not_specify("specify clang-format-binary", variables, {version});
 
       option.binary               = variables[binary].as<std::string>();
       auto [ec, std_out, std_err] = shell::which(option.binary);
       throw_unless(ec == 0, fmt::format("Can't find given clang-format binary: {}", option.binary));
-      option.version = get_version(option.binary);
     } else {
       auto [ec, std_out, std_err] = shell::which("clang-format");
       throw_unless(ec == 0, "can't find clang-format");
-      option.binary  = std_out;
-      option.version = get_version(option.binary);
+      option.binary = std_out;
     }
-    spdlog::info("The clang-format executable path: {}", option.binary);
+
+    option.version = get_version(option.binary);
+    spdlog::info("clang-format path: {}, version: {}", option.binary, option.version);
   }
 
   auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {

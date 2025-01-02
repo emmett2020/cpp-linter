@@ -13,6 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "tools/clang_tidy/creator.h"
-#include "tools/clang_tidy/general/impl.h"
-#include "tools/clang_tidy/version/v18.h"
+#pragma once
+
+#include <boost/program_options.hpp>
+
+#include "tools/base_creator.h"
+#include "tools/base_tool.h"
+#include "tools/clang_tidy/general/option.h"
+
+namespace lint::tool::clang_tidy {
+
+  struct creator : public creator_base {
+    /// Register clang-tidy needed options to program options description.
+    void register_option(program_options::options_description &desc) const override;
+
+    /// Create clang-tidy option struct by user input program options.
+    void create_option(const program_options::variables_map &variables);
+
+    /// Create clang-tidy tool instance.
+    auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
+
+    /// Return whether enables clang-tidy. Clang-tidy is enabled on default
+    /// and could be disabled by user.
+    bool enabled() override;
+
+    [[nodiscard]] auto get_option() const -> const option_t &;
+
+  private:
+    option_t option;
+  };
+
+  /// Get clang-format version based on clang-format output
+  auto get_version(const std::string &binary) -> std::string;
+} // namespace lint::tool::clang_tidy
+
