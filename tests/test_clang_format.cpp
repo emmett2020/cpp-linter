@@ -483,4 +483,18 @@ TEST_CASE("Test reporter", "[CppLintAction][tool][clang_format][general_version]
   auto option   = clang_format::option_t{};
   auto result   = clang_format::result_t{};
   auto reporter = clang_format::reporter_t{option, result};
+  auto context  = runtime_context{};
+
+  reporter.result.fails = {
+    {"file1.cpp", {}},
+    {"file2.cpp", {}}
+  };
+
+  SECTION("Test make issue comment") {
+    auto res       = reporter.make_issue_comment(context);
+    auto expected  = std::string{};
+    expected      += "- file1.cpp";
+    expected      += "- file2.cpp";
+    REQUIRE(res == expected);
+  }
 }
