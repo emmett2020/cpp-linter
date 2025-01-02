@@ -322,7 +322,7 @@ TEST_CASE("Test clang-tidy could correctly handle various file level cases",
   }
 }
 
-TEST_CASE("Test clang-tidy could correctly check basic error error",
+TEST_CASE("Test clang-tidy could correctly check basic error",
           "[CppLintAction][tool][clang_tidy][general_version]") {
   SKIP_IF_NO_CLANG_TIDY
   auto clang_tidy = create_clang_tidy();
@@ -331,28 +331,138 @@ TEST_CASE("Test clang-tidy could correctly check basic error error",
   repo.commit_clang_tidy();
 
   SECTION("Insert error lines shouldn't pass clang-tidy check") {
+    repo.add_file("file.cpp", "int n = 0;\n");
+    auto target_id = repo.commit_changes();
+
+    repo.rewrite_file("file.cpp", "int n = 0;\nint m = 2;");
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("Insert correct lines should pass clang-tidy check") {
+    repo.add_file("file.cpp", "const int n = 0;\n");
+    auto target_id = repo.commit_changes();
+
+    repo.rewrite_file("file.cpp", "const int n = 0;\nconst int m = 1;\n");
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 
   SECTION("Delete all error lines will pass clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "const int m = 0;\n";
+    old_content      += "int p;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "const int m = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 
   SECTION("Delete only part of error lines shouldn't pass clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "int m;\n";
+    old_content      += "int p;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "int m;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
 
   SECTION("Rewrite error lines to error lines shouldn't pass "
           "clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "int m;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "int p;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
   SECTION("Rewrite error lines to correct lines should pass "
           "clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "int m;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "const int m = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
   SECTION("Rewrite correct lines to error lines shouldn't pass "
           "clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "const int m = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "int m;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, false, 0, 1, 0);
   }
   SECTION("Rewrite correct lines to correct lines should pass "
           "clang-tidy check") {
+    auto old_content  = std::string{};
+    old_content      += "const int n = 0;\n";
+    old_content      += "const int m = 0;\n";
+    repo.add_file("file.cpp", old_content);
+    auto target_id = repo.commit_changes();
+
+    auto new_content  = std::string{};
+    new_content      += "const int n = 0;\n";
+    new_content      += "const int p = 0;\n";
+    repo.rewrite_file("file.cpp", new_content);
+    auto source_id = repo.commit_changes();
+
+    auto context = create_runtime_context(target_id, source_id);
+    clang_tidy.check(context);
+    check_result(clang_tidy, true, 1, 0, 0);
   }
 }
 
