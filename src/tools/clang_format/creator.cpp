@@ -33,8 +33,8 @@ namespace lint::tool::clang_format {
 
   } // namespace
 
-  // example:
-  // Ubuntu clang-format version 18.1.3 (1ubuntu1)
+  // Get version from clang-format output.
+  // Example: Ubuntu clang-format version 18.1.3 (1ubuntu1)
   auto get_version(const std::string &binary) -> std::string {
     auto [ec, std_out, std_err] = shell::execute(binary, {"--version"});
     if (ec != 0) {
@@ -58,7 +58,7 @@ namespace lint::tool::clang_format {
       option.file_filter_iregex);
 
     auto boolean = [](bool def) {
-      return value<bool>()->value_name("boolean")->default_value(def);
+      return value<bool>()->value_name("bool")->default_value(def);
     };
 
     // clang-format off
@@ -73,7 +73,7 @@ namespace lint::tool::clang_format {
                                            "exist in your $PATH")
     (binary,              bin,             "Set the full path of clang-format executable binary. "
                                            "Don't spefify both this option and the clang-format-version "
-                                           "option, to avoid ambigous")
+                                           "option to avoid ambigous")
     (file_iregex,         iregex,          "Set the source file filter for clang-format.")
   ;
     // clang-format on

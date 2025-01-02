@@ -23,29 +23,78 @@
 #include "tools/util.h"
 
 namespace lint::tool::clang_tidy {
+  namespace {
+    constexpr auto enable_clang_tidy               = "enable-clang-tidy";
+    constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
+    constexpr auto clang_tidy_version              = "clang-tidy-version";
+    constexpr auto clang_tidy_binary               = "clang-tidy-binary";
+    constexpr auto clang_tidy_allow_no_checks      = "clang-tidy-allow-no-checks";
+    constexpr auto clang_tidy_enable_check_profile = "clang-tidy-enable-check-profile";
+    constexpr auto clang_tidy_checks               = "clang-tidy-checks";
+    constexpr auto clang_tidy_config               = "clang-tidy-config";
+    constexpr auto clang_tidy_config_file          = "clang-tidy-config-file";
+    constexpr auto clang_tidy_database             = "clang-tidy-database";
+    constexpr auto clang_tidy_header_filter        = "clang-tidy-header-filter";
+    constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
+    constexpr auto clang_tidy_file_iregex          = "clang-tidy-file-iregex";
+  } // namespace
+
+  // Get version from clang-tidy output.
+  // Example: Ubuntu LLVM version 18.1.3
+  auto get_version(const std::string &binary) -> std::string {
+    auto [ec, std_out, std_err] = shell::execute(binary, {"--version"});
+    if (ec != 0) {
+      return "";
+    }
+    constexpr auto version_regex = R"(version\ (\d+\.\d+\.\d+))";
+    auto regex                   = boost::regex{version_regex};
+    auto match                   = boost::smatch{};
+    auto matched                 = boost::regex_search(std_out, match, regex, boost::match_extra);
+    throw_unless(matched, "Can't get clang-tidy version");
+    return match[1].str();
+  }
+
   void creator::register_option(program_options::options_description &desc) const {
-    using namespace program_options; // NOLINT
-    using std::string;
+    using program_options::value;
+
+    const auto *ver    = value<std::string>()->value_name("version");
+    const auto *bin    = value<std::string>()->value_name("path");
+    const auto *iregex = value<std::string>()->value_name("iregex")->default_value(
+      option.file_filter_iregex);
+    const auto *database = value<std::string>()->value_name("path")->default_value("build");
+
+    auto boolean = [](bool def) {
+      return value<bool>()->value_name("bool")->default_value(def);
+    };
+
+    auto str = []() {
+      return value<std::string>()->value_name("string")->default_value("");
+    };
+
 
     // clang-format off
-  desc.add_options()
-    (enable_clang_tidy,                value<bool>(),      "Enabel clang-tidy check")
-    (enable_clang_tidy_fastly_exit,    value<bool>(),      "Enabel clang-tidy fastly exit. "
-                                                           "This means CppLintAction will stop all clang-tidy "
-                                                           "checks as soon as first file error occurs")
-    (clang_tidy_version,               value<string>(),    "Set The version of clang-tidy")
-    (clang_tidy_binary,                value<string>(),    "Set the full path of clang-tidy executable binary. "
-                                                           "You are't allowed to specify both this option and "
-                                                           "clang-format-version to avoid ambiguous")
-    (clang_tidy_allow_no_checks,       value<bool>(),      "Enabel clang-tidy allow_no_check option")
-    (clang_tidy_enable_check_profile,  value<bool>(),      "Enabel clang-tidy enable_check_profile option")
-    (clang_tidy_checks,                value<string>(),    "Same as clang-tidy checks option")
-    (clang_tidy_config,                value<string>(),    "Same as clang-tidy config option")
-    (clang_tidy_config_file,           value<string>(),    "Same as clang-tidy config_file option")
-    (clang_tidy_database,              value<string>(),    "Same as clang-tidy -p option")
-    (clang_tidy_header_filter,         value<string>(),    "Same as clang-tidy header_filter option")
-    (clang_tidy_line_filter,           value<string>(),    "Same as clang-tidy line_filter option")
-  ;
+    desc.add_options()
+      (enable_clang_tidy,                boolean(true),   "Enabel clang-tidy check")
+      (enable_clang_tidy_fastly_exit,    boolean(false),  "Enabel clang-tidy fastly exit. This means "
+                                                          "CppLintAction will stop all clang-tidy as soon "
+                                                          "as first file error occurs")
+      (clang_tidy_version,               ver,             "Set the version of clang-tidy. Don't specify "
+                                                          "both this option and the clang-tidy-binary option, "
+                                                          "to avoid ambigous. And the clang-tidy-${version} must "
+                                                          "exist in your $PATH")
+      (clang_tidy_binary,                bin,             "Set the full path of clang-format executable binary. "
+                                                          "Don't spefify both this option and the clang-format-version "
+                                                          "option to avoid ambigous")
+      (clang_tidy_file_iregex,           iregex,          "Set the source file filter for clang-format.")
+      (clang_tidy_allow_no_checks,       boolean(false),  "Enabel clang-tidy allow_no_check option")
+      (clang_tidy_enable_check_profile,  boolean(false),  "Enabel clang-tidy enable_check_profile option")
+      (clang_tidy_database,              database,        "Same as clang-tidy -p option")
+      (clang_tidy_checks,                str(),           "Same as clang-tidy checks option")
+      (clang_tidy_config,                str(),           "Same as clang-tidy config option")
+      (clang_tidy_config_file,           str(),           "Same as clang-tidy config-file option")
+      (clang_tidy_header_filter,         str(),           "Same as clang-tidy header-filter option")
+      (clang_tidy_line_filter,           str(),           "Same as clang-tidy line-filter option")
+    ;
     // clang-format on
   }
 
@@ -104,8 +153,8 @@ namespace lint::tool::clang_tidy {
     if (variables.contains(clang_tidy_line_filter)) {
       option.line_filter = variables[clang_tidy_line_filter].as<std::string>();
     }
-    if (variables.contains(clang_tidy_iregex)) {
-      option.file_filter_iregex = variables[clang_tidy_iregex].as<std::string>();
+    if (variables.contains(clang_tidy_file_iregex)) {
+      option.file_filter_iregex = variables[clang_tidy_file_iregex].as<std::string>();
     }
   }
 

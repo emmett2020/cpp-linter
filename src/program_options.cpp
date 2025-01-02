@@ -46,7 +46,7 @@ namespace lint::program_options {
     const auto *revision = value<string>()->value_name("revision");
 
     auto boolean = [](bool def) {
-      return value<bool>()->value_name("boolean")->default_value(def);
+      return value<bool>()->value_name("bool")->default_value(def);
     };
 
     // clang-format off
@@ -55,8 +55,8 @@ namespace lint::program_options {
       (version,                                      "Display current cpp-lint-action version")
       (log_level,                   level,           "Set the log verbose level of cpp-lint-action. "
                                                      "Supports: [trace, debug, info, error]")
-      (target,                      revision,        "Set the target revision of git repository "
-                                                     "which is usually the branch name you want to merged into")
+      (target,                      revision,        "Set the target revision of git repository. "
+                                                     "It usually is the branch name you want to be merged into")
       (enable_comment_on_issue,     boolean(true),   "Whether enable comment on Github issues")
       (enable_pull_request_review,  boolean(false),  "Whether enable Github pull-request reivew comment")
       (enable_step_summary,         boolean(true),   "Whether enable write step summary to Github action")

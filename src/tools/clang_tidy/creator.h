@@ -23,33 +23,27 @@
 
 namespace lint::tool::clang_tidy {
 
-  constexpr auto enable_clang_tidy               = "enable-clang-tidy";
-  constexpr auto enable_clang_tidy_fastly_exit   = "enable-clang-tidy-fastly-exit";
-  constexpr auto clang_tidy_version              = "clang-tidy-version";
-  constexpr auto clang_tidy_binary               = "clang-tidy-binary";
-  constexpr auto clang_tidy_allow_no_checks      = "clang-tidy-allow-no-checks";
-  constexpr auto clang_tidy_enable_check_profile = "clang-tidy-enable-check-profile";
-  constexpr auto clang_tidy_checks               = "clang-tidy-checks";
-  constexpr auto clang_tidy_config               = "clang-tidy-config";
-  constexpr auto clang_tidy_config_file          = "clang-tidy-config-file";
-  constexpr auto clang_tidy_database             = "clang-tidy-database";
-  constexpr auto clang_tidy_header_filter        = "clang-tidy-header-filter";
-  constexpr auto clang_tidy_line_filter          = "clang-tidy-line-filter";
-  constexpr auto clang_tidy_iregex               = "clang-tidy-iregex";
-
   struct creator : public creator_base {
+    /// Register clang-tidy needed options to program options description.
     void register_option(program_options::options_description &desc) const override;
 
+    /// Create clang-tidy option struct by user input program options.
     void create_option(const program_options::variables_map &variables);
 
+    /// Create clang-tidy tool instance.
     auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
+    /// Return whether enables clang-tidy. Clang-tidy is enabled on default
+    /// and could be disabled by user.
     bool enabled() override;
-
 
     [[nodiscard]] auto get_option() const -> const option_t &;
 
+  private:
     option_t option;
   };
 
+  /// Get clang-format version based on clang-format output
+  auto get_version(const std::string &binary) -> std::string;
 } // namespace lint::tool::clang_tidy
+
