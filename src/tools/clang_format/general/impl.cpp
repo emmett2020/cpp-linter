@@ -128,11 +128,6 @@ namespace lint::tool::clang_format {
       return replacements;
     }
 
-    enum class output_style_t : std::uint8_t {
-      formatted_source_code,
-      replacement_xml
-    };
-
     auto make_replacements_options(std::string_view file) -> std::vector<std::string> {
       spdlog::trace("Enter clang_format::make_replacements_options()");
       auto tool_opt = std::vector<std::string>{};
@@ -141,23 +136,10 @@ namespace lint::tool::clang_format {
       return tool_opt;
     }
 
-    auto make_source_code_options(std::string_view file) -> std::vector<std::string> {
-      spdlog::trace("Enter clang_format::make_source_code_options()");
-      auto tool_opt = std::vector<std::string>{};
-      tool_opt.emplace_back(file);
-      return tool_opt;
-    }
-
-    // TODO: remove formatted source code
-    auto execute(const option_t &opt,
-                 output_style_t output_style,
-                 std::string_view repo,
-                 std::string_view file) -> shell::result {
+    auto execute(const option_t &opt, std::string_view repo, std::string_view file)
+      -> shell::result {
       spdlog::trace("Enter clang_format_general::execute()");
-
-      auto tool_opt     = output_style == output_style_t::formatted_source_code
-                          ? make_source_code_options(file)
-                          : make_replacements_options(file);
+      auto tool_opt     = make_replacements_options(file);
       auto tool_opt_str = concat(tool_opt);
       spdlog::info("Running command: {} {}", opt.binary, tool_opt_str);
 
@@ -172,7 +154,7 @@ namespace lint::tool::clang_format {
     const std::string &file) const -> per_file_result {
     spdlog::trace("Enter clang_format_general::check_single_file()");
 
-    auto xml_res       = execute(option, output_style_t::replacement_xml, root_dir, file);
+    auto xml_res       = execute(option, root_dir, file);
     auto result        = per_file_result{};
     result.file_path   = file;
     result.tool_stdout = xml_res.std_out;
