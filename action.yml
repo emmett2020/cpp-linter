@@ -129,6 +129,9 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
+        echo ${GITHUB_ACTION_REF}
+        version=${action_ref##*@}
+        echo "VERSION: ${version}"
         ls -lrth
         release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
         echo "Current path: `pwd`, current version: ${release_version}"
