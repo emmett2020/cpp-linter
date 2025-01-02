@@ -58,5 +58,5 @@ jobs:
 
       - name: Run Unittests
         run: |
-          ./build/tests/test_git;
+          ./build/tests/test;
 
