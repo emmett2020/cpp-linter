@@ -1,12 +1,16 @@
 # 1.0.0
-1. Refine code:
-  1.1 finish clang-tidy tests
-  1.2 Integrate into Github action
-  1.3 Refine reporter messages on Github
-  1.4 refine log
-  1.5 Add readme
-  1.6 Rebase current source code
-  1.7 Add Github action document and release it as 1.0.0
+1. Research on state of art products.
+2. Refine code:
+   2.1 finish clang-tidy/clang-format tests
+   2.2 Add other test cases
+   2.3 Add code coverage to CI.
+   2.4 Integrate into Github action
+   2.5 Refine reporter messages on Github
+   2.6 refine log
+   2.7 Add readme
+   2.8 Rebase current source code
+   2.9 Add Github action document and release it as 1.0.0
+3. Release it on zhihu / reddit
 
 # 1.1.0
 ## New Features
