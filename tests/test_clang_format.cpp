@@ -493,8 +493,8 @@ TEST_CASE("Test reporter", "[CppLintAction][tool][clang_format][general_version]
   SECTION("Test make issue comment") {
     auto res       = reporter.make_issue_comment(context);
     auto expected  = std::string{};
-    expected      += "- file1.cpp";
-    expected      += "- file2.cpp";
+    expected      += "- file1.cpp\n";
+    expected      += "- file2.cpp\n";
     REQUIRE(res == expected);
   }
 }
