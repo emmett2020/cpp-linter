@@ -41,12 +41,12 @@ namespace lint::tool {
         if (failed_commands.empty()) {
           continue;
         }
-        content += std::format("# {}. Reproduce {}\n", index++, reporter->tool_name());
+        content += std::format("\n# {}. Reproduce {}\n", index++, reporter->tool_name());
         for (const auto &command: reporter->get_failed_commands()) {
           content += command + "\n";
         }
       }
-      return content + "```";
+      return content + "\n```";
     }
   } // namespace
 
@@ -121,7 +121,7 @@ namespace lint::tool {
 
     {
       static const auto usage_summary =
-        "<summary> :boom: Steps to <strong>reproduce</strong> this result in your local environment</summary>"s;
+        "<summary> :mag_right: Steps to <strong>reproduce</strong> this result in your local environment</summary>\n\n"s;
       details += fmt::format(details_fmt, usage_summary + make_reproduce_spec(reporters));
     }
 
