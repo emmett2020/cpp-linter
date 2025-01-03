@@ -51,7 +51,7 @@ namespace lint::tool {
   bool all_passed(const std::vector<reporter_base_ptr> &reporters) {
     for (const auto &reporter: reporters) {
       auto [is_passed, successed, failed, ignored] = reporter->get_brief_result();
-      if (is_passed) {
+      if (!is_passed) {
         return false;
       }
     }
