@@ -132,6 +132,9 @@ runs:
         echo ${GITHUB_ACTION_REF}
         version=${action_ref##*@}
         echo "VERSION: ${version}"
+        echo "action path: ${GITHUB_ACTION_PATH}"
+        ls -lrth "${GITHUB_ACTION_PATH}"
+        echo "above is action path"
         ls -lrth
         release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
         echo "Current path: `pwd`, current version: ${release_version}"
