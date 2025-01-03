@@ -58,7 +58,7 @@ namespace lint {
     spdlog::debug("repository pull-request number: {}", ctx.pr_number);
     spdlog::debug("repository target commit: {}", git::commit::id_str(*ctx.target_commit));
     spdlog::debug("repository source commit: {}", git::commit::id_str(*ctx.source_commit));
-    spdlog::debug("changed files:");
+    spdlog::debug("{} changed files:", ctx.changed_files.size());
     for (const auto &file: ctx.changed_files) {
       spdlog::debug("{}", file);
     }

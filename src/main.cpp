@@ -88,6 +88,22 @@ namespace {
     }
   }
 
+  void print_brief_result(const std::vector<tool::reporter_base_ptr> &reporters,
+                          std::size_t total_files) {
+    for (const auto &reporter: reporters) {
+      auto [is_passed, passed, failed, ignored] = reporter->get_brief_result();
+      auto tool                                 = reporter->tool_name();
+      spdlog::info(
+        "The result of {}:\ttotal files: {}\tpassed files: {}\tfailed files: {}\tignored files: {}",
+        tool,
+        total_files,
+        passed,
+        failed,
+        ignored);
+    }
+  }
+
+
 } // namespace
 
 auto main(int argc, char **argv) -> int {
@@ -129,6 +145,8 @@ auto main(int argc, char **argv) -> int {
 
   // Run tools within the given context and get reporters.
   auto reporters = tool::run_tools(tools, context);
+  print_brief_result(reporters, context.changed_files.size());
+
   if (context.enable_action_output) {
     write_to_github_action_output(context, reporters);
   }
