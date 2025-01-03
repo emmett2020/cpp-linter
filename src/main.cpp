@@ -82,8 +82,9 @@ namespace {
       return;
     }
     spdlog::info("Enabled {} tools:", tools.size());
+    constexpr auto line = "{}:\texecutable binary path: {}\tversion:{}";
     for (const auto &tool: tools) {
-      spdlog::info("\t{}", tool->name());
+      spdlog::info(line, tool->name(), tool->binary(), tool->version());
     }
   }
 

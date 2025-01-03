@@ -42,6 +42,10 @@ namespace lint::tool::clang_format {
       return option.version;
     }
 
+    auto binary() -> std::string_view override {
+      return option.binary;
+    }
+
     auto check_single_file(const runtime_context &context,
                            const std::string &root_dir,
                            const std::string &file) const -> per_file_result;

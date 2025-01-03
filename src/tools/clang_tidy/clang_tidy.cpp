@@ -129,7 +129,6 @@ namespace lint::tool::clang_tidy {
     }
 
     option.version = get_version(option.binary);
-    spdlog::info("clang-tidy path: {}, version: {}", option.binary, option.version);
 
     if (variables.contains(file_iregex)) {
       option.file_filter_iregex = variables[file_iregex].as<std::string>();

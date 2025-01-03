@@ -34,6 +34,9 @@ namespace lint::tool {
     /// Return version of this tool.
     virtual auto version() -> std::string_view = 0;
 
+    /// Return binary path of this tool.
+    virtual auto binary() -> std::string_view = 0;
+
     /// Apply this tool to a single file.
     virtual void check(const runtime_context &context) = 0;
 

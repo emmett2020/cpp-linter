@@ -113,7 +113,6 @@ namespace lint::tool::clang_format {
     }
 
     option.version = get_version(option.binary);
-    spdlog::info("clang-format path: {}, version: {}", option.binary, option.version);
   }
 
   auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
