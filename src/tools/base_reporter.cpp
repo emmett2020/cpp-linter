@@ -43,7 +43,7 @@ namespace lint::tool {
         }
         content += std::format("# {}. Reproduce {}\n", index++, reporter->tool_name());
         for (const auto &command: reporter->get_failed_commands()) {
-          content += "command\n";
+          content += command + "\n";
         }
       }
       return content + "```";
