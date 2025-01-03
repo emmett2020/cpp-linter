@@ -119,6 +119,10 @@ namespace lint::tool::clang_tidy {
               result.ignored.size()};
     }
 
+    auto get_failed_commands() -> std::vector<std::string> override {
+      return result.failed_commands;
+    }
+
     auto tool_name() -> std::string override {
       auto parts = ranges::views::split(option.binary, '/')
                  | ranges::to<std::vector<std::string>>();

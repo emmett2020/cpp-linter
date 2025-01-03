@@ -37,6 +37,8 @@ namespace lint::tool {
     // return sequence: is_pass, passed files number, failed files number, ignored files number.
     virtual auto get_brief_result() -> std::tuple<bool, std::size_t, std::size_t, std::size_t> = 0;
 
+    virtual auto get_failed_commands() -> std::vector<std::string> = 0;
+
     // Used for show in result
     virtual auto tool_name() -> std::string = 0;
   };

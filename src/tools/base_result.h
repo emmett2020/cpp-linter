@@ -27,6 +27,7 @@ namespace lint::tool {
     std::string file_path;
     std::string tool_stdout;
     std::string tool_stderr;
+    std::string file_option;
   };
 
   using per_file_result_base_ptr = std::unique_ptr<per_file_result_base>;
@@ -39,6 +40,8 @@ namespace lint::tool {
     std::vector<std::string> ignored;
     std::unordered_map<std::string, PerFileResult> passes;
     std::unordered_map<std::string, PerFileResult> fails;
+
+    std::vector<std::string> failed_commands;
   };
 
 } // namespace lint::tool

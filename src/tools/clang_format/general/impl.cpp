@@ -137,13 +137,13 @@ namespace lint::tool::clang_format {
     }
 
     auto execute(const option_t &opt, std::string_view repo, std::string_view file)
-      -> shell::result {
+      -> std::tuple<shell::result, std::string> {
       spdlog::trace("Enter clang_format_general::execute()");
       auto tool_opt     = make_replacements_options(file);
       auto tool_opt_str = concat(tool_opt, ' ');
       spdlog::info("Running command: {} {}", opt.binary, tool_opt_str);
 
-      return shell::execute(opt.binary, tool_opt, repo);
+      return {shell::execute(opt.binary, tool_opt, repo), tool_opt_str};
     }
 
   } // namespace
@@ -154,11 +154,12 @@ namespace lint::tool::clang_format {
     const std::string &file) const -> per_file_result {
     spdlog::trace("Enter clang_format_general::check_single_file()");
 
-    auto xml_res       = execute(option, root_dir, file);
-    auto result        = per_file_result{};
-    result.file_path   = file;
-    result.tool_stdout = xml_res.std_out;
-    result.tool_stderr = xml_res.std_err;
+    auto [xml_res, file_opt] = execute(option, root_dir, file);
+    auto result              = per_file_result{};
+    result.file_path         = file;
+    result.tool_stdout       = xml_res.std_out;
+    result.tool_stderr       = xml_res.std_err;
+    result.file_option       = file_opt;
     if (xml_res.exit_code != 0) {
       result.passed = false;
       return result;
@@ -196,6 +197,8 @@ namespace lint::tool::clang_format {
 
       spdlog::error("file: {} doesn't pass {} check.", file, option.binary);
       result.fails[file] = std::move(per_file_result);
+      result.failed_commands.emplace_back(
+        std::format("clang-format {}", per_file_result.file_option));
 
       if (option.enabled_fastly_exit) {
         spdlog::info("{} fastly exit since check failed", option.binary);

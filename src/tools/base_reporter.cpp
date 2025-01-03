@@ -30,13 +30,22 @@ namespace lint::tool {
   using namespace std::string_view_literals;
 
   namespace {
-    // TODO: Use original clang-format and clang-tidy tools.
-    auto make_usage_specification() -> std::string {
+    auto make_reproduce_spec(const std::vector<reporter_base_ptr> &reporters) -> std::string {
       auto content  = "<code>"s;
-      content      += "# 1. download cpp-lint-action\n";
-      content      += "TODO\n";
-      content      += "# 2. validate\n";
-      content      += "TODO\n";
+      content      += "# 1. Enter your local repository\n";
+      content      += "cd /path/to/your/repository\n";
+
+      auto index = std::size_t{2};
+      for (const auto &reporter: reporters) {
+        auto failed_commands = reporter->get_failed_commands();
+        if (failed_commands.empty()) {
+          continue;
+        }
+        content += std::format("# {}. Reproduce {}\n", index++, reporter->tool_name());
+        for (const auto &command: reporter->get_failed_commands()) {
+          content += "command\n";
+        }
+      }
       return content + "</code>";
     }
   } // namespace
@@ -113,7 +122,7 @@ namespace lint::tool {
     {
       static const auto usage_summary =
         "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
-      details += fmt::format(details_fmt, usage_summary + make_usage_specification());
+      details += fmt::format(details_fmt, usage_summary + make_reproduce_spec(reporters));
     }
 
     auto final_content =
