@@ -162,9 +162,12 @@ namespace lint::tool::clang_tidy {
 
   auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
     create_option(variables);
-    auto version = option.version;
+    if (!option.enabled) {
+      return nullptr;
+    }
 
-    auto tool = tool_base_ptr{};
+    auto version = option.version;
+    auto tool    = tool_base_ptr{};
     if (version == version_18_1_3) {
       tool = std::make_unique<clang_tidy_v18_1_3>(option);
     } else if (version == version_18_1_0) {
@@ -180,10 +183,6 @@ namespace lint::tool::clang_tidy {
                              "supported on this platform",
                              version));
     return tool;
-  }
-
-  bool creator::enabled() {
-    return option.enabled;
   }
 
   [[nodiscard]] auto creator::get_option() const -> const option_t & {

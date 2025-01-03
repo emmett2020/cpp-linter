@@ -110,19 +110,19 @@ TEST_CASE("Test register and create clang-tidy option",
   SECTION("Explicitly enables clang-tidy should work") {
     auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-tidy=true");
     creator->create_option(opts);
-    REQUIRE(creator->enabled());
+    REQUIRE(creator->get_option().enabled);
   }
 
   SECTION("Explicitly disable clang-tidy should work") {
     auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-tidy=false");
     creator->create_option(opts);
-    REQUIRE(creator->enabled() == false);
+    REQUIRE(creator->get_option().enabled == false);
   }
 
   SECTION("clang-tidy is defaultly enabled") {
     auto opts = parse_opt(desc, "--target-revision=main");
     creator->create_option(opts);
-    REQUIRE(creator->enabled() == true);
+    REQUIRE(creator->get_option().enabled);
   }
 
   SECTION("Receive an invalid clang-tidy version should throw exception") {

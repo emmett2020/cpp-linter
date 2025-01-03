@@ -30,9 +30,6 @@ namespace lint::tool {
 
     /// Create tool instance.
     virtual auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr = 0;
-
-    /// Whether enabled underlying tool.
-    virtual bool enabled() = 0;
   };
 
   using creator_base_ptr = std::unique_ptr<creator_base>;
@@ -51,8 +48,9 @@ namespace lint::tool {
                        program_options::variables_map &variables) -> std::vector<tool_base_ptr> {
     auto res = std::vector<tool_base_ptr>{};
     for (const auto &creator: creators) {
-      if (creator->enabled()) {
-        res.emplace_back(creator->create_tool(variables));
+      auto tool = creator->create_tool(variables);
+      if (tool) {
+        res.emplace_back(std::move(tool));
       }
     }
     return res;

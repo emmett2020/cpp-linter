@@ -33,10 +33,6 @@ namespace lint::tool::clang_tidy {
     /// Create clang-tidy tool instance.
     auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
-    /// Return whether enables clang-tidy. Clang-tidy is enabled on default
-    /// and could be disabled by user.
-    bool enabled() override;
-
     [[nodiscard]] auto get_option() const -> const option_t &;
 
   private:

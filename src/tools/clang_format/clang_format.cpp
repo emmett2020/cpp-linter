@@ -118,6 +118,9 @@ namespace lint::tool::clang_format {
 
   auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
     create_option(variables);
+    if (!option.enabled) {
+      return nullptr;
+    }
 
     auto version = option.version;
     auto tool    = tool_base_ptr{};
@@ -138,10 +141,6 @@ namespace lint::tool::clang_format {
                              version));
 
     return tool;
-  }
-
-  bool creator::enabled() {
-    return option.enabled;
   }
 
   [[nodiscard]] auto creator::get_option() const -> const option_t & {

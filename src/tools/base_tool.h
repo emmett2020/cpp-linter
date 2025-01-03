@@ -17,6 +17,7 @@
 
 #include "context.h"
 #include "tools/base_reporter.h"
+#include "utils/platform.h"
 
 namespace lint::tool {
   /// This is a base class represents lint tools. All specified tools should be

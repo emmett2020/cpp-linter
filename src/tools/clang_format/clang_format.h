@@ -35,10 +35,6 @@ namespace lint::tool::clang_format {
     /// Create clang-format tool instance.
     auto create_tool(const program_options::variables_map &variables) -> tool_base_ptr override;
 
-    /// Return whether enables clang-format. Clang-format is enabled on default
-    /// and could be disabled by user.
-    bool enabled() override;
-
     [[nodiscard]] auto get_option() const -> const option_t &;
 
   private:

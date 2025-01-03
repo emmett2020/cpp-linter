@@ -39,10 +39,11 @@ namespace lint::program_options {
   using std::string;
 
   auto create_desc() -> options_description {
+    spdlog::trace("Enter create_desc");
     auto desc = options_description{"cpp-lint-action options"};
 
     const auto *level    = value<string>()->value_name("level")->default_value("info");
-    const auto *revision = value<string>()->value_name("revision");
+    const auto *revision = value<string>()->value_name("revision")->required();
 
     auto boolean = [](bool def) {
       return value<bool>()->value_name("bool")->default_value(def);
@@ -67,6 +68,7 @@ namespace lint::program_options {
   }
 
   auto parse(int argc, char **argv, const options_description &desc) -> variables_map {
+    spdlog::trace("Enter parse");
     auto variables = variables_map{};
     store(parse_command_line(argc, argv, desc), variables);
     notify(variables);

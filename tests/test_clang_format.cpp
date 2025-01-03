@@ -110,19 +110,19 @@ TEST_CASE("Test register and create clang-format option",
   SECTION("Explicitly enables clang-format should work") {
     auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=true");
     creator->create_option(opts);
-    REQUIRE(creator->enabled());
+    REQUIRE(creator->get_option().enabled);
   }
 
   SECTION("Explicitly disable clang-format should work") {
     auto opts = parse_opt(desc, "--target-revision=main", "--enable-clang-format=false");
     creator->create_option(opts);
-    REQUIRE(creator->enabled() == false);
+    REQUIRE(creator->get_option().enabled == false);
   }
 
   SECTION("clang-format is defaultly enabled") {
     auto opts = parse_opt(desc, "--target-revision=main");
     creator->create_option(opts);
-    REQUIRE(creator->enabled() == true);
+    REQUIRE(creator->get_option().enabled);
   }
 
   SECTION("Receive an invalid clang-format version should throw exception") {

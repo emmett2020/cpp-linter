@@ -43,23 +43,25 @@ namespace lint {
   }
 
   void print_context(const runtime_context &ctx) {
-    spdlog::info("Runtime Context:");
-    spdlog::info("--------------------------------------------------");
-    spdlog::info("\tenable step summary: {}", ctx.enable_step_summary);
-    spdlog::info("\tenable update issue comment: {}", ctx.enable_comment_on_issue);
-    spdlog::info("\tenable pull request review: {}", ctx.enable_pull_request_review);
-    spdlog::info("\tenable action outptu: {}", ctx.enable_action_output);
-    spdlog::info("\trepository path: {}", ctx.repo_path);
-    spdlog::info("\trepository: {}", ctx.repo_pair);
-    spdlog::info("\trepository token: {}", ctx.token.empty() ? "" : "***");
-    spdlog::info("\trepository event_name: {}", ctx.event_name);
-    spdlog::info("\trepository target: {}", ctx.target);
-    spdlog::info("\trepository source: {}", ctx.source);
-    spdlog::info("\trepository pull-request number: {}", ctx.pr_number);
-    spdlog::info("\tchanged files:");
+    spdlog::debug("Runtime Context:");
+    spdlog::debug("--------------------------------------------------");
+    spdlog::debug("\tenable step summary: {}", ctx.enable_step_summary);
+    spdlog::debug("\tenable comment on issue: {}", ctx.enable_comment_on_issue);
+    spdlog::debug("\tenable pull request review: {}", ctx.enable_pull_request_review);
+    spdlog::debug("\tenable action output: {}", ctx.enable_action_output);
+    spdlog::debug("\trepository path: {}", ctx.repo_path);
+    spdlog::debug("\trepository: {}", ctx.repo_pair);
+    spdlog::debug("\trepository token: {}", ctx.token.empty() ? "" : "***");
+    spdlog::debug("\trepository event_name: {}", ctx.event_name);
+    spdlog::debug("\trepository target: {}", ctx.target);
+    spdlog::debug("\trepository source: {}", ctx.source);
+    spdlog::debug("\trepository pull-request number: {}", ctx.pr_number);
+    spdlog::debug("\trepository target commit: {}", git::commit::id_str(*ctx.target_commit));
+    spdlog::debug("\trepository source commit: {}", git::commit::id_str(*ctx.source_commit));
+    spdlog::debug("\tchanged files:");
     for (const auto &file: ctx.changed_files) {
-      spdlog::info("\t\t{}", file);
+      spdlog::debug("\t\t{}", file);
     }
-    spdlog::info("");
+    spdlog::debug("");
   }
 } // namespace lint

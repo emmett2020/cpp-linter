@@ -21,7 +21,6 @@
 #include <unordered_map>
 
 #include "utils/git_utils.h"
-#include "utils/platform.h"
 
 namespace lint {
   /// The runtime context for all tools.

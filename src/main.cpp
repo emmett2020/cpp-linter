@@ -52,10 +52,6 @@ namespace {
     set_log_level(log_level);
   }
 
-  auto print_changed_files(const std::vector<std::string> &files) {
-    spdlog::info("Got {} changed files. File list:\n{}", files.size(), concat(files));
-  }
-
   void print_version() {
     fmt::print("{}.{}.{}",
                CPP_LINT_ACTION_VERSION_MAJOR,
@@ -64,6 +60,7 @@ namespace {
   }
 
   auto collect_tool_creators() -> std::vector<tool::creator_base_ptr> {
+    spdlog::trace("Enter collect_tool_creators");
     auto ret = std::vector<tool::creator_base_ptr>{};
     ret.push_back(std::make_unique<tool::clang_format::creator>());
     ret.push_back(std::make_unique<tool::clang_tidy::creator>());
@@ -71,11 +68,23 @@ namespace {
   }
 
   void check_repo_is_on_source(const runtime_context &ctx) {
+    spdlog::trace("Enter check_repo_is_on_source");
     auto head = git::repo::head_commit(*ctx.repo);
     throw_unless(head == ctx.source_commit,
                  fmt::format("Head of repository isn't equal to source commit: {} != {}",
                              git::commit::id_str(*head),
                              git::commit::id_str(*ctx.source_commit)));
+  }
+
+  void print_tools_info(const std::vector<tool::tool_base_ptr> &tools) {
+    if (tools.empty()) {
+      spdlog::error("Zero tools are enabled. Does this's an expected behavior?");
+      return;
+    }
+    spdlog::info("Enabled {} tools:", tools.size());
+    for (const auto &tool: tools) {
+      spdlog::info("\t{}", tool->name());
+    }
   }
 
 } // namespace
@@ -97,6 +106,7 @@ auto main(int argc, char **argv) -> int {
   }
   set_log(user_options);
   auto tools = tool::create_enabled_tools(tool_creators, user_options);
+  print_tools_info(tools);
 
   // Create runtime context.
   auto context = runtime_context{};
