@@ -44,6 +44,7 @@ bash "${X64_DIR}/utils/filter_files.sh"         \
                  "*http_parser*"                \
                  "*boost*"                      \
                  "*git2*"                       \
+                 "*ssl*"
 
 
 echo "2. Start to set rpath for: ${BINARY_NAME}"
