@@ -41,5 +41,3 @@ echo "Successfully install ${BINARY_NAME}"
 echo "Binaries install path: ${BIN_INSTALL_PATH}"
 echo "Libraries install path: ${LIB_INSTALL_PATH}."
 
-
-

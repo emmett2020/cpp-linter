@@ -29,5 +29,3 @@ if [[ -d "${BIN_INSTALL_PATH}" ]]; then
 fi
 echo "Successfully uninstall ${BINARY_NAME}"
 
-
-
