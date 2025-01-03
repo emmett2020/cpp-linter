@@ -13,7 +13,7 @@
 Introduction of this script:
 Given at least two parameters. The first parameter is treated as directory path
 and the others are treated as file pattern. This script will delete all files
-except the ones matching one of given pattern.
+in given directory except the ones that matching one of given pattern.
 COMMENT
 
 # Function to filter and delete shared libraries not in the provided list
