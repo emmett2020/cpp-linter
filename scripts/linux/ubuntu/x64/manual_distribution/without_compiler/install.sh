@@ -19,8 +19,6 @@ set -euo pipefail
 
 CUR_SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
-# This file needs sudo permission.
-# Install interpreter into desired directory.
 BINARY_NAME="cpp-lint-action"
 LIB_INSTALL_PATH="$HOME/.local/lib/${BINARY_NAME}"
 BIN_INSTALL_PATH="$HOME/.local/bin/"
@@ -40,7 +38,7 @@ mkdir -p ${BIN_INSTALL_PATH}
 mv ${CUR_SCRIPT_DIR}/lib/${BINARY_NAME}/* ${LIB_INSTALL_PATH}
 mv ${CUR_SCRIPT_DIR}/bin/*                ${BIN_INSTALL_PATH}
 
-echo "Successfully install ${BINARY_NAME}"
-echo "Binaries install path: ${BIN_INSTALL_PATH}"
+echo "Successfully installed  ${BINARY_NAME}"
+echo "Binaries install path:  ${BIN_INSTALL_PATH}"
 echo "Libraries install path: ${LIB_INSTALL_PATH}."
 

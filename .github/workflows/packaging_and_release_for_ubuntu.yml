@@ -70,10 +70,11 @@ jobs:
       - name: Install Packaging Dependencies
         run: |
           bash scripts/linux/ubuntu/install_lddtree.sh
+          bash scripts/linux/ubuntu/install_patchelf.sh
 
       - name: Package
         run: |
-          bash scripts/linux/ubuntu/x64/manual_distribution/without_compiler/package.sh
+          bash scripts/linux/ubuntu/x64/manual_distribution/with_compiler/package.sh
 
       - name: Rename Distributions
         shell: bash
