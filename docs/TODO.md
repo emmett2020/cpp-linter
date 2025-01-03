@@ -6,7 +6,7 @@
    2.3 Add code coverage to CI.
    2.4 Integrate into Github action
    2.5 Refine reporter messages on Github
-   2.6 refine log
+   2.6 refine log [done]
    2.7 Add readme
    2.8 Rebase current source code
    2.9 Add Github action document and release it as 1.0.0
