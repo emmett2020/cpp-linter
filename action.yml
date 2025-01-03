@@ -97,6 +97,7 @@ inputs:
   clang-tidy-allow-no-checks:
     description: Enabel clang-tidy allow_no_check option
     type: boolean
+    default: false
   clang-tidy-enable-check-profile:
     description: Enabel clang-tidy enable_check_profile option
     type: boolean
@@ -150,7 +151,46 @@ runs:
           echo "The git repo details:"
           ls -lrthaR .git
         fi
-        /usr/local/bin/cpp-lint-action                                                      \
+
+        options=" "
+        if [ -n "${{ inputs.clang-format-version }}" ]; then
+          options="${options} ${{ inputs.clang-format-version }}"
+        fi
+        if [ -n "${{ inputs.clang-format-binary }}" ]; then
+          options="${options} ${{ inputs.clang-format-binary }}"
+        fi
+        if [ -n "${{ inputs.clang-format-file-iregex }}" ]; then
+          options="${options} ${{ inputs.clang-format-file-iregex }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-version }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-version }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-binary }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-binary }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-file-iregex }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-file-iregex }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-database }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-database }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-checks }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-checks }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-config }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-config }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-config-file }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-config-file }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-header-filter }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-header-filter }}"
+        fi
+        if [ -n "${{ inputs.clang-tidy-line-filter }}" ]; then
+          options="${options} ${{ inputs.clang-tidy-line-filter }}"
+        fi
+
+        /usr/local/bin/cpp-lint-action                                                        \
            --log-level="${{ inputs.log-level }}"                                              \
            --target-revision="${{ inputs.target-revision }}"                                  \
            --enable-comment-on-issue="${{ inputs.enable-comment-on-issue }}"                  \
@@ -159,21 +199,11 @@ runs:
            --enable-action-output="${{ inputs.enable-action-output }}"                        \
            --enable-clang-format="${{ inputs.enable-clang-format }}"                          \
            --enable-clang-format-fastly-exit="${{ inputs.enable-clang-format-fastly-exit }}"  \
-           --clang-format-version="${{ inputs.clang-format-version }}"                        \
-           --clang-format-binary="${{ inputs.clang-format-binary }}"                          \
-           --clang-format-file-iregex="${{ inputs.clang-format-file-iregex }}"                \
            --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"                              \
-           --clang-tidy-version="${{ inputs.clang-tidy-version }}"                            \
-           --clang-tidy-binary="${{ inputs.clang-tidy-binary }}"                              \
-           --clang-tidy-file-iregex="${{ inputs.clang-tidy-file-iregex }}"                    \
-           --clang-tidy-database="${{ inputs.clang-tidy-database }}"                          \
-           --clang-tidy-allow-no-checks="${{ inputs.clang-tidy-allow-no-checks }}"            \
+           --enable-clang-tidy-fastly-exit="${{ inputs.enable-clang-tidy-fastly-exit }}"      \
            --clang-tidy-enable-check-profile="${{ inputs.clang-tidy-enable-check-profile }}"  \
-           --clang-tidy-checks="${{ inputs.clang-tidy-checks }}"                              \
-           --clang-tidy-config="${{ inputs.clang-tidy-config }}"                              \
-           --clang-tidy-config-file="${{ inputs.clang-tidy-config-file }}"                    \
-           --clang-tidy-header-filter="${{ inputs.clang-tidy-header-filter }}"                \
-           --clang-tidy-line-filter="${{ inputs.clang-tidy-line-filter }}"
+           --clang-tidy-allow-no-checks="${{ inputs.clang-tidy-allow-no-checks }}"            \
+           "${options}"
         exit $?
 
 
