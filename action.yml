@@ -129,18 +129,13 @@ runs:
       if: runner.os == 'Linux'
       shell: bash
       run: |
-        echo ${GITHUB_ACTION_REF}
-        version=${action_ref##*@}
-        echo "VERSION: ${version}"
-        echo "action path: ${GITHUB_ACTION_PATH}"
-        ls -lrth "${GITHUB_ACTION_PATH}"
-        echo "above is action path"
-        ls -lrth
-        release_version=$(cat VERSION | sed '/^$/d' | sed 's/[[:space:]]*$//')
+        version_file = "${GITHUB_ACTION_PATH}/VERSION"
+        release_version=$(cat version_file | sed '/^$/d' | sed 's/[[:space:]]*$//')
         echo "Current path: `pwd`, current version: ${release_version}"
-        # wget -q "https://github.com/emmett2020/cpp-linter/releases/download/v${release_version}/cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" -O cpp-lint-action.tar.gz
-        # tar -xvf cpp-lint-action.tar.gz
-        # cd cpp-lint-action-dist && ls -lrth && ./install.sh
+        wget -q "https://github.com/emmett2020/cpp-lint-action/releases/download/v${release_version}/cpp_lint_action_${release_version}_ubuntu-24.04_${{ runner.arch }}.tar.gz" \
+             -O cpp-lint-action.tar.gz
+        tar -xf cpp-lint-action.tar.gz
+        cd cpp-lint-action-dist && ls -lrth && ./install.sh
 
 
     # - name: Run cpp-lint-action on Linux
