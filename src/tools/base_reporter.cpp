@@ -88,8 +88,8 @@ namespace lint::tool {
     constexpr auto website = "";
     constexpr auto header =
       "# :100: Code Quality Result by [CppLintAction](https://github.com/emmett2020/cpp-lint-action)\n"sv;
-    constexpr auto table_header   = "| Tool Name | Successed | Failed | Ignored |\n"sv;
-    constexpr auto table_sep_line = "|-----------|-----------|--------|---------|\n"sv;
+    constexpr auto table_header   = "| Tool Name | Passed | Failed | Ignored |\n"sv;
+    constexpr auto table_sep_line = "|-----------|--------|--------|---------|\n"sv;
     constexpr auto table_row_fmt  = "| **{}** | {} | {} | {} |\n"sv;
     constexpr auto summary_fmt =
       "<summary>:mag_right: Click here to see the details of <strong>{}</strong> failed {} reported by <strong>{}</strong></summary>\n\n"sv;
