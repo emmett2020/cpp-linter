@@ -44,7 +44,7 @@ jobs:
           echo "Set compiler: CXX: g++-14"
 
           echo "release_version=${release_version}" >> ${GITHUB_OUTPUT}
-          echo "pkg_name=cpp_linter_${release_version}_ubuntu-24.04_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
+          echo "pkg_name=cpp_lint_action_${release_version}_ubuntu-24.04_${{ runner.arch }}" >> ${GITHUB_OUTPUT}
 
       - name: Install Building Dependencies
         run: |
