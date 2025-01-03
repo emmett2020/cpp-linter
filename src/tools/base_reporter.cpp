@@ -102,7 +102,7 @@ namespace lint::tool {
     constexpr auto table_row_fmt  = "| **{}** | {} | {} | {} |\n"sv;
     constexpr auto summary_fmt =
       "<summary>:mag_right: Click here to see the details of <strong>{}</strong> failed {} reported by <strong>{}</strong></summary>\n\n"sv;
-    constexpr auto details_fmt = "<details>{}</details>\n"sv;
+    constexpr auto details_fmt = "<details>\n{}\n</details>\n"sv;
 
     auto table_rows = ""s;
     auto details    = ""s;
@@ -121,7 +121,7 @@ namespace lint::tool {
 
     {
       static const auto usage_summary =
-        "<summary> :boom: Steps to reproduce this result in your local environment</summary>"s;
+        "<summary> :boom: Steps to <strong>reproduce</strong> this result in your local environment</summary>"s;
       details += fmt::format(details_fmt, usage_summary + make_reproduce_spec(reporters));
     }
 
