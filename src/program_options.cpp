@@ -26,7 +26,6 @@
 
 namespace lint::program_options {
   namespace {
-
     constexpr auto help                       = "help";
     constexpr auto version                    = "version";
     constexpr auto log_level                  = "log-level";

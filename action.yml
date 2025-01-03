@@ -46,6 +46,7 @@ inputs:
       CppLintAction will stop clang-format as soon
       as first file error occurs
     type: boolean
+    default: false
   clang-format-version:
     description: |
       Set the version of clang-format. Don't specify
@@ -73,6 +74,7 @@ inputs:
       CppLintAction will stop clang-tidy as soon
       as first file error occurs
     type: boolean
+    default: false
   clang-tidy-version:
     description: |
       Set the version of clang-tidy. Don't specify
@@ -98,6 +100,7 @@ inputs:
   clang-tidy-enable-check-profile:
     description: Enabel clang-tidy enable_check_profile option
     type: boolean
+    default: false
   clang-tidy-checks:
     description: Same as clang-tidy checks option
     type: string
