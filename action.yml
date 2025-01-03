@@ -13,7 +13,7 @@ inputs:
       Set the log verbose level of CppLintAction.
       Supports: [trace, debug, info, error]
     default: info
-  target:
+  target-revision:
     description: |
       Set the target revision of git repository. It usually is the branch name
       you want to be merged into
@@ -138,23 +138,39 @@ runs:
         cd cpp-lint-action-dist && ls -lrth && ./install.sh
 
 
-    # - name: Run cpp-lint-action on Linux
-    #   id: on_linux
-    #   if: runner.os == 'Linux'
-    #   shell: bash
-    #   run: |
-    #     if [[ "${{ inputs.log-level }}" == "trace" ]]; then
-    #       echo "The git repo details:"
-    #       ls -lrthaR .git
-    #     fi
-    #     /usr/local/bin/cpp-lint-action --log-level="${{ inputs.log-level }}"                          \
-    #                                    --enable-clang-format="${{ inputs.enable-clang-format }}"      \
-    #                                    --clang-format-version="${{ inputs.clang-format-version }}"    \
-    #                                    --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"          \
-    #                                    --clang-tidy-version="${{ inputs.clang-tidy-version }}"        \
-    #                                    --clang-tidy-database="${{ inputs.clang-tidy-database }}"      \
-    #                                    --target="${{ inputs.target }}"                                \
-    #                                    --enable-pull-request-review=true
-    #     exit $?
+    - name: Run cpp-lint-action on Linux
+      id: on_linux
+      if: runner.os == 'Linux'
+      shell: bash
+      run: |
+        if [[ "${{ inputs.log-level }}" == "trace" ]]; then
+          echo "The git repo details:"
+          ls -lrthaR .git
+        fi
+        $HOME/.local/bin/cpp-lint-action                                                      \
+           --log-level="${{ inputs.log-level }}"                                              \
+           --target-revision="${{ inputs.target-revision }}"                                  \
+           --enable-comment-on-issue="${{ inputs.enable-comment-on-issue }}"                  \
+           --enable-pull-request-review="${{ inputs.enable-pull-request-review }}"            \
+           --enable-step-summary="${{ inputs.enable-step-summary }}"                          \
+           --enable-action-output="${{ inputs.enable-action-output }}"                        \
+           --enable-clang-format="${{ inputs.enable-clang-format }}"                          \
+           --enable-clang-format-fastly-exit="${{ inputs.enable-clang-format-fastly-exit }}"  \
+           --clang-format-version="${{ inputs.clang-format-version }}"                        \
+           --clang-format-binary="${{ inputs.clang-format-binary }}"                          \
+           --clang-format-file-iregex="${{ inputs.clang-format-file-iregex }}"                \
+           --enable-clang-tidy="${{ inputs.enable-clang-tidy }}"                              \
+           --clang-tidy-version="${{ inputs.clang-tidy-version }}"                            \
+           --clang-tidy-binary="${{ inputs.clang-tidy-binary }}"                              \
+           --clang-tidy-file-iregex="${{ inputs.clang-tidy-file-iregex }}"                    \
+           --clang-tidy-database="${{ inputs.clang-tidy-database }}"                          \
+           --clang-tidy-allow-no-checks="${{ inputs.clang-tidy-allow-no-checks }}"            \
+           --clang-tidy-enable-check-profile="${{ inputs.clang-tidy-enable-check-profile }}"  \
+           --clang-tidy-checks="${{ inputs.clang-tidy-checks }}"                              \
+           --clang-tidy-config="${{ inputs.clang-tidy-config }}"                              \
+           --clang-tidy-config-file="${{ inputs.clang-tidy-config-file }}"                    \
+           --clang-tidy-header-filter="${{ inputs.clang-tidy-header-filter }}"                \
+           --clang-tidy-line-filter="${{ inputs.clang-tidy-line-filter }}"
+        exit $?
 
 

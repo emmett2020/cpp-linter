@@ -45,7 +45,12 @@ bash "${X64_DIR}/utils/filter_files.sh"         \
                  "*boost*"                      \
                  "*git2*"                       \
 
-echo "2. Start to compress"
+
+echo "2. Start to set rpath for: ${BINARY_NAME}"
+# ORIGIN shouldn't be translated while BINARY_NAME should be translated.
+patchelf --force-rpath --set-rpath '$ORIGIN/../lib/'${BINARY_NAME} "${DISTRIBUTION_NAME}/bin/${BINARY_NAME}"
+
+echo "3. Start to compress"
 # -- ${DISTRIBUTION_NAME}
 # ------- install.sh
 # ------- uninstall.sh
