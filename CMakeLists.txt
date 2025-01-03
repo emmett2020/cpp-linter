@@ -8,10 +8,10 @@ string(STRIP "${CPP_LINT_ACTION_VERSION}" CPP_LINT_ACTION_VERSION)
 
 project(cpp_lint_action VERSION ${CPP_LINT_ACTION_VERSION})
 
-set(CMAKE_CXX_STANDARD 20)
-set(CXX_STANDARD_REQUIRED true)
-set(CMAKE_EXPORT_COMPILE_COMMANDS on)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_CXX_STANDARD             20)
+set(CXX_STANDARD_REQUIRED          true)
+set(CMAKE_EXPORT_COMPILE_COMMANDS  on)
+set(CMAKE_BUILD_TYPE               Debug)
 
 set(cpp_lint_action_root ${CMAKE_CURRENT_SOURCE_DIR})
 set(config_dir  ${cpp_lint_action_root}/src/configs)
