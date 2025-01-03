@@ -81,7 +81,7 @@ namespace lint::tool::clang_tidy {
     }
 
     auto execute(const option_t &option, std::string_view repo, std::string_view file)
-      -> shell::result {
+      -> std::tuple<shell::result, std::string> {
       spdlog::trace("Enter execute()");
 
       auto opts = std::vector<std::string>{};
@@ -115,7 +115,7 @@ namespace lint::tool::clang_tidy {
       auto arg_str = concat(opts, ' ');
       spdlog::info("Running command: {} {}", option.binary, arg_str);
 
-      return shell::execute(option.binary, opts, repo);
+      return {shell::execute(option.binary, opts, repo), arg_str};
     }
 
     auto parse_stdout(std::string_view std_out) -> diagnostics {
@@ -234,14 +234,15 @@ namespace lint::tool::clang_tidy {
     const std::string &file) const -> per_file_result {
     spdlog::trace("Enter clang_tidy_general::check_single_file");
 
-    auto [ec, std_out, std_err] = execute(option, root_dir, file);
+    auto [res, failed_command] = execute(option, root_dir, file);
 
     auto result        = per_file_result{};
-    result.passed      = ec == 0;
-    result.diags       = parse_stdout(std_out);
-    result.tool_stdout = std_out;
-    result.tool_stderr = std_err;
+    result.passed      = res.exit_code == 0;
+    result.diags       = parse_stdout(res.std_out);
+    result.tool_stdout = res.std_out;
+    result.tool_stderr = res.std_err;
     result.file_path   = file;
+    result.file_option = failed_command;
     return result;
   }
 
@@ -271,6 +272,8 @@ namespace lint::tool::clang_tidy {
       }
 
       spdlog::error("file: {} doesn't pass {} check.", file, option.binary);
+      result.failed_commands.emplace_back(
+        std::format("clang-tidy {}", per_file_result.file_option));
       result.fails[file] = std::move(per_file_result);
 
       if (option.enabled_fastly_exit) {

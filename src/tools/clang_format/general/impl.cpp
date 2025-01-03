@@ -196,9 +196,9 @@ namespace lint::tool::clang_format {
       }
 
       spdlog::error("file: {} doesn't pass {} check.", file, option.binary);
-      result.fails[file] = std::move(per_file_result);
       result.failed_commands.emplace_back(
         std::format("clang-format {}", per_file_result.file_option));
+      result.fails[file] = std::move(per_file_result);
 
       if (option.enabled_fastly_exit) {
         spdlog::info("{} fastly exit since check failed", option.binary);

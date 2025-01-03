@@ -31,7 +31,7 @@ namespace lint::tool {
 
   namespace {
     auto make_reproduce_spec(const std::vector<reporter_base_ptr> &reporters) -> std::string {
-      auto content  = "<code>"s;
+      auto content  = "```shell"s;
       content      += "# 1. Enter your local repository\n";
       content      += "cd /path/to/your/repository\n";
 
@@ -46,7 +46,7 @@ namespace lint::tool {
           content += "command\n";
         }
       }
-      return content + "</code>";
+      return content + "```";
     }
   } // namespace
 
