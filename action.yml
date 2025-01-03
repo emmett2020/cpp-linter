@@ -147,7 +147,7 @@ runs:
           echo "The git repo details:"
           ls -lrthaR .git
         fi
-        $HOME/.local/bin/cpp-lint-action                                                      \
+        /usr/local/bin/cpp-lint-action                                                      \
            --log-level="${{ inputs.log-level }}"                                              \
            --target-revision="${{ inputs.target-revision }}"                                  \
            --enable-comment-on-issue="${{ inputs.enable-comment-on-issue }}"                  \
