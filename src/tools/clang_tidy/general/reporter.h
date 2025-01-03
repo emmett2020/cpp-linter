@@ -37,6 +37,8 @@ namespace lint::tool::clang_tidy {
     }
 
     auto make_brief() -> std::string {
+      spdlog::trace("Enter clang_tidy::reporter_t::make_brief");
+
       // TODO: replace diagnostic_type with linkable name
       auto ret = ""s;
       for (const auto &[name, failed]: result.fails) {
@@ -68,6 +70,7 @@ namespace lint::tool::clang_tidy {
     }
 
     auto make_review_comment(const runtime_context &context) -> github::review_comments override {
+      spdlog::trace("Enter clang_tidy::reporter_t::make_review_comment");
       auto comments = github::review_comments{};
 
       // For each failed file:

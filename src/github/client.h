@@ -57,7 +57,7 @@ namespace lint::github {
     }
 
     void get_issue_comment_id(const runtime_context &ctx) {
-      spdlog::info("Start to get issue comment id for pull request: {}.", ctx.pr_number);
+      spdlog::debug("Start to get issue comment id for pull request: {}.", ctx.pr_number);
       assert(ranges::contains(github_events_support_comments, ctx.event_name));
 
       auto path    = fmt::format("/repos/{}/issues/{}/comments", ctx.repo_pair, ctx.pr_number);

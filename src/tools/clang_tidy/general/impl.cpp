@@ -82,7 +82,7 @@ namespace lint::tool::clang_tidy {
 
     auto execute(const option_t &option, std::string_view repo, std::string_view file)
       -> shell::result {
-      spdlog::trace("Enter clang_tidy_general::execute()");
+      spdlog::trace("Enter execute()");
 
       auto opts = std::vector<std::string>{};
       if (!option.database.empty()) {
@@ -119,6 +119,7 @@ namespace lint::tool::clang_tidy {
     }
 
     auto parse_stdout(std::string_view std_out) -> diagnostics {
+      spdlog::trace("Enter parse_stdout");
       auto diags         = diagnostics{};
       auto needs_details = false;
 
@@ -231,7 +232,7 @@ namespace lint::tool::clang_tidy {
     [[maybe_unused]] const runtime_context &context,
     const std::string &root_dir,
     const std::string &file) const -> per_file_result {
-    spdlog::trace("Enter clang_tidy_general::check_single_file()");
+    spdlog::trace("Enter clang_tidy_general::check_single_file");
 
     auto [ec, std_out, std_err] = execute(option, root_dir, file);
 
@@ -245,6 +246,7 @@ namespace lint::tool::clang_tidy {
   }
 
   void clang_tidy_general::check(const runtime_context &context) {
+    spdlog::trace("Enter clang_tidy_general::check");
     assert(!option.binary.empty() && "clang-tidy binary is empty");
     assert(!context.repo_path.empty() && "the repo_path of context is empty");
 

@@ -80,6 +80,7 @@ namespace lint::tool::clang_format {
   }
 
   void creator::create_option(const program_options::variables_map &variables) {
+    spdlog::trace("Enter create_option");
     option.enabled = variables[enable].as<bool>();
     if (!option.enabled) {
       // Speed up option creation
@@ -116,6 +117,7 @@ namespace lint::tool::clang_format {
   }
 
   auto creator::create_tool(const program_options::variables_map &variables) -> tool_base_ptr {
+    spdlog::trace("Enter create_tool");
     create_option(variables);
     if (!option.enabled) {
       return nullptr;
