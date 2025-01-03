@@ -112,7 +112,7 @@ namespace lint::tool::clang_tidy {
 
       opts.emplace_back(file);
 
-      auto arg_str = concat(opts);
+      auto arg_str = concat(opts, ' ');
       spdlog::info("Running command: {} {}", option.binary, arg_str);
 
       return shell::execute(option.binary, opts, repo);

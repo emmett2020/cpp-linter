@@ -140,7 +140,7 @@ namespace lint::tool::clang_format {
       -> shell::result {
       spdlog::trace("Enter clang_format_general::execute()");
       auto tool_opt     = make_replacements_options(file);
-      auto tool_opt_str = concat(tool_opt);
+      auto tool_opt_str = concat(tool_opt, ' ');
       spdlog::info("Running command: {} {}", opt.binary, tool_opt_str);
 
       return shell::execute(opt.binary, tool_opt, repo);
