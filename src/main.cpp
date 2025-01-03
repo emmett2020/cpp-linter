@@ -94,8 +94,10 @@ namespace {
       auto [is_passed, passed, failed, ignored] = reporter->get_brief_result();
       auto tool                                 = reporter->tool_name();
       spdlog::info(
-        "The result of {}:\ttotal files: {}\tpassed files: {}\tfailed files: {}\tignored files: {}",
+        "{} result:\tall passes: {}\ttotal files: {}\tpassed files: {}\tfailed files: "
+        "{}\tignored files: {}",
         tool,
+        is_passed,
         total_files,
         passed,
         failed,

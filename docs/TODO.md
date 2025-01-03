@@ -17,10 +17,13 @@
 1. Support Windows
 2. Support MacOS
 
+## Code Quality
+1. Code coverage > 60%
+
 # 1.2.0
 ## New Features
 1. Support cpplint tool
-1. Support cppcheck tool
+2. Support cppcheck tool
 
 ## Code Quality
 1. Code coverage > 80%
@@ -30,3 +33,4 @@
 1. Add online document
 2. Support save and upload log file
 3. Support multiple compilation database for clang-tidy
+4. Support client limit rate
