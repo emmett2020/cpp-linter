@@ -106,6 +106,7 @@ auto main(int argc, char **argv) -> int {
     return 0;
   }
   set_log(user_options);
+
   auto tools = tool::create_enabled_tools(tool_creators, user_options);
   print_tools_info(tools);
 

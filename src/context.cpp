@@ -45,22 +45,22 @@ namespace lint {
   void print_context(const runtime_context &ctx) {
     spdlog::debug("Runtime Context:");
     spdlog::debug("--------------------------------------------------");
-    spdlog::debug("\tenable step summary: {}", ctx.enable_step_summary);
-    spdlog::debug("\tenable comment on issue: {}", ctx.enable_comment_on_issue);
-    spdlog::debug("\tenable pull request review: {}", ctx.enable_pull_request_review);
-    spdlog::debug("\tenable action output: {}", ctx.enable_action_output);
-    spdlog::debug("\trepository path: {}", ctx.repo_path);
-    spdlog::debug("\trepository: {}", ctx.repo_pair);
-    spdlog::debug("\trepository token: {}", ctx.token.empty() ? "" : "***");
-    spdlog::debug("\trepository event_name: {}", ctx.event_name);
-    spdlog::debug("\trepository target: {}", ctx.target);
-    spdlog::debug("\trepository source: {}", ctx.source);
-    spdlog::debug("\trepository pull-request number: {}", ctx.pr_number);
-    spdlog::debug("\trepository target commit: {}", git::commit::id_str(*ctx.target_commit));
-    spdlog::debug("\trepository source commit: {}", git::commit::id_str(*ctx.source_commit));
-    spdlog::debug("\tchanged files:");
+    spdlog::debug("enable step summary: {}", ctx.enable_step_summary);
+    spdlog::debug("enable comment on issue: {}", ctx.enable_comment_on_issue);
+    spdlog::debug("enable pull request review: {}", ctx.enable_pull_request_review);
+    spdlog::debug("enable action output: {}", ctx.enable_action_output);
+    spdlog::debug("repository path: {}", ctx.repo_path);
+    spdlog::debug("repository: {}", ctx.repo_pair);
+    spdlog::debug("repository token: {}", ctx.token.empty() ? "" : "***");
+    spdlog::debug("repository event_name: {}", ctx.event_name);
+    spdlog::debug("repository target: {}", ctx.target);
+    spdlog::debug("repository source: {}", ctx.source);
+    spdlog::debug("repository pull-request number: {}", ctx.pr_number);
+    spdlog::debug("repository target commit: {}", git::commit::id_str(*ctx.target_commit));
+    spdlog::debug("repository source commit: {}", git::commit::id_str(*ctx.source_commit));
+    spdlog::debug("changed files:");
     for (const auto &file: ctx.changed_files) {
-      spdlog::debug("\t\t{}", file);
+      spdlog::debug("{}", file);
     }
     spdlog::debug("");
   }

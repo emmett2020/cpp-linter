@@ -164,6 +164,7 @@ namespace lint::tool::clang_tidy {
     if (!option.enabled) {
       return nullptr;
     }
+    print_option(option);
 
     auto version = option.version;
     auto tool    = tool_base_ptr{};

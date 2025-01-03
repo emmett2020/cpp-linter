@@ -43,7 +43,7 @@ namespace lint::program_options {
     auto desc = options_description{"cpp-lint-action options"};
 
     const auto *level    = value<string>()->value_name("level")->default_value("info");
-    const auto *revision = value<string>()->value_name("revision")->required();
+    const auto *revision = value<string>()->value_name("revision");
 
     auto boolean = [](bool def) {
       return value<bool>()->value_name("bool")->default_value(def);

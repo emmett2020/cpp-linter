@@ -29,4 +29,5 @@ namespace lint::tool::clang_tidy {
     std::string line_filter;
   };
 
+  void print_option(const option_t& option);
 } // namespace lint::tool::clang_tidy

@@ -44,15 +44,15 @@ namespace lint::github {
     void print_env(const github_env &env) {
       spdlog::debug("Github Envionment Variables:");
       spdlog::debug("--------------------------------------------------");
-      spdlog::debug("\tgit repository:{}", env.repository);
-      spdlog::debug("\tgit token:{}", env.token);
-      spdlog::debug("\tgit event name:{}", env.event_name);
-      spdlog::debug("\tgit base ref:{}", env.base_ref);
-      spdlog::debug("\tgit head ref:{}", env.head_ref);
-      spdlog::debug("\tgit ref:{}", env.github_ref);
-      spdlog::debug("\tgit sha:{}", env.github_sha);
-      spdlog::debug("\tgit ref type:{}", env.github_ref_type);
-      spdlog::debug("\tgit workspace:{}", env.workspace);
+      spdlog::debug("git repository:{}", env.repository);
+      spdlog::debug("git token:{}", env.token);
+      spdlog::debug("git event name:{}", env.event_name);
+      spdlog::debug("git base ref:{}", env.base_ref);
+      spdlog::debug("git head ref:{}", env.head_ref);
+      spdlog::debug("git ref:{}", env.github_ref);
+      spdlog::debug("git sha:{}", env.github_sha);
+      spdlog::debug("git ref type:{}", env.github_ref_type);
+      spdlog::debug("git workspace:{}", env.workspace);
       spdlog::debug("");
     }
 

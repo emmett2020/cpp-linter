@@ -13,14 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#pragma once
+#include "tools/clang_format/general/option.h"
 
-#include "tools/base_option.h"
+#include <spdlog/spdlog.h>
 
 namespace lint::tool::clang_format {
-  struct option_t : option_base {
-    bool enable_warning_as_error = false;
-  };
+  void print_option(const option_t& option) {
+    spdlog::debug("Clang-format Option: ");
+    spdlog::debug("--------------------------------------------------");
+    spdlog::debug("enabled: {}", option.enabled);
+    spdlog::debug("enabled-fastly-exit: {}", option.enabled_fastly_exit);
+    spdlog::debug("version: {}", option.version);
+    spdlog::debug("binary: {}", option.binary);
+    spdlog::debug("file-filter-iregex: {}", option.file_filter_iregex);
+    spdlog::debug("enable-warning-as-error: {}", option.enable_warning_as_error);
+    spdlog::debug("");
+  }
 
-  void print_option(const option_t& option);
 } // namespace lint::tool::clang_format
