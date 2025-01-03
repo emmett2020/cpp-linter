@@ -6,6 +6,7 @@
 |    needs root permission?    |              No              |
 |------------------------------|------------------------------|
 |          dependencies        |           lddtree            |
+|                              |           patchelf           |
 |------------------------------|------------------------------|
 |          fellows             |         install.sh           |
 |                              |         uninstall.sh         |
@@ -17,6 +18,10 @@ This script supports compiling binary and running binary using suitable compiler
 That's to say, the version of compiler during compiling must be equal or lower than the
 version of compiler during running.
 COMMENT
+
+# Exit on error, treat unset variables as an error, and fail on pipeline errors
+set -euo pipefail
+
 CUR_SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 SCRIPTS_DIR="${CUR_SCRIPT_DIR}/../../../../.."
 X64_DIR="${SCRIPTS_DIR}/linux/ubuntu/x64"

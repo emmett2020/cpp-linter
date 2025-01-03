@@ -14,6 +14,9 @@ Introduction of this script:
 Install binaries and libraryies into local system.
 COMMENT
 
+# Exit on error, treat unset variables as an error, and fail on pipeline errors
+set -euo pipefail
+
 CUR_SCRIPT_DIR=$(cd $(dirname ${BASH_SOURCE[0]}); pwd)
 
 # This file needs sudo permission.

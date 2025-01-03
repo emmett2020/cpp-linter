@@ -14,6 +14,9 @@ Introduction of this script:
 Uninstall binaries and libraries.
 COMMENT
 
+# Exit on error, treat unset variables as an error, and fail on pipeline errors
+set -euo pipefail
+
 BINARY_NAME="cpp-lint-action"
 LIB_INSTALL_PATH="$HOME/.local/lib/${BINARY_NAME}/"
 BIN_INSTALL_PATH="$HOME/.local/bin/"
