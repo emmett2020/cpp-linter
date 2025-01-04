@@ -1,5 +1,5 @@
 # 1.0.0
-1. Research on state of art products.
+1. Research on state of art products. [doing]
 2. Refine code:
    2.1 finish clang-tidy/clang-format tests [doing]
    2.2 Add other test cases
